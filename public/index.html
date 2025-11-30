@@ -1,0 +1,2397 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FABRIKA | Yönetim Paneli v5.9 (Net-Brüt Hesaplama + Vardiya İyileştirmeleri)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* CSS KODLARI BAŞLANGIÇ */
+
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #f1c40f;
+            --background-color: #ecf0f1;
+            --surface-color: #ffffff;
+            --text-color: #34495e;
+            --dark-color: #2c3e50;
+            --danger-color: #e74c3c;
+            --success-color: #2ecc71;
+            --info-color: #8e44ad;
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            --border-radius: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--background-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+        .auth-container { background-color: var(--surface-color); padding: 40px; border-radius: var(--border-radius); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center; transition: opacity 0.5s, transform 0.5s; display: none; }
+        .auth-container h1 { color: var(--dark-color); margin-bottom: 10px; }
+        .auth-container p { margin-bottom: 25px; color: #7f8c8d; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 12px 15px; border: 1px solid #bdc3c7; border-radius: var(--border-radius); font-size: 16px; transition: border-color 0.3s, box-shadow 0.3s; background-color: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; resize: vertical; min-height: 50px; }
+        .input-group input, .input-group select { min-height: 0; }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
+        .input-group input:disabled { background-color: #f8f9fa; color: #7f8c8d; font-weight: 700; }
+        .auth-message { color: var(--danger-color); margin-bottom: 15px; height: 18px; font-size: 14px; font-weight: 500; }
+
+        .btn { padding: 12px 20px; border: none; border-radius: var(--border-radius); font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s ease-in-out; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-secondary { background-color: #bdc3c7; color: var(--dark-color); }
+        .btn-warning { background-color: var(--secondary-color); color: var(--dark-color); }
+        .btn-info { background-color: var(--info-color); color: white; }
+        .btn-full { width: 100%; padding: 15px; }
+        .btn-sm-danger { background-color: var(--danger-color); color: white; padding: 5px 10px; font-size: 12px; font-weight: 500; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-sm-warning { background-color: var(--secondary-color); color: var(--dark-color); padding: 5px 10px; font-size: 12px; font-weight: 500; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-sm-success { background-color: var(--success-color); color: white; padding: 5px 10px; font-size: 12px; font-weight: 500; border-radius: 6px; border: none; cursor: pointer; }
+
+        #app-container { display: none; width: 100%; height: 100vh; display: flex; background-color: var(--background-color); }
+        #sidebar { width: 260px; background-color: var(--dark-color); color: white; padding: 20px; display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
+        #sidebar .logo { text-align: center; margin-bottom: 40px; font-size: 24px; font-weight: 700; letter-spacing: 1px; }
+        #sidebar .logo span { color: var(--primary-color); font-weight: 400; }
+        #sidebar nav { flex-grow: 1; }
+        #sidebar nav ul { list-style: none; }
+        #sidebar nav li { margin-bottom: 10px; }
+        #sidebar nav a { color: #bdc3c7; text-decoration: none; display: flex; align-items: center; padding: 15px; border-radius: var(--border-radius); transition: background-color 0.3s, color 0.3s; font-weight: 500;}
+        #sidebar nav a.active, #sidebar nav a:hover { background-color: var(--primary-color); color: white; }
+        #sidebar nav a svg { margin-right: 15px; width: 20px; height: 20px; }
+        #sidebar-vardiya-durumu { background-color: rgba(0,0,0,0.2); padding: 15px; border-radius: var(--border-radius); text-align: center; font-size: 14px; margin-top: 20px; }
+        #sidebar-vardiya-durumu .durum { font-weight: 700; display: block; margin-bottom: 5px; }
+        #sidebar-vardiya-durumu .durum-kapali { color: var(--danger-color); }
+        #sidebar-vardiya-durumu .durum-acik { color: var(--success-color); }
+        #sidebar-vardiya-durumu .isim { font-size: 13px; color: #bdc3c7; }
+        #logout-btn { margin-top: 20px; }
+
+        #main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
+        #main-content header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #dce1e2; padding-bottom: 20px; }
+        #main-content header h1 { font-size: 32px; color: var(--dark-color); font-weight: 700; }
+        #main-content header #kullanici-bilgisi { font-size: 16px; color: var(--text-color); font-weight: 500; }
+        #main-content header #kullanici-bilgisi span { font-weight: 700; color: var(--dark-color); }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-bottom: 30px; }
+        .card { background-color: var(--surface-color); padding: 25px; border-radius: var(--border-radius); box-shadow: var(--shadow); }
+        .card h3 { font-size: 16px; color: #7f8c8d; margin-bottom: 10px; font-weight: 600; }
+        .card .value { font-size: 32px; font-weight: 700; color: var(--dark-color); }
+        .card .value.profit { color: var(--success-color); }
+        .card .value.loss { color: var(--danger-color); }
+        .content-box { background-color: var(--surface-color); padding: 30px; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 30px; }
+        .content-box h2 { margin-bottom: 25px; color: var(--dark-color); font-size: 22px; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; display: inline-block;}
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; }
+        .full-width { grid-column: 1 / -1; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ecf0f1; }
+        th:last-child, td:last-child { text-align: center; }
+        th { background-color: #f8f9fa; font-weight: 600; color: var(--dark-color); text-transform: uppercase; font-size: 12px; }
+        tr:hover { background-color: #f8f9fa; }
+        td .btn { padding: 8px 12px; font-size: 13px; font-weight: 500; }
+        td .btn-sm-warning, td .btn-sm-success { margin-right: 5px; }
+        .danger-zone { border-left: 5px solid var(--danger-color); background-color: #fff8f8; }
+        .danger-zone h2 { color: var(--danger-color); border-bottom-color: var(--danger-color); }
+        .danger-zone p { margin-bottom: 20px; font-size: 15px; line-height: 1.6; }
+        #kayit-listesi-tablosu th, #kayit-listesi-tablosu td { padding: 12px 15px; }
+        #kayit-listesi-tablosu td:last-child { text-align: center; }
+        #kayit-listesi-genel-toplam { font-size: 18px; font-weight: 700; text-align: right; margin-top: 20px; color: var(--dark-color); }
+        #modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s; }
+        #modal-container.show { display: flex; }
+        .modal-content { background-color: var(--surface-color); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 90%; max-width: 500px; animation: slideIn 0.4s ease-out; }
+        .modal-content.modal-lg { max-width: 800px; }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { color: var(--dark-color); }
+        .modal-close-btn { font-size: 24px; font-weight: bold; color: #95a5a6; cursor: pointer; border: none; background: none; transition: transform 0.2s; }
+        .modal-close-btn:hover { transform: rotate(90deg); }
+        .text-center { text-align: center; }
+        .no-data-message { color: #7f8c8d; font-style: italic; padding: 40px; text-align: center; }
+        .sgk-badge { background-color: var(--info-color); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 5px; }
+        #aktif-vardiya-container { border-left: 5px solid var(--success-color); background-color: #f7fffb; padding: 30px; }
+        #aktif-vardiya-container h2 { color: var(--success-color); border-bottom-color: var(--success-color); }
+        #aktif-vardiya-detaylari { font-size: 18px; color: var(--text-color); line-height: 1.7; margin-bottom: 25px; }
+        #aktif-vardiya-detaylari strong { color: var(--dark-color); font-weight: 600; }
+        #vardiya-gecmisi-container table td:first-child { word-break: break-word; max-width: 500px; min-width: 300px; }
+        .checkbox-container { display: flex; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #dce1e2; margin-bottom: 15px; }
+        .checkbox-container input[type="checkbox"] { width: 20px; height: 20px; margin-right: 15px; min-height: auto; }
+        .checkbox-container label { margin-bottom: 0; cursor: pointer; font-weight: 500; }
+
+        /* Yeni: Katılım tablosu için basit stiller */
+        .attendance-table { border-collapse: collapse; width: 100%; overflow-x: auto; display: block; }
+        .attendance-table th, .attendance-table td { border: 1px solid #ddd; padding: 8px; font-size: 12px; text-align: center; }
+        .attendance-table th { background-color: #f8f9fa; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+        .attendance-present { color: var(--success-color); font-weight: bold; }
+        .attendance-absent { color: var(--danger-color); font-weight: bold; }
+        /* Haftalık/planlı izinler için turuncu renk */
+        .attendance-weekly { color: var(--secondary-color); font-weight: bold; }
+
+
+        /* Özet için basit stil */
+        .attendance-summary {
+            margin-top: 20px;
+        }
+        .attendance-summary h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: var(--dark-color);
+        }
+        .attendance-summary ul {
+            list-style: none;
+            padding-left: 0;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+        .attendance-summary li {
+            margin-bottom: 5px;
+        }
+        
+        /*
+         * Mobil uyumluluk (responsive) stilleri
+         * Varsayılan olarak mobil menü butonu gizli; 768px altında görünür ve sidebar içeri kayar.
+         */
+        #sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+        #sidebar-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        /* Küçük ekranlar için düzenlemeler */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: flex-start;
+            }
+            #app-container {
+                flex-direction: column;
+                width: 100%;
+                height: auto;
+            }
+            #sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 260px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1000;
+            }
+            /* Sidebar aktif olduğunda görünür */
+            #sidebar.active {
+                transform: translateX(0);
+            }
+            #sidebar-toggle {
+                display: flex;
+            }
+            #main-content {
+                padding: 20px;
+                width: 100%;
+                margin-left: 0;
+            }
+            .card-container {
+                grid-template-columns: 1fr;
+            }
+            /* Tabloları kaydırılabilir hale getir */
+            table {
+                display: block;
+                overflow-x: auto;
+                width: 100%;
+            }
+            th, td {
+                white-space: nowrap;
+            }
+            /* Kimlik doğrulama konteynerlerini esnetmek */
+            .auth-container {
+                max-width: 90%;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Mobil cihazlarda yan menüyü açıp kapatmak için buton -->
+    <button id="sidebar-toggle" aria-label="Menüyü Aç/Kapat">
+        <!-- Hamburger ikon -->
+        <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>
+    </button>
+
+
+    <div id="setup-container" class="auth-container">
+        <h1>Yönetim Paneline Hoş Geldiniz</h1>
+        <p>İlk kez kullanıyorsanız, lütfen bir yönetici kullanıcı adı ve şifresi oluşturun.</p>
+        <form id="setup-form">
+            <div class="input-group">
+                <label for="setup-username">Yönetici Kullanıcı Adı</label>
+                <input type="text" id="setup-username" required>
+            </div>
+            <div class="input-group">
+                <label for="setup-pass">Yeni Yönetici Şifresi (En az 4 karakter)</label>
+                <input type="password" id="setup-pass" required>
+            </div>
+            <div class="input-group">
+                <label for="setup-pass-onay">Yeni Şifreyi Onayla</label>
+                <input type="password" id="setup-pass-onay" required>
+            </div>
+            <div id="setup-error" class="auth-message"></div>
+            <button type="submit" class="btn btn-primary btn-full">Yönetici Hesabını Oluştur</button>
+        </form>
+    </div>
+
+    <div id="login-choice-container" class="auth-container">
+        <h1>Yönetim Paneli</h1>
+        <p>Lütfen giriş yapmak istediğiniz panel türünü seçin.</p>
+        <button id="btn-admin-login-choice" class="btn btn-primary btn-full" style="margin-bottom: 15px;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 1L9 5h6l-3-4zM6 9l-4 3 4 3V9zm12 0v6l4-3-4-3zm-9 4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM4 17.01L7 14h10l3 3.01H4z"/></svg>
+            YÖNETİCİ GİRİŞİ
+        </button>
+        <button id="btn-personel-login-choice" class="btn btn-secondary btn-full">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            PERSONEL GİRİŞİ
+        </button>
+    </div>
+
+    <div id="admin-login-container" class="auth-container">
+        <h1>Yönetici Girişi</h1>
+        <p>Lütfen yönetici kullanıcı adınızı ve şifrenizi girin.</p>
+        <form id="admin-login-form">
+            <div class="input-group">
+                <label for="admin-username">Kullanıcı Adı</label>
+                <input type="text" id="admin-username" required>
+            </div>
+            <div class="input-group">
+                <label for="admin-password">Şifre</label>
+                <input type="password" id="admin-password" required>
+            </div>
+            <div id="admin-login-error" class="auth-message"></div>
+            <button type="submit" class="btn btn-primary btn-full">Giriş Yap</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 15px;" onclick="main.showLoginChoice()">Geri</button>
+        </form>
+    </div>
+
+    <div id="personel-login-container" class="auth-container">
+        <h1>Personel Girişi</h1>
+        <p>Lütfen size atanan kullanıcı adı ve şifre ile giriş yapın.</p>
+        <form id="personel-login-form">
+            <div class="input-group">
+                <label for="personel-username">Kullanıcı Adı</label>
+                <input type="text" id="personel-username" required>
+            </div>
+            <div class="input-group">
+                <label for="personel-password">Şifre</label>
+                <input type="password" id="personel-password" required>
+            </div>
+            <div id="personel-login-error" class="auth-message"></div>
+            <button type="submit" class="btn btn-primary btn-full">Giriş Yap</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 15px;" onclick="main.showLoginChoice()">Geri</button>
+        </form>
+    </div>
+    <div id="app-container">
+        <aside id="sidebar">
+            <div class="logo">YÖNETİM<span>PANELİ</span></div>
+            <nav>
+                <ul>
+                    <li data-role="admin"><a href="#" class="nav-link" data-page="dashboard"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Ana Panel</a></li>
+                    <li data-role="admin isci"><a href="#" class="nav-link" data-page="vardiya-yonetimi"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.25 14.16L11 13.32V7h1.5v5.5l4.5 2.66-.75 1.3z"/></svg>Vardiya Yönetimi</a></li>
+                    <li data-role="admin isci"><a href="#" class="nav-link" data-page="uretim-ekle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>Üretim Ekle</a></li>
+                    <li data-role="admin"><a href="#" class="nav-link" data-page="personel-yonetimi"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V18h14v-1.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V18h6v-1.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Personel Yönetimi</a></li>
+                    <li data-role="admin"><a href="#" class="nav-link" data-page="giderler"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm-1 14H5c-.55 0-1-.45-1-1v-5h16v5c0 .55-.45 1-1 1zM20 8H4V6h16v2z"/></svg>Giderler</a></li>
+                    <li data-role="admin"><a href="#" class="nav-link" data-page="fabrikalar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>Fabrika Hesapları</a></li>
+                    <li data-role="admin"><a href="#" class="nav-link" data-page="raporlar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>Raporlar</a></li>
+                    <li data-role="admin"><a href="#" class="nav-link" data-page="ayarlar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.4 12.99l-2.07-1.22c.04-.3.07-.61.07-.92s-.03-.62-.07-.92l2.07-1.22c.32-.19.44-.59.24-.91l-1-1.73c-.2-.32-.6-.44-.91-.24l-2.07 1.22c-.44-.33-.92-.6-1.44-.79l-.3-2.28c-.05-.38-.38-.66-.77-.66h-2c-.38 0-.72.28-.77.66l-.3 2.28c-.52.19-1 .46-1.44-.79l-2.07-1.22c-.32-.19-.71-.08-.91.24l-1 1.73c-.2.32-.08.71.24.91l2.07 1.22c-.04.3-.07.61-.07.92s.03.62.07.92l-2.07 1.22c-.32.19-.44.59-.24.91l1 1.73c.2.32.6.44.91.24l2.07-1.22c.44.33.92.6 1.44.79l.3 2.28c.05.38.38.66.77.66h2c.38 0-.72.28-.77-.66l-.3-2.28c.52-.19 1-.46 1.44-.79l2.07 1.22c.32.19.71.08.91-.24l1-1.73c.2-.32.08-.71-.24-.91zM12 15c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>Ayarlar</a></li>
+                    <!-- Yeni: Personel Durumu (Yoklama) -->
+                    <li data-role="admin"><a href="#" class="nav-link" data-page="personel-durumu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3H4v18h2V3zm14 0h-2v18h2V3zM11 7h2v10h-2V7z"/></svg>Personel Durumu</a></li>
+                </ul>
+            </nav>
+            <div id="sidebar-vardiya-durumu"></div>
+            <button id="logout-btn" class="btn btn-danger">Çıkış Yap</button>
+        </aside>
+
+        <main id="main-content">
+            <header>
+                <h1 id="page-title">Ana Panel</h1>
+                <div id="kullanici-bilgisi"></div>
+            </header>
+            
+            <div id="dashboard" class="page active">
+                <div class="card-container">
+                    <div class="card"><h3>Toplam Üretim Değeri</h3><div class="value" id="dashboard-gelir">0 ₺</div></div>
+                    <div class="card"><h3>Toplam Giderler</h3><div class="value" id="dashboard-gider">0 ₺</div></div>
+                    <div class="card"><h3>Net Kâr (Tahsilata Göre)</h3><div class="value" id="dashboard-kar">0 ₺</div></div>
+                    <div class="card"><h3>Kalan Toplam Alacak</h3><div class="value"id="dashboard-alacak">0 ₺</div></div>
+                </div>
+                <div class="content-box"><h2>Son 6 Aylık Nakit Akışı</h2><canvas id="nakitAkisChart" height="120"></canvas></div>
+            </div>
+
+            <div id="vardiya-yonetimi" class="page">
+                <div id="aktif-vardiya-container" class="content-box" style="display: none;">
+                    <h2>Aktif Vardiya</h2>
+                    <div id="aktif-vardiya-detaylari"></div>
+                    <!-- Yeni: Personel Ekle/Çıkar Butonu -->
+                    <button id="vardiya-personel-yonet-btn" class="btn btn-info btn-full" style="margin-bottom: 15px;">Personel Ekle/Çıkar</button>
+                    <button id="vardiya-devret-modal-btn" class="btn btn-warning btn-full" style="margin-bottom: 15px;">VARDİYAYI DEVRET (Başka Birine)</button>
+                    <button id="vardiya-kapat-btn" class="btn btn-danger btn-full">VARDİYAYI KAPAT (Günü Sonlandır)</button>
+                </div>
+                <div id="yeni-vardiya-form-container" class="content-box" style="display: none;">
+                    <h2>Yeni Vardiya Başlat</h2>
+                    <form id="yeni-vardiya-form">
+                        <div class="form-grid" style="grid-template-columns: 2fr 1fr; align-items: end;">
+                            <div class="input-group">
+                                <label for="vardiya-personel-select">Vardiyayı Başlatan Personel(ler)</label>
+                                <!-- Çoklu seçim: birden fazla personel seçilebilir -->
+                                <select id="vardiya-personel-select" multiple size="6" required>
+                                    <option value="" disabled>Personel Seçin...</option>
+                                </select>
+                                <small style="font-size: 12px; color: #7f8c8d;">Birden fazla personel seçmek için Ctrl veya Shift tuşlarını kullanın.</small>
+                            </div>
+                            <div class="input-group">
+                                <button type="submit" class="btn btn-success btn-full">VARDİYAYI BAŞLAT</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="content-box">
+                    <h2>Vardiya Geçmişi (Puantaj)</h2>
+                    <div id="vardiya-gecmisi-container"></div>
+                </div>
+            </div>
+            <div id="personel-yonetimi" class="page">
+                <div class="content-box">
+                    <h2>Personel İşlem Formu</h2>
+                    <form id="personel-islem-form">
+                        
+                        <div class="input-group full-width" style="border-bottom: 2px solid #eee; padding-bottom: 25px;">
+                            <label for="personel-islem-select">İşlem Tipi</label>
+                            <select id="personel-islem-select">
+                                <option value="new" selected>-- Yeni Personel Oluştur --</option>
+                            </select>
+                            <p style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">
+                                Yeni personel eklemek için bu seçenekte bırakın veya mevcut bir personeli güncellemek için listeden seçin.
+                            </p>
+                        </div>
+                        
+                        <h3 style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Personel Bilgileri</h3>
+                        <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr;">
+                            <div class="input-group"><label for="personel-ad-soyad">İsim Soyisim (Zorunlu)</label><input type="text" id="personel-ad-soyad" placeholder="Örn: Mehmet Kaya" required></div>
+                            <div class="input-group"><label for="personel-telefon">Telefon</label><input type="tel" id="personel-telefon" placeholder="Örn: 0555 123 4567"></div>
+                            <div class="input-group"><label for="personel-ise-alim-tarihi">İşe Alınma Tarihi</label><input type="date" id="personel-ise-alim-tarihi"></div>
+                        </div>
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+                            <div class="input-group"><label for="personel-pozisyon-select">Pozisyon</label><select id="personel-pozisyon-select" required><option value="" disabled selected>Pozisyon Seçin...</option></select></div>
+                             <div class="input-group">
+                                <label for="personel-net-maas" style="color: var(--success-color);">Net Maaş (Ele Geçen)</label>
+                                <input type="number" step="0.01" id="personel-net-maas" placeholder="Örn: 25000" style="border-color: var(--success-color);">
+                            </div>
+                            <div class="input-group">
+                                <label for="personel-brut-maas" style="color: var(--info-color);">Brüt Maaş (Resmi)</label>
+                                <input type="number" step="0.01" id="personel-brut-maas" placeholder="Otomatik hesaplanır">
+                            </div>
+                            <div class="input-group">
+                                <label for="personel-maas-tipi">Maaş Tipi</label>
+                                <select id="personel-maas-tipi">
+                                    <option value="Günlük">Günlük</option>
+                                    <option value="Aylık">Aylık</option>
+                                    <option value="Yarım Ay">Yarım Ay</option>
+                                    <option value="Avans">Avans</option>
+                                    <option value="Prim">Prim Usulü</option> </select>
+                            </div>
+                            <div class="input-group"><label for="personel-durum">Durum</label><select id="personel-durum"><option value="Aktif" selected>Aktif</option><option value="İzinde">İzinde</option><option value="Ayrıldı">İşten Ayrıldı</option></select></div>
+                        </div>
+
+                        
+                        <h3 style="margin-top: 20px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Yasal Durum (SGK)</h3>
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                             <div class="input-group">
+                                <label for="personel-sgk-durumu">SGK Durumu</label>
+                                <select id="personel-sgk-durumu">
+                                    <option value="Yok">Sigortasız</option>
+                                    <option value="Var">Sigortalı</option>
+                                </select>
+                            </div>
+                            <div class="input-group" id="personel-sgk-tutar-group" style="display:none;">
+                                <label for="personel-sgk-tutar">Aylık SGK Maliyeti (İşveren Payı Dahil)</label>
+                                <input type="number" step="0.01" id="personel-sgk-tutar" placeholder="Örn: 5500">
+                                <small style="color: #7f8c8d; font-size: 12px;">Ödeme yaparken bu tutarı Giderlere eklemek isteyip istemediğinizi soracağım.</small>
+                            </div>
+                        </div>
+
+                        <h3 style="margin-top: 20px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Panel Giriş Bilgileri (Opsiyonel)</h3>
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="input-group">
+                                <label for="personel-kullanici-adi">Panel Kullanıcı Adı</label>
+                                <input type="text" id="personel-kullanici-adi" placeholder="Bu personele özel kullanıcı adı (örn: mehmet.kaya)">
+                            </div>
+                             <div class="input-group">
+                                <label for="personel-sifre">Panel Şifresi</label>
+                                <input type="password" id="personel-sifre" placeholder="Yeni şifre (en az 4 karakter)">
+                            </div>
+                        </div>
+
+                        <div style="text-align: right; margin-top: 10px;">
+                            <button type="submit" id="personel-form-submit-btn" class="btn btn-success">Personeli Kaydet</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="content-box">
+                    <h2>Kayıtlı Personel Listesi</h2>
+                    <div id="personel-listesi-container"></div>
+                </div>
+            </div>
+            
+            <div id="uretim-ekle" class="page">
+                <div class="content-box">
+                    <h2>Yeni Üretim Kalemi Ekle</h2>
+                    <form id="uretim-ekle-form">
+                        <div class="form-grid" style="grid-template-columns: 2fr 1fr;"><div class="input-group"><label for="uretim-fabrika">Fabrika Seçin</label><select id="uretim-fabrika" required></select></div><div class="input-group"><label for="uretim-tarih">Tarih</label><input type="date" id="uretim-tarih" required></div></div>
+                        <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr; align-items: flex-end;">
+                            <div class="input-group"><label for="uretim-aciklama">Ürün / Hizmet Açıklaması</label><input type="text" id="uretim-aciklama" placeholder="Örn: Standart Öğle Yemeği" required></div>
+                            <div class="input-group"><label for="uretim-adet">Adet</label><input type="number" id="uretim-adet" placeholder="Örn: 150" required></div>
+                            <div class="input-group"><label for="uretim-birim-fiyat">Birim Fiyat (₺)</label><input type="number" step="0.01" id="uretim-birim-fiyat" placeholder="Örn: 85.50" required></div>
+                            <div class="input-group"><label for="uretim-toplam-tutar">Toplam Tutar</label><input type="text" id="uretim-toplam-tutar" disabled></div>
+                        </div>
+                        <div class="full-width" style="text-align: right;"><button type="submit" id="listeye-ekle-btn" class="btn btn-primary">Listeye Ekle</button></div>
+                    </form>
+                </div>
+                <div class="content-box">
+                    <h2>Kaydedilecek Üretimler Listesi</h2>
+                    <div id="kayit-listesi-container"></div>
+                    <div id="kayit-listesi-genel-toplam">Genel Toplam: 0,00 ₺</div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 20px;"><button id="listeyi-temizle-btn" class="btn btn-danger">Listeyi Temizle</button><button id="tumunu-kaydet-btn" class="btn btn-success">Listeyi Onayla ve Tümünü Kaydet</button></div>
+                </div>
+                <div class="content-box">
+                    <h2>Son Kayıtlar</h2>
+                    <div id="son-uretimler-container"></div>
+                </div>
+            </div>
+            
+            <div id="giderler" class="page">
+                <div class="content-box">
+                    <h2>Yeni Gider Ekle</h2>
+                    <form id="gider-form">
+                        <div class="form-grid">
+                            <div class="input-group"><label for="gider-tip">Gider Tipi</label><select id="gider-tip" required><option value="" disabled selected>Tip seçin...</option><option value="fabrika">Fabrika Gideri</option><option value="diger">Diğer Gider</option></select></div>
+                            <div class="input-group"><label for="gider-aciklama">Gider Başlığı (Kategori)</label><input type="text" id="gider-aciklama" placeholder="Örn: Mutfak Malzemeleri" required></div>
+                            <div class="input-group full-width"><label for="gider-detay">Geniş Açıklama (Opsiyonel)</label><textarea id="gider-detay" rows="3" placeholder="Giderle ilgili detayları buraya yazabilirsiniz..."></textarea></div>
+                            <div class="input-group"><label for="gider-tutar">Tutar (₺)</label><input type="number" step="0.01" id="gider-tutar" required></div>
+                            <div class="input-group"><label for="gider-tarih">Tarih</label><input type="date" id="gider-tarih" required></div>
+                            <div class="input-group" style="align-self: end;"><button type="submit" class="btn btn-success">Gideri Kaydet</button></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="content-box">
+                    <h2>Gider Listesi</h2>
+                    <button id="gider-csv-indir" class="btn btn-primary" style="margin-bottom: 20px;">Gider Raporu (CSV) İndir</button>
+                    <div id="gider-tablo-container"></div>
+                </div>
+            </div>
+            
+            <div id="fabrikalar" class="page">
+                <div class="content-box">
+                    <h2>Yeni Fabrika Ekle</h2>
+                    <form id="fabrika-form"><div class="form-grid" style="grid-template-columns: 2fr 1fr;"><div class="input-group"><label for="fabrika-adi">Fabrika Adı</label><input type="text" id="fabrika-adi" placeholder="Örn: Büyük Anadolu Tekstil" required></div><div class="input-group" style="align-self: end;"><button type="submit" class="btn btn-success">Fabrikayı Kaydet</button></div></div></form>
+                </div>
+                <div class="content-box">
+                    <h2>Fabrika Hesap Özetleri</h2>
+                    <div id="fabrika-hesap-tablo-container"></div>
+                </div>
+                <div class="content-box danger-zone">
+                    <h2>Tehlikeli Alan: Fabrika Silme</h2>
+                    <p>Bir fabrikayı silmek, o fabrikaya ait **TÜM** üretim ve ödeme kayıtlarını kalıcı olarak yok edecektir. Bu işlem geri alınamaz. Sadece hesabını (kayıtlarını) temizlemek istiyorsanız, yukarıdaki "Hesabı Sıfırla" butonunu kullanın.</p>
+                    <form id="fabrika-sil-form">
+                        <div class="form-grid" style="grid-template-columns: 3fr 1fr; align-items: end;">
+                            <div class="input-group"><label for="fabrika-sil-select">Silinecek Fabrikayı Seçin</label><select id="fabrika-sil-select" required><option value="" disabled selected>...Bir fabrika seçin...</option></select></div>
+                            <div class="input-group"><button type="submit" class="btn btn-danger btn-full">Seçili Fabrikayı Sil</button></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div id="raporlar" class="page">
+                <div class="card-container" id="rapor-ozet-container" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="card"><h3>Toplam Üretim Değeri</h3><div class="value" id="rapor-gelir">0 ₺</div></div>
+                    <div class="card"><h3>Toplam Giderler</h3><div class="value" id="rapor-gider">0 ₺</div></div>
+                    <div class="card"><h3>Net Kâr (Tahsilata Göre)</h3><div class="value" id="rapor-kar">0 ₺</div></div>
+                    <div class="card"><h3>Kalan Toplam Alacak</h3><div class="value" id="rapor-alacak">0 ₺</div></div>
+                </div>
+                <div class="content-box">
+                    <h2>Genel Raporlama</h2>
+                    <p style="margin-bottom:20px;">Tüm üretim (gelir kalemi) ve gider kayıtlarınızı içeren detaylı bir CSV dosyası indirin. Rapor sonunda Net Kâr ve Kalan Alacak özetini göreceksiniz.</p>
+                    <button id="genel-csv-indir" class="btn btn-primary">Genel CSV Raporu İndir</button>
+                </div>
+            </div>
+
+            <div id="ayarlar" class="page">
+                <div class="content-box">
+                    <h2>Güvenlik Ayarları</h2>
+                    <p style="margin-bottom: 25px;">**Yönetici** (Admin) Ana Şifrenizi buradan güvenli bir şekilde değiştirebilirsiniz.</p>
+                    <form id="sifre-degistir-form">
+                        <div class="input-group"><label for="mevcut-sifre">Mevcut Yönetici Şifresi</label><input type="password" id="mevcut-sifre" required></div>
+                        <div class="input-group"><label for="yeni-sifre">Yeni Yönetici Şifresi (En az 4 karakter)</label><input type="password" id="yeni-sifre" required></div>
+                        <div class="input-group"><label for="yeni-sifre-onay">Yeni Yönetici Şifreyi Onayla</label><input type="password" id="yeni-sifre-onay" required></div>
+                        <div id="sifre-degistir-sonuc" class="auth-message" style="height: auto;"></div>
+                        <button type="submit" class="btn btn-primary">Şifreyi Güncelle</button>
+                    </form>
+                </div>
+
+                <div class="content-box">
+                    <h2>İK Ayarları: Pozisyon Yönetimi</h2>
+                    <p style="margin-bottom: 20px;">"Personel Yönetimi" sayfasında görünecek pozisyon tanımlamalarını buradan yapabilirsiniz.</p>
+                    <form id="pozisyon-ekle-form">
+                        <div class="form-grid" style="grid-template-columns: 3fr 1fr; align-items: end;">
+                            <div class="input-group"><label for="pozisyon-adi">Pozisyon Adı</label><input type="text" id="pozisyon-adi" placeholder="Örn: Aşçı, Şoför, Garson" required></div>
+                            <div class="input-group"><button type="submit" class="btn btn-success btn-full">Pozisyon Ekle</button></div>
+                        </div>
+                    </form>
+                    <h3 style="margin-top: 30px;">Mevcut Pozisyonlar</h3>
+                    <div id="pozisyon-listesi-container"></div>
+                </div>
+            </div>
+
+            <!-- Yeni: Personel Durumu Sayfası -->
+            <div id="personel-durumu" class="page">
+                <div class="content-box">
+                    <h2>Personel Durumu (Günlük Yoklama)</h2>
+                    <p style="margin-bottom:20px;">Personellerin işe gelip gelmediğini kontrol etmek için tabloyu kullanabilirsiniz. ✔ işaretli günler çalıştığı, × işaretli günler çalışmadığı, turuncu <strong>İzin</strong> hücreleri planlı haftalık izinleri, kırmızı <strong>İzin</strong> hücreleri ise devamsızlık/mazeretli izin günlerini gösterir.</p>
+                    <div id="personel-durumu-container" style="overflow-x:auto;"></div>
+                    <!-- Özet alanı: Çalışma günleri toplamlarını gösterecek -->
+                    <div id="personel-durumu-summary-container"></div>
+
+                    <!-- Haftalık izin planlama: kullanıcı her hafta farklı bir izin günü seçebilsin -->
+                    <div id="izin-plan-section" style="margin-top: 30px;">
+                        <h3>Haftalık İzin Planlama</h3>
+                        <form id="izin-plan-form">
+                            <div class="form-grid" style="grid-template-columns: 2fr 2fr 1fr; align-items: end;">
+                                <div class="input-group">
+                                    <label for="izin-personel-select">Personel</label>
+                                    <select id="izin-personel-select" required>
+                                        <option value="" disabled selected>Personel Seçin...</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="izin-tarih">İzin Tarihi</label>
+                                    <input type="date" id="izin-tarih" required>
+                                </div>
+                                <div class="input-group">
+                                    <button type="submit" class="btn btn-warning">İzin Gününü Ekle</button>
+                                </div>
+                            </div>
+                            <p style="font-size: 12px; color: #7f8c8d; margin-top: 10px;">Her hafta farklı izin günlerini burada seçebilirsiniz. Bu işlem yalnızca seçilen tarih için izin kaydı oluşturur.</p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="modal-container">
+        <div class="modal-content" id="modal-content-dynamic">
+            <div class="modal-header">
+                <h2 id="modal-title"></h2>
+                <button class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body-dynamic">
+            </div>
+        </div>
+    </div>
+    <script>
+// JAVASCRIPT KODLARI BAŞLANGIÇ (v5.9 - Net/Brüt Otomasyonu + Vardiya İyileştirmeleri)
+
+const main = {}; 
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- BÖLÜM 1: UYGULAMA OBJESİ (NAMESPACE) ---
+    const app = {
+        currentUser: null,
+        dom: {
+            setupContainer: document.getElementById('setup-container'),
+            setupForm: document.getElementById('setup-form'),
+            setupError: document.getElementById('setup-error'),
+            loginChoiceContainer: document.getElementById('login-choice-container'),
+            btnAdminLoginChoice: document.getElementById('btn-admin-login-choice'),
+            btnPersonelLoginChoice: document.getElementById('btn-personel-login-choice'),
+            adminLoginContainer: document.getElementById('admin-login-container'),
+            adminLoginForm: document.getElementById('admin-login-form'),
+            adminLoginError: document.getElementById('admin-login-error'),
+            // Admin login inputs
+            adminUsernameInput: document.getElementById('admin-username'),
+            adminPasswordInput: document.getElementById('admin-password'),
+            personelLoginContainer: document.getElementById('personel-login-container'),
+            personelLoginForm: document.getElementById('personel-login-form'),
+            personelLoginError: document.getElementById('personel-login-error'),
+            appContainer: document.getElementById('app-container'),
+            logoutBtn: document.getElementById('logout-btn'),
+            navLinks: document.querySelectorAll('#sidebar nav a'), 
+            navItems: document.querySelectorAll('#sidebar nav li'), 
+            pages: document.querySelectorAll('.page'),
+            pageTitle: document.getElementById('page-title'),
+            kullaniciBilgisi: document.getElementById('kullanici-bilgisi'), 
+            fabrikaForm: document.getElementById('fabrika-form'),
+            uretimEkleForm: document.getElementById('uretim-ekle-form'), 
+            giderForm: document.getElementById('gider-form'),
+            modalContainer: document.getElementById('modal-container'),
+            modalContent: document.getElementById('modal-content-dynamic'),
+            modalTitle: document.getElementById('modal-title'),
+            modalBody: document.getElementById('modal-body-dynamic'),
+            modalCloseBtn: document.querySelector('.modal-close-btn'),
+            fabrikaHesapTabloContainer: document.getElementById('fabrika-hesap-tablo-container'),
+            giderTabloContainer: document.getElementById('gider-tablo-container'),
+            genelCsvIndirBtn: document.getElementById('genel-csv-indir'),
+            giderCsvIndirBtn: document.getElementById('gider-csv-indir'),
+            uretimFabrikaSelect: document.getElementById('uretim-fabrika'),
+            uretimTarihInput: document.getElementById('uretim-tarih'),
+            uretimAdetInput: document.getElementById('uretim-adet'),
+            uretimBirimFiyatInput: document.getElementById('uretim-birim-fiyat'),
+            uretimToplamTutarInput: document.getElementById('uretim-toplam-tutar'),
+            listeyeEkleBtn: document.getElementById('listeye-ekle-btn'),
+            kayitListesiContainer: document.getElementById('kayit-listesi-container'),
+            kayitListesiGenelToplam: document.getElementById('kayit-listesi-genel-toplam'),
+            listeyiTemizleBtn: document.getElementById('listeyi-temizle-btn'),
+            tumunuKaydetBtn: document.getElementById('tumunu-kaydet-btn'),
+            sonUretimlerContainer: document.getElementById('son-uretimler-container'),
+            fabrikaSilForm: document.getElementById('fabrika-sil-form'),
+            fabrikaSilSelect: document.getElementById('fabrika-sil-select'),
+            sifreDegistirForm: document.getElementById('sifre-degistir-form'),
+            sifreDegistirSonuc: document.getElementById('sifre-degistir-sonuc'),
+            sidebarVardiyaDurumu: document.getElementById('sidebar-vardiya-durumu'),
+            aktifVardiyaContainer: document.getElementById('aktif-vardiya-container'),
+            aktifVardiyaDetaylari: document.getElementById('aktif-vardiya-detaylari'),
+            vardiyaKapatBtn: document.getElementById('vardiya-kapat-btn'),
+            yeniVardiyaFormContainer: document.getElementById('yeni-vardiya-form-container'),
+            yeniVardiyaForm: document.getElementById('yeni-vardiya-form'),
+            vardiyaGecmisiContainer: document.getElementById('vardiya-gecmisi-container'),
+            vardiyaPersonelSelect: document.getElementById('vardiya-personel-select'),
+            vardiyaDevretModalBtn: document.getElementById('vardiya-devret-modal-btn'),
+            // Yeni: personel yönet butonu
+            vardiyaPersonelYonetBtn: document.getElementById('vardiya-personel-yonet-btn'),
+            // Personel Form DOM (GÜNCELLENDİ: Net ve Brüt Maaş Alanları)
+            personelIslemForm: document.getElementById('personel-islem-form'),
+            personelIslemSelect: document.getElementById('personel-islem-select'),
+            personelFormSubmitBtn: document.getElementById('personel-form-submit-btn'),
+            personelSgkDurumu: document.getElementById('personel-sgk-durumu'),
+            personelSgkTutarGroup: document.getElementById('personel-sgk-tutar-group'),
+            personelNetMaasInput: document.getElementById('personel-net-maas'),
+            personelBrutMaasInput: document.getElementById('personel-brut-maas'),
+            personelListesiContainer: document.getElementById('personel-listesi-container'),
+            personelPozisyonSelect: document.getElementById('personel-pozisyon-select'),
+            pozisyonEkleForm: document.getElementById('pozisyon-ekle-form'),
+            pozisyonListesiContainer: document.getElementById('pozisyon-listesi-container'),
+            // Yeni: Personel Durumu sayfası
+            personelDurumuContainer: document.getElementById('personel-durumu-container'),
+            personelDurumuSummaryContainer: document.getElementById('personel-durumu-summary-container'),
+            // Haftalık izin planlama
+            izinPersonelSelect: document.getElementById('izin-personel-select'),
+            izinTarihInput: document.getElementById('izin-tarih'),
+            izinPlanForm: document.getElementById('izin-plan-form'),
+            // Personel Durumu nav is handled via navLinks
+        },
+        data: {},
+        temp: {
+            uretimListesi: []
+        },
+        charts: {
+            nakitAkis: null,
+        },
+        helpers: {
+            formatCurrency: (value) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value),
+            formatDateTime: (isoString) => { if (!isoString) return '-'; return new Date(isoString).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); },
+            formatTime: (isoString) => { if (!isoString) return '-'; return new Date(isoString).toLocaleString('tr-TR', { hour: '2-digit', minute: '2-digit' }); },
+            formatDate: (isoString) => { if (!isoString) return '-'; if (isoString.length === 10) { return new Date(isoString + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }); } return new Date(isoString).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }); },
+            getTodayISO: () => new Date().toISOString().split('T')[0],
+            hash: async (string) => { const utf8 = new TextEncoder().encode(string); const hashBuffer = await crypto.subtle.digest('SHA-256', utf8); const hashArray = Array.from(new Uint8Array(hashBuffer)); return hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); },
+            calculateDuration: (startISO, endISO) => { if (!startISO || !endISO) return 'N/A'; const start = new Date(startISO); const end = new Date(endISO); let diffMs = end - start; if (diffMs < 0) diffMs = 0; const hours = Math.floor(diffMs / 3600000); const minutes = Math.floor((diffMs % 3600000) / 60000); return `${hours} saat ${minutes} dk`; },
+            // Hesaplanan süreyi ondalık saat olarak döndürür
+            calculateHoursDecimal: (startISO, endISO) => {
+                if (!startISO || !endISO) return 0;
+                let diffMs = new Date(endISO) - new Date(startISO);
+                if (diffMs < 0) diffMs = 0;
+                const hours = diffMs / 3600000;
+                return parseFloat(hours.toFixed(2));
+            },
+            // Saat ondalığını okunabilir formata çevirir (örn. 5.5 -> "5sa 30dk")
+            formatHoursDecimal: (hoursDecimal) => {
+                if (!hoursDecimal || hoursDecimal <= 0) return '';
+                const hours = Math.floor(hoursDecimal);
+                const minutes = Math.round((hoursDecimal - hours) * 60);
+                let str = '';
+                if (hours > 0) str += `${hours}sa`;
+                if (minutes > 0) str += `${str ? ' ' : ''}${minutes}dk`;
+                return str;
+            },
+            // YENİ: Netten Brüt Hesaplama Fonksiyonu (Tahmini Katsayı ile)
+            calculateGrossSalary: (netSalary) => {
+                if (!netSalary || netSalary <= 0) return 0;
+                const gross = netSalary / 0.7149;
+                return parseFloat(gross.toFixed(2));
+            }
+        }
+    };
+
+    // --- BÖLÜM 2: VERİ YÖNETİMİ ---
+    const dataManager = {
+        /**
+         * Sunucudan verileri yükler. Eğer sunucuya erişilemiyorsa,
+         * localStorage'daki veriyi kullanır veya varsayılan boş veriyle devam eder.
+         */
+        load: async () => {
+            const defaultData = { fabrikalar: [], uretimler: [], giderler: [], odemeler: [], vardiyalar: [], personel: [], pozisyonlar: [] };
+            try {
+                // Sunucudan veriyi almaya çalış
+                const resp = await fetch('/api/data');
+                if (!resp.ok) throw new Error('Sunucu yanıtı başarısız');
+                const remoteData = await resp.json();
+                app.data = remoteData || defaultData;
+            } catch (err) {
+                console.error('Sunucudan veri alınamadı, localStorage kullanılacak:', err);
+                const savedData = localStorage.getItem('fabrikaYonetimVeri_v3');
+                app.data = savedData ? JSON.parse(savedData) : defaultData;
+            }
+            
+            // VERİ MİGRASYONU (Eski verileri yeni formata uydurma)
+            app.data.personel.forEach(p => {
+                if (!p.kullaniciAdi) p.kullaniciAdi = '';
+                if (p.sifre && p.sifre.length < 64) p.sifre = '';
+                if (!p.sgkDurumu) p.sgkDurumu = 'Yok';
+                if (!p.sgkTutar) p.sgkTutar = 0;
+                
+                // YENİ: Eğer eski 'maas' alanı varsa ama 'netMaas' yoksa aktar
+                if (p.maas !== undefined && p.netMaas === undefined) {
+                    p.netMaas = p.maas;
+                    p.brutMaas = app.helpers.calculateGrossSalary(p.maas);
+                }
+                // Katılım verisi (attendance) yoksa ekle; eski boolean verileri yeni yapıya dönüştür
+                if (!p.attendance) {
+                    p.attendance = {};
+                } else {
+                    Object.keys(p.attendance).forEach(d => {
+                        const entry = p.attendance[d];
+                        if (typeof entry === 'boolean') {
+                            // true -> present, false -> absent
+                            if (entry) {
+                                p.attendance[d] = { status: 'present', hours: null };
+                            } else {
+                                p.attendance[d] = { status: 'absent', hours: null };
+                            }
+                        } else if (entry && (entry.status === undefined || entry.status === null)) {
+                            // Eğer sadece hours saklanmışsa veya string ise varsayılan olarak present kabul et
+                            if (typeof entry === 'string') {
+                                // 'izin' vb. metinler ise
+                                p.attendance[d] = { status: entry, hours: null };
+                            } else {
+                                p.attendance[d] = { status: 'present', hours: entry.hours || null };
+                            }
+                        }
+                    });
+                }
+
+            });
+            
+            if (app.data.isciler && !app.data.personel) { app.data.personel = app.data.isciler; delete app.data.isciler; }
+            if (!app.data.vardiyalar) { app.data.vardiyalar = []; }
+            if (!app.data.personel) { app.data.personel = []; }
+            if (!app.data.pozisyonlar) { app.data.pozisyonlar = []; }
+
+            // --- Yönetici hesabı migrasyonu ---
+            // Eğer eski yöneticinin hash'i saklanmışsa ve henüz 'Yönetici' pozisyonunda bir kullanıcı yoksa,
+            // bu pozisyonda varsayılan bir yönetici personel oluşturur.
+            try {
+                const storedHash = dataManager.loadAuthHash && dataManager.loadAuthHash();
+                if (storedHash) {
+                    // Yönetici pozisyonunu bul veya oluştur
+                    let yoneticiPos = app.data.pozisyonlar.find(pos => {
+                        return pos.ad && typeof pos.ad === 'string' && pos.ad.toLowerCase() === 'yönetici';
+                    });
+                    if (!yoneticiPos) {
+                        yoneticiPos = { id: Date.now(), ad: 'Yönetici' };
+                        app.data.pozisyonlar.push(yoneticiPos);
+                    }
+                    // Yönetici pozisyonuna sahip bir personel var mı?
+                    const existingAdmin = app.data.personel.find(p => p.pozisyonId === yoneticiPos.id);
+                    if (!existingAdmin) {
+                        // Varsayılan kullanıcı adı: admin
+                        // Mevcut hashed password storedHash kullanılır
+                        app.data.personel.push({
+                            id: Date.now() + 1,
+                            ad: 'Yönetici',
+                            telefon: '',
+                            iseAlimTarihi: app.helpers.getTodayISO(),
+                            pozisyonId: yoneticiPos.id,
+                            netMaas: 0,
+                            brutMaas: 0,
+                            maasTipi: 'Aylık',
+                            durum: 'Aktif',
+                            kullaniciAdi: 'admin',
+                            sifre: storedHash,
+                            sgkDurumu: 'Yok',
+                            sgkTutar: 0,
+                            attendance: {}
+                        });
+                        // Veriyi kalıcı olarak kaydet
+                        try {
+                            localStorage.setItem('fabrikaYonetimVeri_v3', JSON.stringify(app.data));
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+                    // Yönetici hash'i bir kerelik kullanıldığı için temizleyebiliriz
+                    // localStorage.removeItem kullanmak yerine boş bir string kaydediyoruz
+                    // böylece bir daha bu kod çalıştırıldığında yeniden oluşturmaz
+                    try {
+                        localStorage.setItem('fabrikaYonetimAuth_v2_hash', '');
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+            } catch (e) {
+                console.error('Admin migration error', e);
+            }
+            // Migrate old vardiya format: ensure calisanlar array and responsibleId exist
+            app.data.vardiyalar.forEach(vardiya => {
+                // If old format had isciAdi, convert to calisanlar array
+                if (vardiya.isciAdi && !vardiya.calisanlar) {
+                    vardiya.calisanlar = [
+                        {
+                            isciAdi: vardiya.isciAdi,
+                            // Note: personelId may not exist in very old data
+                            personelId: vardiya.personelId || null,
+                            devralmaZamani: vardiya.baslamaZamani
+                        }
+                    ];
+                }
+                // Eğer sorumlu tanımlı değilse, ilk çalışanı sorumlu olarak ata
+                if (vardiya.responsibleId === undefined) {
+                    if (Array.isArray(vardiya.calisanlar) && vardiya.calisanlar.length > 0) {
+                        const first = vardiya.calisanlar[0];
+                        vardiya.responsibleId = first.personelId || null;
+                    } else {
+                        vardiya.responsibleId = null;
+                    }
+                }
+                // hoursRecorded alanını ekle: bitiş zamanı varsa kayıt yapılmış kabul et
+                if (Array.isArray(vardiya.calisanlar)) {
+                    vardiya.calisanlar.forEach(c => {
+                        if (c.hoursRecorded === undefined) {
+                            c.hoursRecorded = !!c.bitisZamani;
+                        }
+                    });
+                }
+            });
+        },
+        /**
+         * Verileri sunucuya kaydeder. Sunucuya ulaşılamıyorsa, localStorage yedeği tutulur.
+         */
+        save: async () => {
+            try {
+                await fetch('/api/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(app.data)
+                });
+            } catch (err) {
+                console.error('Veri kaydedilirken sunucu hatası, localStorage kullanılacak:', err);
+                localStorage.setItem('fabrikaYonetimVeri_v3', JSON.stringify(app.data));
+            }
+        },
+        loadAuthHash: () => { return localStorage.getItem('fabrikaYonetimAuth_v2_hash'); },
+        saveAuthHash: (hash) => { localStorage.setItem('fabrikaYonetimAuth_v2_hash', hash); }
+    };
+
+    // --- BÖLÜM 3: HESAPLAMA MOTORU ---
+    const calculator = {
+        fabrikaBakiyesi: (fabrikaId) => { const toplamUretim = app.data.uretimler.filter(u => u.fabrikaId === fabrikaId).reduce((sum, u) => sum + (u.adet * u.birimFiyat), 0); const toplamOdenen = app.data.odemeler.filter(o => o.fabrikaId === fabrikaId).reduce((sum, o) => sum + o.tutar, 0); return { toplamUretim, toplamOdenen, kalanBorc: toplamUretim - toplamOdenen }; },
+        genelDurum: () => { const toplamUretimDegeri = app.data.uretimler.reduce((sum, u) => sum + (u.adet * u.birimFiyat), 0); const toplamGiderler = app.data.giderler.reduce((sum, g) => sum + g.tutar, 0); const toplamTahsilat = app.data.odemeler.reduce((sum, o) => sum + o.tutar, 0); const netKar = toplamTahsilat - toplamGiderler; const kalanAlacak = toplamUretimDegeri - toplamTahsilat; return { toplamUretimDegeri, toplamGiderler, toplamTahsilat, netKar, kalanAlacak }; }
+    };
+
+    // --- BÖLÜM 4: ARAYÜZ GÜNCELLEME (RENDER) ---
+    const renderer = {
+        updateAll: () => {
+            renderer.fabrikaSelect(); 
+            renderer.giderTablosu();
+            renderer.fabrikaHesapOzetleri();
+            renderer.dashboard();
+            renderer.raporlarOzeti(); 
+            renderer.uretimEkleListesi();
+            renderer.sonUretimler();
+            renderer.fabrikaSilSelect();
+            renderer.pozisyonListesi();
+            renderer.personelPozisyonSelect();
+            renderer.personelListesi();
+            renderer.vardiyaPersonelSelect();
+            renderer.updateVardiyaDurumu(); 
+            renderer.personelIslemSelect();
+            renderer.personelDurumu();
+            // Haftalık izin planlama için personel listesini güncelle
+            renderer.populateIzinPersonelSelect();
+        },
+        updateForRole: () => {
+            const role = app.currentUser.role;
+            const ad = app.currentUser.ad;
+            app.dom.kullaniciBilgisi.innerHTML = `Giriş Yapan: <span>${ad}</span> (${role === 'admin' ? 'Yönetici' : 'Personel'})`;
+            app.dom.navItems.forEach(li => {
+                const roller = li.dataset.role.split(' ');
+                if (roller.includes(role)) { li.style.display = 'block'; } 
+                else { li.style.display = 'none'; }
+            });
+            if (role === 'isci') { actions.navigate(null, 'vardiya-yonetimi'); } 
+            else { actions.navigate(null, 'dashboard'); }
+        },
+        updateVardiyaDurumu: () => {
+            const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
+            if (activeShift) {
+                // Sadece aktif çalışanları al (bitisZamani olmayanlar)
+                const aktifCalisanlar = activeShift.calisanlar.filter(c => !c.bitisZamani);
+                // Sorumlu personeli belirle (shift.responsibleId varsa onu kullan, yoksa ilk kişiyi al)
+                let responsibleId = activeShift.responsibleId;
+                if (responsibleId === undefined || responsibleId === null) {
+                    responsibleId = aktifCalisanlar.length > 0 ? aktifCalisanlar[0].personelId : null;
+                }
+                // Yan paneldeki isim listesi (tüm aktif çalışanların isimleri)
+                const isimYazisi = aktifCalisanlar.map(c => c.isciAdi).join(', ');
+                app.dom.sidebarVardiyaDurumu.innerHTML = `<span class="durum durum-acik">VARDİYA AÇIK</span><span class="isim">${isimYazisi || '-'}</span>`;
+                // Detayları göster: sorumlu en üstte, diğerleri altta
+                let detayHtml = '';
+                // Sorumlu personel
+                const sorumlu = aktifCalisanlar.find(c => c.personelId === responsibleId);
+                if (sorumlu) {
+                    detayHtml += `<div style="margin-bottom:8px;"><strong>${sorumlu.isciAdi} (Vardiya Sorumlusu)</strong> (Başlangıç: ${app.helpers.formatTime(sorumlu.devralmaZamani)})</div>`;
+                }
+                // Diğer çalışanlar
+                aktifCalisanlar.forEach(c => {
+                    if (c.personelId === responsibleId) return;
+                    detayHtml += `<div style="margin-bottom:8px;">
+                        <strong>${c.isciAdi}</strong> (Başlangıç: ${app.helpers.formatTime(c.devralmaZamani)}) 
+                        <button class="btn-sm-danger calisan-cikart-btn" data-personel-id="${c.personelId}">Çıkış</button>
+                    </div>`;
+                });
+                if (aktifCalisanlar.length > 0) {
+                    app.dom.aktifVardiyaDetaylari.innerHTML = detayHtml;
+                } else {
+                    app.dom.aktifVardiyaDetaylari.innerHTML = '<p>Şu anda aktif çalışan bulunmuyor.</p>';
+                }
+                app.dom.aktifVardiyaContainer.style.display = 'block';
+                app.dom.yeniVardiyaFormContainer.style.display = 'none';
+            } else {
+                app.dom.sidebarVardiyaDurumu.innerHTML = `<span class="durum durum-kapali">VARDİYA KAPALI</span><span class="isim">-</span>`;
+                app.dom.aktifVardiyaContainer.style.display = 'none';
+                app.dom.yeniVardiyaFormContainer.style.display = 'block';
+            }
+            renderer.vardiyaGecmisi();
+        },
+        vardiyaGecmisi: () => {
+            app.dom.vardiyaGecmisiContainer.innerHTML = '';
+            const tamamlananlar = app.data.vardiyalar.filter(v => v.durum === 'Tamamlandı').sort((a, b) => new Date(b.baslamaZamani) - new Date(a.baslamaZamani));
+            if (tamamlananlar.length === 0) { app.dom.vardiyaGecmisiContainer.innerHTML = '<p class="no-data-message">Henüz tamamlanmış bir vardiya kaydı yok.</p>'; return; }
+            const table = document.createElement('table');
+            table.innerHTML = '<thead><tr><th>Çalışan(lar) (Zaman Damgaları ve Süreler)</th><th>İlk Başlangıç</th><th>Son Bitiş</th><th>Toplam Süre</th><th>İşlemler</th></tr></thead><tbody></tbody>';
+            const tbody = table.querySelector('tbody');
+            const silmeButonuHtml = app.currentUser && app.currentUser.role === 'admin' 
+                ? `<button class="btn-sm-danger vardiya-sil-btn" data-id="{id}">Sil</button>`
+                : `<i>Yetki Yok</i>`; 
+            tamamlananlar.forEach(vardiya => {
+                const calisanDetaylari = [];
+                vardiya.calisanlar.forEach(calisan => {
+                    const startTimeISO = calisan.devralmaZamani;
+                    const endTimeISO = calisan.bitisZamani || vardiya.bitisZamani;
+                    const startTime = app.helpers.formatTime(startTimeISO);
+                    const endTime = app.helpers.formatTime(endTimeISO);
+                    const sure = app.helpers.calculateDuration(startTimeISO, endTimeISO);
+                    calisanDetaylari.push(`${calisan.isciAdi} (${startTime} - ${endTime}) [${sure}]`);
+                });
+                const calisanZinciri = calisanDetaylari.join(' &rarr; ');
+                const toplamSure = app.helpers.calculateDuration(vardiya.baslamaZamani, vardiya.bitisZamani);
+                tbody.insertRow().innerHTML = `
+                    <td>${calisanZinciri}</td>
+                    <td>${app.helpers.formatDateTime(vardiya.baslamaZamani)}</td>
+                    <td>${app.helpers.formatDateTime(vardiya.bitisZamani)}</td>
+                    <td>${toplamSure}</td>
+                    <td>${silmeButonuHtml.replace('{id}', vardiya.id)}</td>
+                `;
+            });
+            app.dom.vardiyaGecmisiContainer.appendChild(table);
+        },
+        personelListesi: () => {
+            app.dom.personelListesiContainer.innerHTML = '';
+            const personeller = app.data.personel.sort((a, b) => a.ad.localeCompare(b.ad));
+            if (personeller.length === 0) { app.dom.personelListesiContainer.innerHTML = '<p class="no-data-message">Kayıtlı personel bulunmuyor.</p>'; return; }
+            const table = document.createElement('table');
+            table.innerHTML = '<thead><tr><th>Durum</th><th>İsim Soyisim</th><th>Pozisyon</th><th>Panel Girişi</th><th>Maaş (Net/Brüt)</th><th>İşlemler</th></tr></thead><tbody></tbody>';
+            const tbody = table.querySelector('tbody');
+            personeller.forEach(personel => {
+                const pozisyon = app.data.pozisyonlar.find(p => p.id === personel.pozisyonId);
+                const pozisyonAdi = pozisyon ? pozisyon.ad : '<span style="color:red;">Silinmiş</span>';
+                const net = personel.netMaas ? app.helpers.formatCurrency(personel.netMaas) : '0 ₺';
+                const brut = personel.brutMaas ? app.helpers.formatCurrency(personel.brutMaas) : '0 ₺';
+                const maasBilgisi = `<strong>Net: ${net}</strong><br><span style="font-size:12px; color:#7f8c8d;">Brüt: ${brut}</span><br><span style="font-size:11px;">(${personel.maasTipi})</span>`;
+                const panelGiris = personel.kullaniciAdi ? `Var (${personel.kullaniciAdi})` : 'Yok';
+                let durumRenk = '';
+                if (personel.durum === 'Aktif') durumRenk = 'var(--success-color)';
+                if (personel.durum === 'İzinde') durumRenk = 'var(--secondary-color)';
+                if (personel.durum === 'Ayrıldı') durumRenk = 'var(--danger-color)';
+                let sgkBadge = '';
+                if (personel.sgkDurumu === 'Var') {
+                    sgkBadge = '<span class="sgk-badge">SGK</span>';
+                }
+                tbody.insertRow().innerHTML = `
+                    <td style="color: ${durumRenk}; font-weight: 600;">${personel.durum}</td>
+                    <td>${personel.ad} ${sgkBadge}</td>
+                    <td>${pozisyonAdi}</td>
+                    <td style="font-style: italic;">${panelGiris}</td>
+                    <td>${maasBilgisi}</td>
+                    <td style="width: 180px;">
+                        <button class="btn-sm-success personel-odeme-btn" data-id="${personel.id}" data-name="${personel.ad}">Ödeme Yap</button>
+                        <button class="btn-sm-danger personel-sil-btn" data-id="${personel.id}">Sil</button>
+                    </td>
+                `;
+            });
+            app.dom.personelListesiContainer.appendChild(table);
+        },
+        personelIslemSelect: () => {
+            const select = app.dom.personelIslemSelect;
+            const mevcutDeger = select.value;
+            select.innerHTML = '<option value="new" selected>-- Yeni Personel Oluştur --</option>';
+            const personeller = app.data.personel.sort((a, b) => a.ad.localeCompare(b.ad));
+            personeller.forEach(p => {
+                select.add(new Option(p.ad, p.id));
+            });
+            select.value = mevcutDeger;
+        },
+        pozisyonListesi: () => {
+            app.dom.pozisyonListesiContainer.innerHTML = '';
+            const pozisyonlar = app.data.pozisyonlar.sort((a, b) => a.ad.localeCompare(b.ad));
+            if (pozisyonlar.length === 0) { app.dom.pozisyonListesiContainer.innerHTML = '<p class="no-data-message">Tanımlanmış pozisyon yok.</p>'; return; }
+            const table = document.createElement('table');
+            table.innerHTML = '<thead><tr><th>Pozisyon Adı</th><th>Kullanan Personel Sayısı</th><th>İşlemler</th></tr></thead><tbody></tbody>';
+            const tbody = table.querySelector('tbody');
+            pozisyonlar.forEach(pozisyon => {
+                const kullanimSayisi = app.data.personel.filter(p => p.pozisyonId === pozisyon.id).length;
+                tbody.insertRow().innerHTML = `
+                    <td>${pozisyon.ad}</td>
+                    <td>${kullanimSayisi} kişi</td>
+                    <td><button class="btn-sm-danger pozisyon-sil-btn" data-id="${pozisyon.id}" data-kullanim="${kullanimSayisi}">Sil</button></td>
+                `;
+            });
+            app.dom.pozisyonListesiContainer.appendChild(table);
+        },
+        personelPozisyonSelect: (selectElement = app.dom.personelPozisyonSelect, selectedId = null) => {
+            selectElement.innerHTML = '<option value="" disabled>Pozisyon Seçin...</option>';
+            const pozisyonlar = app.data.pozisyonlar.sort((a, b) => a.ad.localeCompare(b.ad));
+            if(pozisyonlar.length === 0) { selectElement.innerHTML = '<option value="" disabled>Lütfen önce Ayarlar\'dan pozisyon ekleyin.</option>'; }
+            pozisyonlar.forEach(p => {
+                const option = new Option(p.ad, p.id);
+                if (selectedId && p.id === selectedId) { option.selected = true; }
+                selectElement.add(option);
+            });
+            if (!selectedId) { selectElement.value = ""; }
+        },
+        vardiyaPersonelSelect: () => {
+            const select = app.dom.vardiyaPersonelSelect;
+            select.innerHTML = '<option value="" disabled>Personel Seçin...</option>';
+            const aktifPersoneller = app.data.personel.filter(p => p.durum === 'Aktif').sort((a, b) => a.ad.localeCompare(b.ad));
+            if (app.currentUser && app.currentUser.role === 'isci') {
+                // İşçi ise, sadece kendini seçebilir (tek seçim). Ancak multiple select desteklendiğinden tek seçim olmaması gerekir; yine de kısıtlayalım.
+                const isci = aktifPersoneller.find(p => p.id === app.currentUser.id);
+                if (isci) { select.innerHTML = `<option value="${isci.id}" selected>${isci.ad}</option>`; } 
+                else { select.innerHTML = '<option value="" disabled>Aktif personel olarak kayıtlı değilsiniz.</option>'; }
+            } else { 
+                 if(aktifPersoneller.length === 0) { select.innerHTML = '<option value="" disabled>Sistemde "Aktif" personel bulunmuyor.</option>'; }
+                 aktifPersoneller.forEach(p => { select.add(new Option(p.ad, p.id)); });
+            }
+        },
+        fabrikaSelect: () => { const selectUretim = app.dom.uretimFabrikaSelect; selectUretim.innerHTML = '<option value="" disabled selected>Bir fabrika seçin...</option>'; app.data.fabrikalar.forEach(f => selectUretim.add(new Option(f.ad, f.id))); },
+        fabrikaSilSelect: () => { const selectSil = app.dom.fabrikaSilSelect; selectSil.innerHTML = '<option value="" disabled selected>...Bir fabrika seçin...</option>'; app.data.fabrikalar.forEach(f => selectSil.add(new Option(f.ad, f.id))); },
+        giderTablosu: () => {
+            app.dom.giderTabloContainer.innerHTML = '';
+            if (app.data.giderler.length === 0) { app.dom.giderTabloContainer.innerHTML = '<p class="no-data-message">Henüz gider kaydı bulunmuyor.</p>'; return; }
+            const table = document.createElement('table'); table.innerHTML = '<thead><tr><th>Tip</th><th>Tarih</th><th>Başlık</th><th>Açıklama</th><th>Tutar</th><th>İşlemler</th></tr></thead><tbody></tbody>';
+            const tbody = table.querySelector('tbody');
+            app.data.giderler.sort((a,b) => new Date(b.tarih) - new Date(a.tarih)).forEach(gider => {
+                const row = tbody.insertRow(); const giderTipiMetni = gider.tip === 'fabrika' ? 'Fabrika Gideri' : 'Diğer Gider';
+                row.innerHTML = `<td>${giderTipiMetni}</td><td>${new Date(gider.tarih).toLocaleDateString('tr-TR')}</td><td>${gider.aciklama}</td><td style="white-space: pre-wrap; max-width: 300px; word-wrap: break-word;">${gider.detay || '-'}</td><td>${app.helpers.formatCurrency(gider.tutar)}</td><td><button class="btn btn-danger gider-sil-btn" data-id="${gider.id}">Sil</button></td>`;
+            });
+            app.dom.giderTabloContainer.appendChild(table);
+        },
+        fabrikaHesapOzetleri: () => {
+            app.dom.fabrikaHesapTabloContainer.innerHTML = '';
+            if (app.data.fabrikalar.length === 0) { app.dom.fabrikaHesapTabloContainer.innerHTML = '<p class="no-data-message">Lütfen önce bir fabrika ekleyin.</p>'; return; }
+            const table = document.createElement('table'); table.innerHTML = '<thead><tr><th>Fabrika Adı</th><th>Toplam Üretim</th><th>Toplam Ödenen</th><th>Kalan Borç</th><th>İşlemler</th></tr></thead><tbody></tbody>';
+            const tbody = table.querySelector('tbody');
+            app.data.fabrikalar.forEach(fabrika => {
+                const bakiye = calculator.fabrikaBakiyesi(fabrika.id);
+                tbody.insertRow().innerHTML = `<td>${fabrika.ad}</td><td>${app.helpers.formatCurrency(bakiye.toplamUretim)}</td><td>${app.helpers.formatCurrency(bakiye.toplamOdenen)}</td><td style="font-weight:bold; color: ${bakiye.kalanBorc > 0 ? 'var(--danger-color)' : 'var(--success-color)'}">${app.helpers.formatCurrency(bakiye.kalanBorc)}</td><td><button class="btn btn-success odeme-al-btn" data-id="${fabrika.id}" data-name="${fabrika.ad}">Ödeme</button> <button class="btn btn-secondary fabrika-csv-btn" data-id="${fabrika.id}" data-name="${fabrika.ad}">Rapor</button> <button class="btn btn-warning reset-hesap-btn" data-id="${fabrika.id}" data-name="${fabrika.ad}">Hesabı Sıfırla</button></td>`;
+            });
+            app.dom.fabrikaHesapTabloContainer.appendChild(table);
+        },
+        updateCardValues: (elements, durum) => { elements.gelir.textContent = app.helpers.formatCurrency(durum.toplamUretimDegeri); elements.gider.textContent = app.helpers.formatCurrency(durum.toplamGiderler); elements.alacak.textContent = app.helpers.formatCurrency(durum.kalanAlacak); elements.kar.textContent = app.helpers.formatCurrency(durum.netKar); elements.kar.className = 'value'; if (durum.netKar > 0) elements.kar.classList.add('profit'); if (durum.netKar < 0) elements.kar.classList.add('loss'); },
+        dashboard: () => { const durum = calculator.genelDurum(); const elements = { gelir: document.getElementById('dashboard-gelir'), gider: document.getElementById('dashboard-gider'), kar: document.getElementById('dashboard-kar'), alacak: document.getElementById('dashboard-alacak') }; renderer.updateCardValues(elements, durum); renderer.nakitAkisChart(); },
+        raporlarOzeti: () => { const durum = calculator.genelDurum(); const elements = { gelir: document.getElementById('rapor-gelir'), gider: document.getElementById('rapor-gider'), kar: document.getElementById('rapor-kar'), alacak: document.getElementById('rapor-alacak') }; renderer.updateCardValues(elements, durum); },
+        nakitAkisChart: () => { const ctx = document.getElementById('nakitAkisChart').getContext('2d'); const etiketler = [], tahsilatlar = [], giderler = [], simdi = new Date(); for (let i = 5; i >= 0; i--) { const tarih = new Date(simdi.getFullYear(), simdi.getMonth() - i, 1); etiketler.push(tarih.toLocaleString('tr-TR', { month: 'long' })); const ayFiltre = item => { const it = new Date(item.tarih); return it.getFullYear() === tarih.getFullYear() && it.getMonth() === tarih.getMonth(); }; tahsilatlar.push(app.data.odemeler.filter(ayFiltre).reduce((sum, o) => sum + o.tutar, 0)); giderler.push(app.data.giderler.filter(ayFiltre).reduce((sum, g) => sum + g.tutar, 0)); } if (app.charts.nakitAkis) app.charts.nakitAkis.destroy(); app.charts.nakitAkis = new Chart(ctx, { type: 'bar', data: { labels: etiketler, datasets: [{ label: 'Tahsilatlar', data: tahsilatlar, backgroundColor: 'var(--success-color)' }, { label: 'Giderler', data: giderler, backgroundColor: 'var(--danger-color)' }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: value => app.helpers.formatCurrency(value) } } } } }); },
+        uretimEkleListesi: () => {
+            app.dom.kayitListesiContainer.innerHTML = '';
+            const list = app.temp.uretimListesi;
+            if (list.length === 0) { app.dom.kayitListesiContainer.innerHTML = '<p class="no-data-message">Kaydedilecek bir kalem bulunmuyor.</p>'; app.dom.kayitListesiGenelToplam.textContent = 'Genel Toplam: 0,00 ₺'; return; }
+            const table = document.createElement('table'); table.id = "kayit-listesi-tablosu"; table.innerHTML = '<thead><tr><th>Fabrika</th><th>Tarih</th><th>Açıklama</th><th>Adet</th><th>Birim Fiyat</th><th>Toplam Tutar</th><th>İşlem</th></tr></thead><tbody></tbody>';
+            const tbody = table.querySelector('tbody');
+            let genelToplam = 0;
+            list.forEach((item, index) => {
+                const fabrika = app.data.fabrikalar.find(f => f.id === item.fabrikaId); const toplam = item.adet * item.birimFiyat; genelToplam += toplam;
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${fabrika ? fabrika.ad : 'Bilinmeyen'}</td><td>${new Date(item.tarih).toLocaleDateString('tr-TR')}</td><td>${item.aciklama}</td><td>${item.adet}</td><td>${app.helpers.formatCurrency(item.birimFiyat)}</td><td>${app.helpers.formatCurrency(toplam)}</td><td><button class="btn-sm-danger temp-sil-btn" data-index="${index}">Listeden Sil</button></td>`;
+            });
+            app.dom.kayitListesiContainer.appendChild(table); app.dom.kayitListesiGenelToplam.textContent = `Genel Toplam: ${app.helpers.formatCurrency(genelToplam)}`;
+        },
+        sonUretimler: () => {
+            app.dom.sonUretimlerContainer.innerHTML = '';
+            const sonBes = [...app.data.uretimler].sort((a,b) => b.id - a.id).slice(0, 5);
+            if (sonBes.length === 0) { app.dom.sonUretimlerContainer.innerHTML = '<p class="no-data-message">Henüz kaydedilmiş bir üretim bulunmuyor.</p>'; return; }
+            const table = document.createElement('table'); table.innerHTML = '<thead><tr><th>Fabrika</th><th>Tarih</th><th>Açıklama</th><th>Toplam Tutar</th><th>İşlem</th></tr></thead><tbody></tbody>';
+            const tbody = table.querySelector('tbody');
+            const silmeButonuHtml = app.currentUser && app.currentUser.role === 'admin' 
+                ? `<button class="btn-sm-danger uretim-sil-btn" data-id="{id}">Sil</button>` : ``;
+            sonBes.forEach(item => {
+                const fabrika = app.data.fabrikalar.find(f => f.id === item.fabrikaId); const toplam = item.adet * item.birimFiyat;
+                tbody.insertRow().innerHTML = `<td>${fabrika ? fabrika.ad : 'Bilinmeyen'}</td><td>${new Date(item.tarih).toLocaleDateString('tr-TR')}</td><td>${item.aciklama} (${item.adet} adet)</td><td>${app.helpers.formatCurrency(toplam)}</td><td>${silmeButonuHtml.replace('{id}', item.id)}</td>`;
+            });
+            app.dom.sonUretimlerContainer.appendChild(table);
+        },
+        // Yeni: Personel Durumu tablosu
+        personelDurumu: () => {
+            const container = app.dom.personelDurumuContainer;
+            if (!container) return;
+            container.innerHTML = '';
+            const personeller = app.data.personel.sort((a,b) => a.ad.localeCompare(b.ad));
+            if (personeller.length === 0) {
+                container.innerHTML = '<p class="no-data-message">Henüz personel kaydı yok.</p>';
+                return;
+            }
+            // Tüm günleri en eski kayıt tarihinden bugüne kadar listele.
+            const today = new Date();
+            let days = [];
+            let earliestDate = null;
+            // Personellerin katılım kayıtlarından en eski tarihi bul.
+            // Iterate through each person to find earliest attendance date
+            personeller.forEach(p => {
+                if (p.attendance) {
+                    Object.keys(p.attendance).forEach(dateKey => {
+                        const d = new Date(dateKey);
+                        if (!isNaN(d)) {
+                            if (!earliestDate || d < earliestDate) {
+                                earliestDate = new Date(d);
+                            }
+                        }
+                    });
+                }
+            });
+            let startDate;
+            if (earliestDate) {
+                // En eski kayıt tarihinden başlayarak bugüne kadar tüm günleri göster
+                startDate = new Date(earliestDate);
+            } else {
+                // Hiç kayıt yoksa, son 30 günü göster
+                startDate = new Date(today);
+                startDate.setDate(today.getDate() - 29);
+            }
+            // Takvim aralığını belirle: bugün dahil olmak üzere
+            // kullanıcının planlama yapabilmesi için gelecekteki 30 günü de ekleyelim
+            const endDate = new Date(today);
+            endDate.setDate(today.getDate() + 30);
+            // startDate ile endDate arasındaki tüm günlerin listesini oluştur
+            const current = new Date(startDate);
+            while (current <= endDate) {
+                days.push(current.toISOString().split('T')[0]);
+                current.setDate(current.getDate() + 1);
+            }
+            // tablo oluştur
+            const table = document.createElement('table');
+            table.className = 'attendance-table';
+            let theadHtml = '<thead><tr><th>Personel</th>';
+            days.forEach(d => {
+                const dt = new Date(d);
+                const label = (`${dt.getDate().toString().padStart(2,'0')}.${(dt.getMonth()+1).toString().padStart(2,'0')}`);
+                theadHtml += `<th>${label}</th>`;
+            });
+            theadHtml += '</tr></thead>';
+            let tbodyHtml = '<tbody>';
+            personeller.forEach(p => {
+                tbodyHtml += `<tr><td style="white-space: nowrap; text-align:left;">${p.ad}</td>`;
+                days.forEach(d => {
+                    let cellHtml = '';
+                    const entry = p.attendance ? p.attendance[d] : undefined;
+                    if (entry) {
+                        // Haftalık planlı izinler: turuncu renk
+                        if (entry.status === 'weekly') {
+                            cellHtml = '<span class="attendance-weekly">İzin</span>';
+                        } else if (entry.status === 'izin') {
+                            // Manuel olarak işaretlenen veya devamsızlık günü: kırmızı
+                            cellHtml = '<span class="attendance-absent">İzin</span>';
+                        } else if (entry.status === 'present') {
+                            // Çalışılan günler
+                            if (entry.hours !== null && entry.hours !== undefined) {
+                                const durStr = app.helpers.formatHoursDecimal(entry.hours);
+                                cellHtml = `<span class="attendance-present">✔ ${durStr}</span>`;
+                            } else {
+                                cellHtml = '<span class="attendance-present">✔</span>';
+                            }
+                        } else if (entry.status === 'absent') {
+                            // Absent statüsü (şimdilik kullanılmıyor)
+                            cellHtml = '<span class="attendance-absent">×</span>';
+                        } else {
+                            cellHtml = '<span class="attendance-absent">×</span>';
+                        }
+                    } else {
+                        // Kayıt yok: default olarak devamsız (×)
+                        cellHtml = '<span class="attendance-absent">×</span>';
+                    }
+                    // veri attributeleri ekle: personelId ve tarih
+                    tbodyHtml += `<td data-person-id="${p.id}" data-date="${d}">${cellHtml}</td>`;
+                });
+                tbodyHtml += '</tr>';
+            });
+            tbodyHtml += '</tbody>';
+            table.innerHTML = theadHtml + tbodyHtml;
+            container.appendChild(table);
+            // Admin yetkisi varsa, izin/absent işaretlemek için hücre tıklama olayını ekle
+            if (app.currentUser && app.currentUser.role === 'admin') {
+                const tbodyEl = table.querySelector('tbody');
+                tbodyEl.addEventListener('click', (e) => {
+                    const td = e.target.closest('td');
+                    if (!td) return;
+                    const pid = parseInt(td.dataset.personId);
+                    const dateKey = td.dataset.date;
+                    // Personel adı hücreleri veya geçersiz veri için işlem yapmayalım
+                    if (!pid || !dateKey) return;
+                    const person = app.data.personel.find(per => per.id === pid);
+                    if (!person) return;
+                    const entry = person.attendance ? person.attendance[dateKey] : undefined;
+                    // Çalışılan veya planlı izin (weekly) günleri değiştirme
+                    if (entry && (entry.status === 'present' || entry.status === 'weekly')) {
+                        return;
+                    }
+                    if (entry && entry.status === 'izin') {
+                        // İzin (kırmızı) > sil (devamsız)
+                        delete person.attendance[dateKey];
+                    } else {
+                        // Devamsız (veya hiç kayıt yok) > izin (kırmızı)
+                        if (!person.attendance) person.attendance = {};
+                        person.attendance[dateKey] = { status: 'izin', hours: null };
+                    }
+                    dataManager.save();
+                    renderer.personelDurumu();
+                });
+            }
+
+            // --- Aylık Çalışma ve İzin Günleri Özetlerini Hesapla ve Göster ---
+            const summaryContainer = app.dom.personelDurumuSummaryContainer;
+            if (summaryContainer) {
+                // İçeriği temizle
+                summaryContainer.innerHTML = '';
+                const wrapper = document.createElement('div');
+                wrapper.className = 'attendance-summary';
+                // Aylara göre toplam gün sayısını hesapla (gösterilen günler)
+                const monthDayCount = {};
+                // Yalnızca bugüne kadar olan günleri sayarak aylık çalışma/izin oranlarını hesaplarken gelecek günleri payda olarak kullanma
+                days.forEach(dateStr => {
+                    const dt = new Date(dateStr);
+                    // Sadece bugün veya daha önceki tarihleri hesaba kat
+                    if (dt <= today) {
+                        const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                        if (!monthDayCount[key]) monthDayCount[key] = 0;
+                        monthDayCount[key] += 1;
+                    }
+                });
+                const monthNames = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+                // Çalışma özeti başlığı
+                const summaryTitle = document.createElement('h3');
+                summaryTitle.textContent = 'Aylık Çalışma Günleri Özeti';
+                wrapper.appendChild(summaryTitle);
+                const summaryList = document.createElement('ul');
+                // 'personeller' isimli değişkeni kullanarak aylık çalışma günleri özetini oluşturalım
+                personeller.forEach(p => {
+                    // Her ay için çalışılan gün sayısını hesapla
+                    const monthWorked = {};
+                    days.forEach(dateStr => {
+                        const dt = new Date(dateStr);
+                        const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                        const entry = p.attendance ? p.attendance[dateStr] : undefined;
+                        if (!monthWorked[key]) monthWorked[key] = 0;
+                        if (entry && entry.status === 'present') monthWorked[key] += 1;
+                    });
+                    const parts = [];
+                    Object.keys(monthWorked).forEach(key => {
+                        const [year, month] = key.split('-');
+                        const name = monthNames[parseInt(month) - 1];
+                        const worked = monthWorked[key];
+                        // Sabit payda olarak 30 gün kullanıyoruz
+                        const totalDays = 30;
+                        parts.push(`${name}: ${worked}/${totalDays} gün`);
+                    });
+                    const li = document.createElement('li');
+                    li.textContent = `${p.ad}: ${parts.join(', ')}`;
+                    summaryList.appendChild(li);
+                });
+                wrapper.appendChild(summaryList);
+                // İzin özeti başlığı
+                const izinTitle = document.createElement('h3');
+                izinTitle.textContent = 'Aylık İzin Günleri Özeti';
+                wrapper.appendChild(izinTitle);
+                const izinList = document.createElement('ul');
+                // Aylık izin günleri özetini oluştururken de aynı personeller listesini kullan
+                personeller.forEach(p => {
+                    const monthWeekly = {};
+                    const monthIzin = {};
+                    days.forEach(dateStr => {
+                        const dt = new Date(dateStr);
+                        const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+                        const entry = p.attendance ? p.attendance[dateStr] : undefined;
+                        if (!monthWeekly[key]) monthWeekly[key] = 0;
+                        if (!monthIzin[key]) monthIzin[key] = 0;
+                        if (entry) {
+                            if (entry.status === 'weekly') monthWeekly[key] += 1;
+                            else if (entry.status === 'izin') monthIzin[key] += 1;
+                        }
+                    });
+                    const parts2 = [];
+                    const keys = Object.keys(monthDayCount);
+                    keys.forEach(key => {
+                        const [year, month] = key.split('-');
+                        const name = monthNames[parseInt(month) - 1];
+                        const weekly = monthWeekly[key] || 0;
+                        const izin = monthIzin[key] || 0;
+                        const total = weekly + izin;
+                        // Sabit payda olarak 30 gün kullanıyoruz
+                        const totalDaysIzin = 30;
+                        parts2.push(`${name}: ${total}/${totalDaysIzin} gün (planlı ${weekly}, devamsızlık ${izin})`);
+                    });
+                    const li2 = document.createElement('li');
+                    li2.textContent = `${p.ad}: ${parts2.join(', ')}`;
+                    izinList.appendChild(li2);
+                });
+                wrapper.appendChild(izinList);
+                summaryContainer.appendChild(wrapper);
+            }
+            // Son olarak, varsa haftalık izin planlama formunu güncelle
+            if (renderer.populateIzinPersonelSelect) {
+                renderer.populateIzinPersonelSelect();
+            }
+        },
+
+        /**
+         * Haftalık izin planlama formundaki personel select'ini doldurur.
+         * Sadece aktif durumdaki personeller listelenir.
+         */
+        populateIzinPersonelSelect: () => {
+            const select = app.dom.izinPersonelSelect;
+            if (!select) return;
+            // Mevcut seçenekleri temizle ve doldur
+            const aktifPersoneller = app.data.personel.filter(p => p.durum === 'Aktif').sort((a, b) => a.ad.localeCompare(b.ad));
+            if (aktifPersoneller.length === 0) {
+                select.innerHTML = '<option value="" disabled selected>Aktif personel yok</option>';
+                return;
+            }
+            // Varsayılan seçeneği ve aktif personelleri ekle
+            const options = [];
+            options.push('<option value="" disabled selected>Personel Seçin...</option>');
+            aktifPersoneller.forEach(p => {
+                options.push(`<option value="${p.id}">${p.ad}</option>`);
+            });
+            select.innerHTML = options.join('');
+        }
+    };
+
+    // --- BÖLÜM 5: AKSİYONLAR VE İŞ MANTIĞI ---
+    const actions = {
+        setup: async (e) => {
+            e.preventDefault();
+            const username = app.dom.setupForm.querySelector('#setup-username').value.trim();
+            const newPass = app.dom.setupForm.querySelector('#setup-pass').value;
+            const confirmPass = app.dom.setupForm.querySelector('#setup-pass-onay').value;
+            const errorMsg = app.dom.setupError;
+            errorMsg.textContent = '';
+            if (!username) {
+                errorMsg.textContent = 'Kullanıcı adı boş olamaz.';
+                return;
+            }
+            if (newPass.length < 4) {
+                errorMsg.textContent = 'Şifre en az 4 karakter olmalıdır.';
+                return;
+            }
+            if (newPass !== confirmPass) {
+                errorMsg.textContent = 'Şifreler eşleşmiyor!';
+                return;
+            }
+            // Kullanıcı adı zaten kullanılıyor mu?
+            if (app.data.personel.some(p => p.kullaniciAdi && p.kullaniciAdi.toLowerCase() === username.toLowerCase())) {
+                errorMsg.textContent = 'Bu kullanıcı adı zaten kullanılıyor.';
+                return;
+            }
+            const newHash = await app.helpers.hash(newPass);
+            // Yönetici pozisyonu bul veya oluştur
+            let yoneticiPos = app.data.pozisyonlar.find(pos => pos.ad && pos.ad.toLowerCase() === 'yönetici');
+            if (!yoneticiPos) {
+                yoneticiPos = { id: Date.now(), ad: 'Yönetici' };
+                app.data.pozisyonlar.push(yoneticiPos);
+            }
+            // Yeni yönetici personeli oluştur
+            const newId = Date.now();
+            const newAdmin = {
+                id: newId,
+                ad: username,
+                telefon: '',
+                iseAlimTarihi: app.helpers.getTodayISO(),
+                pozisyonId: yoneticiPos.id,
+                netMaas: 0,
+                brutMaas: 0,
+                maasTipi: 'Aylık',
+                durum: 'Aktif',
+                kullaniciAdi: username,
+                sifre: newHash,
+                sgkDurumu: 'Yok',
+                sgkTutar: 0,
+                attendance: {}
+            };
+            app.data.personel.push(newAdmin);
+            dataManager.save();
+            // Clear any stored admin hash so migration does not recreate default admin
+            try {
+                localStorage.setItem('fabrikaYonetimAuth_v2_hash', '');
+            } catch (e) {}
+            // Oturum aç ve devam et
+            app.currentUser = { id: newAdmin.id, ad: newAdmin.ad, role: 'admin' };
+            app.dom.setupContainer.style.display = 'none';
+            app.dom.appContainer.style.display = 'flex';
+            main.runAfterLogin();
+        },
+        adminLogin: async (e) => { 
+            e.preventDefault();
+            const username = app.dom.adminUsernameInput ? app.dom.adminUsernameInput.value.trim() : '';
+            const password = app.dom.adminPasswordInput ? app.dom.adminPasswordInput.value : '';
+            const loginError = app.dom.adminLoginError;
+            loginError.textContent = '';
+            // Kullanıcı adı ve şifre zorunlu
+            if (!username || !password) {
+                loginError.textContent = 'Lütfen kullanıcı adı ve şifrenizi girin.';
+                return;
+            }
+            const inputHash = await app.helpers.hash(password);
+            const personel = app.data.personel.find(p => p.kullaniciAdi && p.kullaniciAdi.toLowerCase() === username.toLowerCase());
+            if (personel && personel.sifre === inputHash) {
+                // Kullanıcının yönetici pozisyonunda olup olmadığını kontrol et
+                const pos = app.data.pozisyonlar.find(pos => pos.id === personel.pozisyonId);
+                const isAdminPos = pos && pos.ad && pos.ad.toLowerCase() === 'yönetici';
+                if (!isAdminPos) {
+                    loginError.textContent = 'Bu kullanıcı yönetici değildir.';
+                    return;
+                }
+                if (personel.durum !== 'Aktif') {
+                    loginError.textContent = 'Hesabınız aktif değil. Yönetici ile görüşün.';
+                    return;
+                }
+                // Başarılı yönetici girişi
+                app.currentUser = { id: personel.id, ad: personel.ad, role: 'admin' };
+                app.dom.adminLoginContainer.style.display = 'none';
+                app.dom.appContainer.style.display = 'flex';
+                main.runAfterLogin();
+                return;
+            }
+            loginError.textContent = 'Kullanıcı adı veya şifre hatalı!';
+        },
+
+        personelLogin: async (e) => {
+            e.preventDefault(); 
+            const username = app.dom.personelLoginForm.querySelector('#personel-username').value.trim();
+            const password = app.dom.personelLoginForm.querySelector('#personel-password').value;
+            const loginError = app.dom.personelLoginError;
+            loginError.textContent = '';
+            const inputHash = await app.helpers.hash(password);
+            const personel = app.data.personel.find(p => p.kullaniciAdi.toLowerCase() === username.toLowerCase());
+            if (personel && personel.sifre === inputHash) {
+                if(personel.durum !== 'Aktif') { loginError.textContent = 'Hesabınız aktif değil. Yönetici ile görüşün.'; return; }
+                app.currentUser = { id: personel.id, ad: personel.ad, role: 'isci' };
+                app.dom.personelLoginContainer.style.display = 'none';
+                app.dom.appContainer.style.display = 'flex';
+                main.runAfterLogin();
+                return;
+            }
+            loginError.textContent = 'Kullanıcı adı veya şifre hatalı!';
+        },
+        changePassword: async (e) => { e.preventDefault(); const form = app.dom.sifreDegistirForm; const currentPass = form.querySelector('#mevcut-sifre').value; const newPass = form.querySelector('#yeni-sifre').value; const confirmPass = form.querySelector('#yeni-sifre-onay').value; const resultMsg = app.dom.sifreDegistirSonuc; resultMsg.textContent = ''; resultMsg.style.color = 'var(--danger-color)'; const storedHash = dataManager.loadAuthHash(); const currentHash = await app.helpers.hash(currentPass); if (currentHash !== storedHash) { resultMsg.textContent = 'Mevcut Yönetici şifreniz hatalı!'; return; } if (newPass.length < 4) { resultMsg.textContent = 'Yeni şifre en az 4 karakter olmalıdır.'; return; } if (newPass !== confirmPass) { resultMsg.textContent = 'Yeni şifreler eşleşmiyor!'; return; } const newHash = await app.helpers.hash(newPass); dataManager.saveAuthHash(newHash); resultMsg.style.color = 'var(--success-color)'; resultMsg.textContent = 'Yönetici şifreniz başarıyla güncellendi!'; form.reset(); },
+        logout: () => { if(confirm("Çıkış yapmak istediğinizden emin misiniz?")) { app.currentUser = null; window.location.reload(); } },
+        navigate: (e, forcePageId = null) => {
+            if (e) e.preventDefault();
+            const pageId = forcePageId || e.currentTarget.dataset.page;
+            if (app.currentUser.role === 'isci') { const allowedPages = ['vardiya-yonetimi', 'uretim-ekle']; if (!allowedPages.includes(pageId)) { return; } }
+            app.dom.navLinks.forEach(l => l.classList.remove('active'));
+            app.dom.pages.forEach(p => p.classList.remove('active'));
+            const activeLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
+            const activePage = document.getElementById(pageId);
+            if(activeLink) { activeLink.classList.add('active'); app.dom.pageTitle.textContent = activeLink.textContent.trim(); }
+            if(activePage) { activePage.classList.add('active'); }
+            // Özel sayfa güncellemeleri
+            if (pageId === 'personel-durumu') {
+                renderer.personelDurumu();
+            }
+        },
+        // Yeni: vardiya başlangıcı çoklu personel destekler
+        startShift: (e) => {
+            e.preventDefault();
+            const select = app.dom.vardiyaPersonelSelect;
+            const selectedOptions = Array.from(select.selectedOptions).filter(opt => opt.value);
+            if (selectedOptions.length === 0) { alert('Vardiyayı başlatmak için lütfen bir veya daha fazla personel seçin.'); return; }
+            // Eğer işçi rolünde ise, sadece kendisini seçebilir
+            if(app.currentUser.role === 'isci' && selectedOptions.some(opt => parseInt(opt.value) !== app.currentUser.id)) { alert('İşçi olarak sadece kendi adınıza vardiya başlatabilirsiniz.'); return; }
+            const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
+            if (activeShift) { alert('Zaten aktif bir vardiya bulunmaktadır. Önce onu kapatmalı veya devretmelisiniz.'); return; }
+            const nowISO = new Date().toISOString();
+            const calisanlar = selectedOptions.map(opt => {
+                const pid = parseInt(opt.value);
+                return { isciAdi: opt.text, personelId: pid, devralmaZamani: nowISO, hoursRecorded: false };
+            });
+            // İlk seçilen kişi vardiya sorumlusu olur
+            const responsibleId = parseInt(selectedOptions[0].value);
+            // Vardiya oluştur
+            const newShift = {
+                id: Date.now(),
+                baslamaZamani: nowISO,
+                bitisZamani: null,
+                durum: 'Aktif',
+                calisanlar: calisanlar,
+                responsibleId: responsibleId
+            };
+            app.data.vardiyalar.push(newShift);
+            // Attendance kaydet
+            const today = app.helpers.getTodayISO();
+            calisanlar.forEach(c => {
+                const person = app.data.personel.find(p => p.id === c.personelId);
+                if (person) {
+                    if (!person.attendance[today]) {
+                        person.attendance[today] = { status: 'present', hours: null };
+                    } else {
+                        person.attendance[today].status = 'present';
+                    }
+                }
+            });
+            dataManager.save();
+            renderer.updateAll();
+            app.dom.yeniVardiyaForm.reset();
+        },
+        endShift: () => {
+            const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
+            if (!activeShift) { alert('Kapatılacak aktif bir vardiya bulunamadı.'); return; }
+            const onay = confirm('Aktif vardiyayı tamamen sonlandırmak istediğinizden emin misiniz?');
+            if (!onay) return;
+            const nowISO = new Date().toISOString();
+            // bitisZamani tüm aktif çalışanlar için ekle
+            activeShift.calisanlar.forEach(c => {
+                if (!c.bitisZamani) {
+                    c.bitisZamani = nowISO;
+                }
+            });
+            // Çalışanların çalışma saatlerini hesapla ve kaydet
+            activeShift.calisanlar.forEach(c => {
+                if (!c.hoursRecorded) {
+                    const person = app.data.personel.find(p => p.id === c.personelId);
+                    if (person) {
+                        const startISO = c.devralmaZamani;
+                        const endISO = c.bitisZamani;
+                        const hoursDec = app.helpers.calculateHoursDecimal(startISO, endISO);
+                        const dateKey = app.helpers.getTodayISO();
+                        if (!person.attendance[dateKey]) {
+                            person.attendance[dateKey] = { status: 'present', hours: hoursDec };
+                        } else {
+                            const entry = person.attendance[dateKey];
+                            entry.status = 'present';
+                            if (entry.hours === null || entry.hours === undefined) entry.hours = 0;
+                            entry.hours = parseFloat((entry.hours + hoursDec).toFixed(2));
+                        }
+                    }
+                    c.hoursRecorded = true;
+                }
+            });
+            activeShift.bitisZamani = nowISO;
+            activeShift.durum = 'Tamamlandı';
+            dataManager.save();
+            renderer.updateAll();
+        },
+        transferShift: () => {
+            const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
+            if (!activeShift) { alert('Devredilecek aktif bir vardiya bulunamadı.'); return; }
+            // Mevcut sorumlu personeli bul
+            let responsibleId = activeShift.responsibleId;
+            // Eğer sorumlu belirtilmemişse ilk aktif çalışanı sorumlu olarak kabul et
+            const aktifCalisanlar = activeShift.calisanlar.filter(c => !c.bitisZamani);
+            if (responsibleId === undefined || responsibleId === null) {
+                responsibleId = aktifCalisanlar.length > 0 ? aktifCalisanlar[0].personelId : null;
+            }
+            const currentResponsible = app.data.personel.find(p => p.id === responsibleId);
+            if (!currentResponsible) { alert('Aktif vardiya sorumlusu bulunamadı.'); return; }
+            // İşçi rolünde sadece kendi vardiyasını devredebilir
+            if (app.currentUser.role === 'isci' && currentResponsible.id !== app.currentUser.id) { alert('Sadece kendi aktif vardiyanızı devredebilirsiniz.'); return; }
+            // Devredilecek kişi listesi: Aktif olan ve mevcut sorumlu olmayan personeller
+            const devirListesi = app.data.personel.filter(p => p.durum === 'Aktif' && p.id !== currentResponsible.id).sort((a, b) => a.ad.localeCompare(b.ad));
+            let optionsHtml = '<option value="" disabled selected>Devredilecek personeli seçin...</option>';
+            if (devirListesi.length === 0) {
+                optionsHtml = '<option value="" disabled>Devredilecek başka "Aktif" personel bulunmuyor.</option>';
+            } else {
+                devirListesi.forEach(p => {
+                    optionsHtml += `<option value="${p.id}">${p.ad}</option>`;
+                });
+            }
+            const formHtml = `
+                <p style="margin-bottom: 20px;">Mevcut vardiya sorumlusu: <strong>${currentResponsible.ad}</strong><br>Vardiyayı kime devretmek istiyorsunuz?</p>
+                <form id="vardiya-devir-form">
+                    <div class="input-group"><label for="vardiya-devir-select">Yeni Personel</label><select id="vardiya-devir-select" required>${optionsHtml}</select></div>
+                    <button type="submit" class="btn btn-success btn-full">Vardiyayı Devret</button>
+                </form>
+            `;
+            actions.openModal('Vardiya Devret', formHtml);
+            document.getElementById('vardiya-devir-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const selectEl = document.getElementById('vardiya-devir-select');
+                const selectedOption = selectEl.options[selectEl.selectedIndex];
+                if (!selectedOption || selectedOption.value === "") { alert('Lütfen bir personel seçin.'); return; }
+                const yeniPersonelId = parseInt(selectedOption.value);
+                const yeniIsciAdi = selectedOption.text;
+                if (confirm(`'${currentResponsible.ad}' vardiyasını '${yeniIsciAdi}' adlı çalışana devretmek üzeresiniz. Onaylıyor musunuz?`)) {
+                    // Yeni sorumlu olarak ata
+                    activeShift.responsibleId = yeniPersonelId;
+                    // Seçilen kişi aktif değilse, aktif vardiyaya ekle
+                    const alreadyActive = aktifCalisanlar.some(c => c.personelId === yeniPersonelId && !c.bitisZamani);
+                    if (!alreadyActive) {
+                        actions.addWorkerToActiveShift(yeniPersonelId);
+                    }
+                    // Attendance kaydı addWorkerToActiveShift fonksiyonunda yapılıyor
+                    dataManager.save();
+                    actions.closeModal();
+                    renderer.updateAll();
+                    alert('Vardiya başarıyla devredildi.');
+                }
+            });
+        },
+        // Yeni: aktif vardiyaya personel ekleme/çıkarma yöneticisi
+        manageShiftPersonnel: () => {
+            const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
+            if (!activeShift) { alert('Şu anda aktif vardiya bulunmuyor.'); return; }
+            const activeIds = activeShift.calisanlar.filter(c => !c.bitisZamani).map(c => c.personelId);
+            const aktifPersoneller = app.data.personel.filter(p => p.durum === 'Aktif').sort((a,b) => a.ad.localeCompare(b.ad));
+            let formHtml = '<form id="shift-personnel-form">';
+            formHtml += '<p style="margin-bottom:10px;">İşaretli personeller şu anda vardiyada olacaktır.</p>';
+            aktifPersoneller.forEach(p => {
+                const checked = activeIds.includes(p.id) ? 'checked' : '';
+                formHtml += `<div class="checkbox-container"><input type="checkbox" id="chk_${p.id}" value="${p.id}" ${checked}><label for="chk_${p.id}">${p.ad}</label></div>`;
+            });
+            formHtml += '<button type="submit" class="btn btn-success btn-full">Kaydet</button></form>';
+            actions.openModal('Vardiya Personel Yönetimi', formHtml, true);
+            document.getElementById('shift-personnel-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const checkedIds = Array.from(e.target.querySelectorAll('input[type="checkbox"]:checked')).map(inp => parseInt(inp.value));
+                // Eklenecek olanlar = checked but not active
+                const toAdd = checkedIds.filter(id => !activeIds.includes(id));
+                // Çıkarılacak olanlar = active but not checked
+                const toRemove = activeIds.filter(id => !checkedIds.includes(id));
+                toAdd.forEach(pid => {
+                    actions.addWorkerToActiveShift(pid);
+                });
+                toRemove.forEach(pid => {
+                    actions.removeWorkerFromActiveShift(pid);
+                });
+                // Sorumlu personel değişikliği: eğer sorumlu artık aktif değilse, ilk aktif kişiyi sorumlu yap
+                const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
+                if (activeShift) {
+                    const activeIdsNow = activeShift.calisanlar.filter(c => !c.bitisZamani).map(c => c.personelId);
+                    if (activeIdsNow.length > 0) {
+                        if (!activeIdsNow.includes(activeShift.responsibleId)) {
+                            activeShift.responsibleId = activeIdsNow[0];
+                        }
+                    } else {
+                        activeShift.responsibleId = null;
+                    }
+                }
+                dataManager.save();
+                actions.closeModal();
+                renderer.updateAll();
+                alert('Vardiya personel listesi güncellendi.');
+            });
+        },
+        addWorkerToActiveShift: (personelId) => {
+            const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
+            if (!activeShift) return;
+            if (activeShift.calisanlar.some(c => !c.bitisZamani && c.personelId === personelId)) return; // already active
+            const person = app.data.personel.find(p => p.id === personelId);
+            if (!person) return;
+            activeShift.calisanlar.push({ isciAdi: person.ad, personelId: personelId, devralmaZamani: new Date().toISOString(), hoursRecorded: false });
+            // Attendance kaydet: bu gün için mevcut değeri güncelle
+            const today = app.helpers.getTodayISO();
+            if (!person.attendance[today]) {
+                person.attendance[today] = { status: 'present', hours: null };
+            } else {
+                // eğer izin veya absent ise present olarak güncelle ancak hours koru
+                const entry = person.attendance[today];
+                entry.status = 'present';
+            }
+        },
+        removeWorkerFromActiveShift: (personelId) => {
+            const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
+            if (!activeShift) return;
+            const calisan = activeShift.calisanlar.find(c => !c.bitisZamani && c.personelId === personelId);
+            if (!calisan) return;
+            // Çıkış zamanını işaretle
+            const nowISO = new Date().toISOString();
+            calisan.bitisZamani = nowISO;
+            // Eğer saat kaydı henüz yapılmadıysa, çalışılan süreyi hesapla ve attendance kaydet
+            if (!calisan.hoursRecorded) {
+                const person = app.data.personel.find(p => p.id === personelId);
+                if (person) {
+                    const startISO = calisan.devralmaZamani;
+                    const hoursDec = app.helpers.calculateHoursDecimal(startISO, nowISO);
+                    const dateKey = app.helpers.getTodayISO();
+                    if (!person.attendance[dateKey]) {
+                        person.attendance[dateKey] = { status: 'present', hours: hoursDec };
+                    } else {
+                        const entry = person.attendance[dateKey];
+                        entry.status = 'present';
+                        if (entry.hours === null || entry.hours === undefined) entry.hours = 0;
+                        entry.hours = parseFloat((entry.hours + hoursDec).toFixed(2));
+                    }
+                }
+                calisan.hoursRecorded = true;
+            }
+            // Eğer çıkartılan kişi sorumlu ise yeni sorumlu ataması yap
+            if (activeShift.responsibleId === personelId) {
+                // Mevcut aktif personelleri listele (bu kişiyi çıkardıktan sonra)
+                const kalanAktifler = activeShift.calisanlar.filter(c => !c.bitisZamani).map(c => c.personelId);
+                if (kalanAktifler.length > 0) {
+                    activeShift.responsibleId = kalanAktifler[0];
+                } else {
+                    activeShift.responsibleId = null;
+                }
+            }
+        },
+        handlePersonelFormLoad: (e) => {
+            const selectedId = e.target.value;
+            const form = app.dom.personelIslemForm;
+            const submitBtn = app.dom.personelFormSubmitBtn;
+            const sifreInput = form.querySelector('#personel-sifre');
+            const sgkSelect = app.dom.personelSgkDurumu; 
+            const sgkTutarGroup = app.dom.personelSgkTutarGroup; 
+            const sgkTutarInput = form.querySelector('#personel-sgk-tutar');
+            const netMaasInput = app.dom.personelNetMaasInput; 
+            const brutMaasInput = app.dom.personelBrutMaasInput; 
+            
+            if (selectedId === 'new') {
+                form.reset();
+                form.querySelector('#personel-ise-alim-tarihi').value = app.helpers.getTodayISO();
+                form.querySelector('#personel-islem-select').value = 'new';
+                submitBtn.textContent = 'Personeli Kaydet';
+                submitBtn.classList.add('btn-success');
+                submitBtn.classList.remove('btn-warning');
+                sifreInput.placeholder = 'Yeni şifre (en az 4 karakter)';
+                sgkSelect.value = 'Yok'; 
+                sgkTutarGroup.style.display = 'none';
+            } else {
+                const personelId = parseInt(selectedId);
+                const personel = app.data.personel.find(p => p.id === personelId);
+                if (!personel) {
+                    alert('Personel bulunamadı. Form sıfırlanıyor.');
+                    actions.handlePersonelFormLoad({ target: { value: 'new' } });
+                    return;
+                }
+                form.querySelector('#personel-ad-soyad').value = personel.ad;
+                form.querySelector('#personel-telefon').value = personel.telefon || '';
+                form.querySelector('#personel-ise-alim-tarihi').value = personel.iseAlimTarihi || '';
+                form.querySelector('#personel-pozisyon-select').value = personel.pozisyonId;
+                
+                netMaasInput.value = personel.netMaas || '';
+                brutMaasInput.value = personel.brutMaas || '';
+                
+                form.querySelector('#personel-maas-tipi').value = personel.maasTipi;
+                form.querySelector('#personel-durum').value = personel.durum;
+                form.querySelector('#personel-kullanici-adi').value = personel.kullaniciAdi || '';
+                
+                sgkSelect.value = personel.sgkDurumu || 'Yok';
+                sgkTutarInput.value = personel.sgkTutar || '';
+                if (personel.sgkDurumu === 'Var') {
+                    sgkTutarGroup.style.display = 'block';
+                } else {
+                    sgkTutarGroup.style.display = 'none';
+                }
+
+                sifreInput.value = ''; 
+                sifreInput.placeholder = personel.sifre ? 'Yeni şifre (Değiştirmek için)' : 'Yeni şifre (en az 4 karakter)';
+                submitBtn.textContent = 'Değişiklikleri Kaydet';
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-warning');
+            }
+        },
+        handlePersonelFormSubmit: async (e) => {
+            e.preventDefault();
+            const selectedId = app.dom.personelIslemSelect.value;
+            if (selectedId === 'new') { await actions.saveNewWorker(e.target); } 
+            else { await actions.saveUpdatedWorker(e.target, parseInt(selectedId)); }
+        },
+        saveNewWorker: async (form) => {
+            const adSoyad = form.querySelector('#personel-ad-soyad').value.trim();
+            const pozisyonId = parseInt(form.querySelector('#personel-pozisyon-select').value);
+            if (!adSoyad || isNaN(pozisyonId)) { alert('İsim Soyisim ve Pozisyon alanları zorunludur.'); return; }
+            const kullaniciAdi = form.querySelector('#personel-kullanici-adi').value.trim();
+            const sifre = form.querySelector('#personel-sifre').value;
+            const sgkDurumu = form.querySelector('#personel-sgk-durumu').value;
+            const sgkTutar = parseFloat(form.querySelector('#personel-sgk-tutar').value) || 0;
+            // Maaşları Al (Manuel)
+            const netMaas = parseFloat(app.dom.personelNetMaasInput.value) || 0;
+            const brutMaas = parseFloat(app.dom.personelBrutMaasInput.value) || 0;
+
+            let sifreHash = '';
+            if (kullaniciAdi) {
+                if (kullaniciAdi.toLowerCase() === 'admin' || app.data.personel.some(p => p.kullaniciAdi.toLowerCase() === kullaniciAdi.toLowerCase())) {
+                    alert('Bu kullanıcı adı zaten kullanılıyor. Lütfen başka bir kullanıcı adı seçin.');
+                    return;
+                }
+                if(sifre.length < 4) { alert('Kullanıcı adı girdiyseniz, şifre en az 4 karakter olmalıdır.'); return; }
+                sifreHash = await app.helpers.hash(sifre);
+            } else if (sifre) {
+                alert('Şifre belirlemek için önce bir kullanıcı adı girmelisiniz.');
+                return;
+            }
+            const newWorker = {
+                id: Date.now(),
+                ad: adSoyad,
+                telefon: form.querySelector('#personel-telefon').value.trim(),
+                iseAlimTarihi: form.querySelector('#personel-ise-alim-tarihi').value,
+                pozisyonId: pozisyonId,
+                netMaas: netMaas, 
+                brutMaas: brutMaas, 
+                maasTipi: form.querySelector('#personel-maas-tipi').value,
+                durum: form.querySelector('#personel-durum').value,
+                kullaniciAdi: kullaniciAdi,
+                sifre: sifreHash,
+                sgkDurumu: sgkDurumu,
+                sgkTutar: sgkTutar,
+                attendance: {} // Yeni: katılım kaydı
+            };
+            app.data.personel.push(newWorker);
+            dataManager.save();
+            alert('Personel başarıyla kaydedildi.');
+            renderer.personelListesi(); 
+            renderer.pozisyonListesi(); 
+            renderer.vardiyaPersonelSelect();
+            renderer.personelIslemSelect(); 
+            actions.handlePersonelFormLoad({ target: { value: 'new' } }); 
+        },
+        saveUpdatedWorker: async (form, personelId) => {
+            const personelIndex = app.data.personel.findIndex(p => p.id === personelId);
+            if (personelIndex === -1) { alert('Personel bulunamadı. Değişiklikler kaydedilemedi.'); return; }
+            const adSoyad = form.querySelector('#personel-ad-soyad').value.trim();
+            const pozisyonId = parseInt(form.querySelector('#personel-pozisyon-select').value);
+            const sgkDurumu = form.querySelector('#personel-sgk-durumu').value;
+            const sgkTutar = parseFloat(form.querySelector('#personel-sgk-tutar').value) || 0;
+            // Maaşları Al (Manuel)
+            const netMaas = parseFloat(app.dom.personelNetMaasInput.value) || 0;
+            const brutMaas = parseFloat(app.dom.personelBrutMaasInput.value) || 0;
+
+            if (!adSoyad || isNaN(pozisyonId)) { alert('İsim Soyisim ve Pozisyon alanları zorunludur.'); return; }
+            const eskiAd = app.data.personel[personelIndex].ad;
+            if (eskiAd !== adSoyad) { if (!confirm(`Personelin adını '${eskiAd}' -> '${adSoyad}' olarak değiştirmek üzeresiniz?\n(Geçmiş vardiya kayıtları etkilenmez.)`)) { return; } }
+            const kullaniciAdi = form.querySelector('#personel-kullanici-adi').value.trim();
+            const yeniSifre = form.querySelector('#personel-sifre').value;
+            let sifreHash = app.data.personel[personelIndex].sifre;
+            if (kullaniciAdi) {
+                if (kullaniciAdi.toLowerCase() === 'admin' || app.data.personel.some(p => p.id !== personelId && p.kullaniciAdi.toLowerCase() === kullaniciAdi.toLowerCase())) {
+                    alert('Bu kullanıcı adı zaten başka bir personel tarafından kullanılıyor.');
+                    return;
+                }
+                if (yeniSifre) {
+                    if(yeniSifre.length < 4) { alert('Yeni şifre en az 4 karakter olmalıdır.'); return; }
+                    sifreHash = await app.helpers.hash(yeniSifre);
+                } else if (!sifreHash) { 
+                    alert('Kullanıcı adı belirlediyseniz, mutlaka bir şifre de girmelisiniz.');
+                    return;
+                }
+            } else {
+                if (yeniSifre) { alert('Şifre belirlemek için önce bir kullanıcı adı girmelisiniz.'); return; }
+                sifreHash = '';
+            }
+            app.data.personel[personelIndex] = {
+                ...app.data.personel[personelIndex],
+                ad: adSoyad,
+                telefon: form.querySelector('#personel-telefon').value.trim(),
+                iseAlimTarihi: form.querySelector('#personel-ise-alim-tarihi').value,
+                pozisyonId: pozisyonId,
+                netMaas: netMaas, 
+                brutMaas: brutMaas, 
+                maasTipi: form.querySelector('#personel-maas-tipi').value,
+                durum: form.querySelector('#personel-durum').value,
+                kullaniciAdi: kullaniciAdi,
+                sifre: sifreHash,
+                sgkDurumu: sgkDurumu,
+                sgkTutar: sgkTutar
+            };
+            dataManager.save();
+            alert('Personel bilgileri başarıyla güncellendi.');
+            renderer.personelListesi();
+            renderer.vardiyaPersonelSelect();
+            renderer.personelIslemSelect(); 
+            actions.handlePersonelFormLoad({ target: { value: 'new' } }); 
+        },
+        deleteWorker: (workerId) => {
+            workerId = parseInt(workerId);
+            const worker = app.data.personel.find(i => i.id === workerId);
+            if (!worker) { alert('Silinecek personel bulunamadı.'); return; }
+            let vardiyaUyarisi = "";
+            const isUsedInShift = app.data.vardiyalar.some(v => v.calisanlar.some(c => c.personelId === workerId || c.isciAdi === worker.ad));
+            if(isUsedInShift) { vardiyaUyarisi = "\n\n(Bu personel, geçmiş vardiya kayıtlarında kullanılmış.)"; }
+            const selectValue = app.dom.personelIslemSelect.value;
+            if (parseInt(selectValue) === workerId) { alert(`'${worker.ad}' şu anda işlem formunda seçili. Lütfen formu sıfırlayıp (Yeni Personel seçip) tekrar deneyin.`); return; }
+            if (confirm(`'${worker.ad}' adlı personeli silmek istediğinizden emin misiniz? (Panel giriş bilgileri de silinecektir)${vardiyaUyarisi}`)) {
+                app.data.personel = app.data.personel.filter(i => i.id !== workerId);
+                dataManager.save();
+                renderer.updateAll(); 
+                alert('Personel silindi.');
+            }
+        },
+        openPersonelOdemeModal: (personelId, personelAdi) => {
+            const personel = app.data.personel.find(p => p.id === personelId);
+            let sgkInfoHtml = '';
+            
+            if (personel && personel.sgkDurumu === 'Var') {
+                const sgkTutar = personel.sgkTutar > 0 ? personel.sgkTutar : 0;
+                sgkInfoHtml = `
+                    <div class="checkbox-container" style="margin-top: 15px;">
+                        <input type="checkbox" id="personel-sgk-ekle-check" checked>
+                        <label for="personel-sgk-ekle-check">
+                            SGK Primi Gideri Ekle (${app.helpers.formatCurrency(sgkTutar)})
+                        </label>
+                    </div>
+                    <p style="font-size: 12px; color: #7f8c8d; margin-top: -10px; margin-bottom: 15px;">İşaretlenirse, maaş ödemesine ek olarak bu tutar 'Resmi Gider' olarak ayrıca kaydedilir.</p>
+                    <input type="hidden" id="personel-sgk-tutar-hidden" value="${sgkTutar}">
+                `;
+            }
+
+            // Maaş bilgisi önerisi
+            const netMaas = personel.netMaas || 0;
+            const oneriText = netMaas > 0 ? `(Maaş: ${app.helpers.formatCurrency(netMaas)})` : '';
+
+            const formHtml = `
+                <form id="personel-odeme-form">
+                    <input type="hidden" id="personel-odeme-id" value="${personelId}"><input type="hidden" id="personel-odeme-ad" value="${personelAdi}">
+                    <div class="input-group"><label for="personel-odeme-tipi">Ödeme Tipi</label><select id="personel-odeme-tipi" required><option value="Maaş Ödemesi">Maaş Ödemesi</option><option value="Avans Ödemesi">Avans Ödemesi</option><option value="Prim Ödemesi">Prim Ödemesi</option></select></div>
+                    <div class="input-group"><label for="personel-odeme-tutar">Tutar (₺) ${oneriText}</label><input type="number" step="0.01" id="personel-odeme-tutar" value="${netMaas > 0 ? netMaas : ''}" required></div>
+                    <!-- Fazla İzin Kesintisi düğmesi ve alanı -->
+                    <div class="input-group" id="kesinti-toggle-group" style="display:none; margin-bottom:10px;">
+                        <button type="button" id="toggle-kesinti-btn" class="btn btn-sm-warning">Fazla İzin Kesintisi Ekle</button>
+                    </div>
+                    <div class="input-group" id="personel-kesinti-group" style="display:none;">
+                        <label for="personel-odeme-kesinti">Fazla İzin Kesintisi (₺)</label>
+                        <input type="number" step="0.01" id="personel-odeme-kesinti" placeholder="Opsiyonel">
+                    </div>
+                    <div class="input-group"><label for="personel-odeme-tarih">Ödeme Tarihi</label><input type="date" id="personel-odeme-tarih" value="${app.helpers.getTodayISO()}" required></div>
+                    <div class="input-group"><label for="personel-odeme-aciklama">Kısa Açıklama (Opsiyonel)</label><input type="text" id="personel-odeme-aciklama" placeholder="Örn: Bayram avansı"></div>
+                    ${sgkInfoHtml}
+                    <button type="submit" class="btn btn-success btn-full">Ödemeyi Kaydet</button>
+                </form>
+            `;
+            actions.openModal(`${personelAdi} için Ödeme`, formHtml);
+            // Ödeme tipi değiştiğinde kesinti alanını göster/gizle
+            const formEl = document.getElementById('personel-odeme-form');
+            if (formEl) {
+                const odemeSelect = formEl.querySelector('#personel-odeme-tipi');
+                const kesintiToggleGroup = formEl.querySelector('#kesinti-toggle-group');
+                const kesintiGroup = formEl.querySelector('#personel-kesinti-group');
+                const toggleBtn = formEl.querySelector('#toggle-kesinti-btn');
+                if (odemeSelect && kesintiToggleGroup && kesintiGroup && toggleBtn) {
+                    // Ödeme tipine göre kesinti butonunun görünümü
+                    const updateKesintiVisibility = () => {
+                        if (odemeSelect.value === 'Maaş Ödemesi') {
+                            kesintiToggleGroup.style.display = 'block';
+                        } else {
+                            kesintiToggleGroup.style.display = 'none';
+                            kesintiGroup.style.display = 'none';
+                            // buton metnini sıfırla
+                            toggleBtn.textContent = 'Fazla İzin Kesintisi Ekle';
+                            // inputu temizle
+                            const inp = kesintiGroup.querySelector('input');
+                            if (inp) inp.value = '';
+                        }
+                    };
+                    // İlk görünüm
+                    updateKesintiVisibility();
+                    odemeSelect.addEventListener('change', updateKesintiVisibility);
+                    // Düğme ile kesinti giriş alanını göster/gizle
+                    toggleBtn.addEventListener('click', () => {
+                        if (kesintiGroup.style.display === 'none' || kesintiGroup.style.display === '') {
+                            kesintiGroup.style.display = 'block';
+                            toggleBtn.textContent = 'Kesinti Gizle';
+                        } else {
+                            kesintiGroup.style.display = 'none';
+                            toggleBtn.textContent = 'Fazla İzin Kesintisi Ekle';
+                            const inp = kesintiGroup.querySelector('input');
+                            if (inp) inp.value = '';
+                        }
+                    });
+                }
+                formEl.addEventListener('submit', actions.handlePersonelOdeme);
+            }
+        },
+        handlePersonelOdeme: (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const personelId = parseInt(form.querySelector('#personel-odeme-id').value);
+            const personel = app.data.personel.find(p => p.id === personelId);
+            
+            const personelAdi = form.querySelector('#personel-odeme-ad').value;
+            const odemeTipi = form.querySelector('#personel-odeme-tipi').value;
+            // Çalışana ödenen NET tutar (kullanıcının girdiği tutar)
+            let netOdemeTutar = parseFloat(form.querySelector('#personel-odeme-tutar').value);
+            const tarih = form.querySelector('#personel-odeme-tarih').value;
+            const aciklama = form.querySelector('#personel-odeme-aciklama').value.trim();
+            
+            const sgkCheckbox = form.querySelector('#personel-sgk-ekle-check');
+            let sgkMesaj = "";
+            // Varsayılan: Avans/Prim tutarı
+            let giderKaydiTutar = netOdemeTutar;
+            // Açıklama içerisinde kesinti bilgisini sonradan ekleyeceğiz
+            let giderKaydiAciklama = `${personelAdi} isimli personele yapılan ${odemeTipi} (Net Ödeme). ${aciklama ? `(Not: ${aciklama})` : ''}`;
+            // Fazla izin kesintisi (opsiyonel)
+            let kesinti = 0;
+            const kesintiInputEl = form.querySelector('#personel-odeme-kesinti');
+            if (kesintiInputEl && kesintiInputEl.value) {
+                const val = parseFloat(kesintiInputEl.value);
+                if (!isNaN(val) && val > 0) {
+                    kesinti = val;
+                }
+            }
+
+            if (isNaN(netOdemeTutar) || netOdemeTutar <= 0) { alert('Lütfen geçerli bir tutar girin.'); return; }
+            // Kesinti, net ödeme tutarından büyük olamaz
+            if (kesinti > 0 && kesinti > netOdemeTutar) {
+                alert('Kesinti tutarı net ödeme tutarından büyük olamaz.');
+                return;
+            }
+            
+            // 1. Gider Kaydını Net Maaş yerine Brüt Maaş üzerinden yap
+            if (odemeTipi === 'Maaş Ödemesi' && personel && personel.brutMaas > 0) {
+                // Kesinti varsa, brüt maaştan da düşelim (basit oran)
+                let brutGider = personel.brutMaas;
+                if (kesinti > 0) {
+                    brutGider = brutGider - kesinti;
+                    if (brutGider < 0) brutGider = 0;
+                }
+                giderKaydiTutar = brutGider; // Gider olarak BRÜT MAAŞ - kesinti
+                // Net ödeme tutarından kesinti düş
+                const netOdenen = netOdemeTutar - kesinti;
+                // Gider açıklaması: çalışma ve kesinti bilgileri
+                giderKaydiAciklama = `${personelAdi} için Aylık Maaş Gideri (Brüt Tutar). Çalışana Net Ödenen: ${app.helpers.formatCurrency(netOdenen)}.`;
+                if (kesinti > 0) {
+                    giderKaydiAciklama += ` Fazla izin kesintisi: ${app.helpers.formatCurrency(kesinti)}.`;
+                }
+                if (aciklama) {
+                    giderKaydiAciklama += ` Not: ${aciklama}.`;
+                }
+                // Net ödeme tutarını güncelleyin
+                netOdemeTutar = netOdenen;
+            }
+
+            // Gider Kaydını Oluştur (Net/Brüt duruma göre)
+            const newExpense = { 
+                id: Date.now(), 
+                tip: 'diger', 
+                aciklama: odemeTipi === 'Maaş Ödemesi' ? 'Personel Maaş Gideri (Brüt)' : odemeTipi, // Raporlarda ayırt etmesi kolay olsun
+                detay: giderKaydiAciklama, 
+                tutar: giderKaydiTutar, 
+                tarih: tarih 
+            };
+            app.data.giderler.push(newExpense);
+
+            // 2. SGK Primi Giderini Kaydet (SADECE Maaş Ödemesi ve Onaylı ise)
+            if (odemeTipi === 'Maaş Ödemesi' && sgkCheckbox && sgkCheckbox.checked) {
+                const sgkTutar = parseFloat(form.querySelector('#personel-sgk-tutar-hidden').value);
+                if (sgkTutar > 0) {
+                     const sgkExpense = { 
+                         id: Date.now() + 1, // Benzersizlik için +1
+                         tip: 'diger', 
+                         aciklama: 'Resmi İşveren Maliyeti (SGK/Vergi)', 
+                         detay: `${personelAdi} için ${tarih} tarihli işveren maliyeti (SGK ve Diğer Resmi Kesintiler).`, 
+                         tutar: sgkTutar, 
+                         tarih: tarih 
+                     };
+                     app.data.giderler.push(sgkExpense);
+                     sgkMesaj = `\n\nAyrıca ${app.helpers.formatCurrency(sgkTutar)} tutarında resmi maliyet (SGK/Vergi) giderlere eklendi.`;
+                }
+            }
+
+            dataManager.save();
+            actions.closeModal();
+            renderer.updateAll();
+            let finalMessage = `${personelAdi} için ${app.helpers.formatCurrency(netOdemeTutar)} net ödemesi kaydedildi.`;
+            if (kesinti > 0) {
+                finalMessage += ` Kesinti uygulandı: ${app.helpers.formatCurrency(kesinti)}.`;
+            }
+            finalMessage += ` Giderlere ${app.helpers.formatCurrency(giderKaydiTutar)} yansıtıldı.${sgkMesaj}`;
+            alert(finalMessage);
+        },
+        addPosition: (e) => {
+            e.preventDefault();
+            const form = app.dom.pozisyonEkleForm;
+            const ad = form.querySelector('#pozisyon-adi').value.trim();
+            if (!ad) { alert('Pozisyon adı boş olamaz.'); return; }
+            if (app.data.pozisyonlar.some(p => p.ad.toLowerCase() === ad.toLowerCase())) { alert('Bu pozisyon adı zaten kayıtlı.'); return; }
+            app.data.pozisyonlar.push({ id: Date.now(), ad: ad });
+            dataManager.save();
+            renderer.pozisyonListesi(); 
+            renderer.personelPozisyonSelect(app.dom.personelPozisyonSelect);
+            form.reset();
+            alert('Pozisyon eklendi.');
+        },
+        deletePosition: (pozisyonId, kullanimSayisi) => {
+            pozisyonId = parseInt(pozisyonId);
+            kullanimSayisi = parseInt(kullanimSayisi);
+            const pozisyon = app.data.pozisyonlar.find(p => p.id === pozisyonId);
+            if (!pozisyon) { alert('Silinecek pozisyon bulunamadı.'); return; }
+            if (kullanimSayisi > 0) { alert(`'${pozisyon.ad}' pozisyonu şu anda ${kullanimSayisi} personel tarafından kullanıldığı için silinemez.\nÖnce bu personellerin pozisyonlarını değiştirin.`); return; }
+            if (confirm(`'${pozisyon.ad}' pozisyonunu silmek istediğinizden emin misiniz?`)) {
+                app.data.pozisyonlar = app.data.pozisyonlar.filter(p => p.id !== pozisyonId);
+                dataManager.save();
+                renderer.pozisyonListesi();
+                renderer.personelPozisyonSelect(app.dom.personelPozisyonSelect);
+                alert('Pozisyon silindi.');
+            }
+        },
+        addFactory: (e) => { e.preventDefault(); const name = app.dom.fabrikaForm.querySelector('#fabrika-adi').value.trim(); if (name) { app.data.fabrikalar.push({ id: Date.now(), ad: name }); dataManager.save(); app.dom.fabrikaForm.reset(); renderer.updateAll(); } },
+        updateUretimToplam: () => { const adet = parseFloat(app.dom.uretimAdetInput.value) || 0; const birimFiyat = parseFloat(app.dom.uretimBirimFiyatInput.value) || 0; app.dom.uretimToplamTutarInput.value = app.helpers.formatCurrency(adet * birimFiyat); },
+        addUretimToList: (e) => { e.preventDefault(); const form = app.dom.uretimEkleForm; const uretim = { fabrikaId: parseInt(form.querySelector('#uretim-fabrika').value), tarih: form.querySelector('#uretim-tarih').value, aciklama: form.querySelector('#uretim-aciklama').value.trim(), adet: parseInt(form.querySelector('#uretim-adet').value), birimFiyat: parseFloat(form.querySelector('#uretim-birim-fiyat').value) }; if (!uretim.fabrikaId || !uretim.tarih || !uretim.aciklama || isNaN(uretim.adet) || uretim.adet <= 0 || isNaN(uretim.birimFiyat) || uretim.birimFiyat <= 0) { alert('Lütfen tüm alanları (Açıklama, Adet, Fiyat) doğru ve eksiksiz doldurun.'); return; } app.temp.uretimListesi.push(uretim); renderer.uretimEkleListesi(); form.querySelector('#uretim-aciklama').value = ''; form.querySelector('#uretim-adet').value = ''; form.querySelector('#uretim-birim-fiyat').value = ''; form.querySelector('#uretim-toplam-tutar').value = ''; form.querySelector('#uretim-aciklama').focus(); },
+        removeUretimFromList: (index) => { app.temp.uretimListesi.splice(index, 1); renderer.uretimEkleListesi(); },
+        clearUretimListesi: () => { if (app.temp.uretimListesi.length > 0 && confirm('Kaydedilmemiş tüm kalemler silinecek. Emin misiniz?')) { app.temp.uretimListesi = []; renderer.uretimEkleListesi(); } },
+        saveUretimListesi: () => { const list = app.temp.uretimListesi; if (list.length === 0) { alert('Kaydedilecek bir kalem bulunmuyor.'); return; } if (confirm(`${list.length} adet üretim kalemini kaydetmek istediğinizden emin misiniz?`)) { list.forEach((item, index) => app.data.uretimler.push({ ...item, id: Date.now() + index })); dataManager.save(); app.temp.uretimListesi = []; alert(`${list.length} adet üretim kaydı başarıyla eklendi.`); renderer.updateAll(); } },
+        deleteProduction: (uretimId) => { uretimId = parseInt(uretimId); const uretim = app.data.uretimler.find(u => u.id === uretimId); if (!uretim) return; const fabrikaAdi = app.data.fabrikalar.find(f => f.id === uretim.fabrikaId)?.ad || 'Bilinmeyen Fabrika'; const onay = confirm(`Aşağıdaki üretim kaydını kalıcı olarak silmek istediğinizden emin misiniz?\n\nFabrika: ${fabrikaAdi}\nTarih: ${uretim.tarih}\nAçıklama: ${uretim.aciklama}\nTutar: ${app.helpers.formatCurrency(uretim.adet * uretim.birimFiyat)}`); if (onay) { app.data.uretimler = app.data.uretimler.filter(u => u.id !== uretimId); dataManager.save(); renderer.updateAll(); alert('Üretim kaydı silindi.'); } },
+        addExpense: (e) => { e.preventDefault(); const form = app.dom.giderForm; const gider = { id: Date.now(), tip: form.querySelector('#gider-tip').value, aciklama: form.querySelector('#gider-aciklama').value.trim(), detay: form.querySelector('#gider-detay').value.trim(), tutar: parseFloat(form.querySelector('#gider-tutar').value), tarih: form.querySelector('#gider-tarih').value }; if (!gider.tip || !gider.aciklama || isNaN(gider.tutar) || !gider.tarih) { alert('Lütfen Tip, Başlık, Tutar ve Tarih alanlarını doğru doldurun.'); return; } app.data.giderler.push(gider); dataManager.save(); form.reset(); form.querySelector('#gider-tarih').value = app.helpers.getTodayISO(); alert('Gider kaydedildi!'); renderer.updateAll(); },
+        addPayment: (e) => { e.preventDefault(); const form = e.target; const odeme = { id: Date.now(), fabrikaId: parseInt(form.querySelector('#odeme-fabrika-id').value), tutar: parseFloat(form.querySelector('#odeme-tutari').value), tarih: form.querySelector('#odeme-tarihi').value }; if (isNaN(odeme.tutar) || !odeme.tarih) { alert('Lütfen tüm alanları doğru doldurun.'); return; } app.data.odemeler.push(odeme); dataManager.save(); actions.closeModal(); alert('Ödeme kaydedildi!'); renderer.updateAll(); },
+        handleFabrikaSilSubmit: (e) => { e.preventDefault(); const fabrikaId = parseInt(app.dom.fabrikaSilSelect.value); if (isNaN(fabrikaId)) { alert('Lütfen silmek için bir fabrika seçin.'); return; } const fabrika = app.data.fabrikalar.find(f => f.id === fabrikaId); if (!fabrika) return; const onayMetni = prompt(`'${fabrika.ad}' fabrikasını kalıcı olarak silmek üzeresiniz. Bu işlem geri alınamaz ve tüm kayıtları yok edecektir.\n\nOnaylamak için fabrikanın adını ('${fabrika.ad}') aşağıdaki kutuya tam olarak yazın.`); if (onayMetni === fabrika.ad) { actions.deleteFactory(fabrikaId, fabrika.ad); } else if (onayMetni !== null) { alert('Onay metni eşleşmedi. Silme işlemi iptal edildi.'); } else { alert('Silme işlemi iptal edildi.'); } },
+        deleteFactory: (fabrikaId, fabrikaAdi) => { app.data.fabrikalar = app.data.fabrikalar.filter(f => f.id !== fabrikaId); app.data.uretimler = app.data.uretimler.filter(u => u.fabrikaId !== fabrikaId); app.data.odemeler = app.data.odemeler.filter(o => o.fabrikaId !== fabrikaId); dataManager.save(); renderer.updateAll(); alert(`'${fabrikaAdi}' fabrikası ve ilgili tüm kayıtlar başarıyla silindi.`); app.dom.fabrikaSilForm.reset(); },
+        resetFactory: (fabrikaId, fabrikaAdi) => { fabrikaId = parseInt(fabrikaId); const onay = confirm(`'${fabrikaAdi}' fabrikasının hesabını sıfırlamak istediğinizden emin misiniz?\n\nBu işlem fabrikayı SİLMEZ, ancak o fabrikaya ait TÜM üretim ve ödeme kayıtlarını kalıcı olarak siler.\n\nBu işlem geri alınamaz.`); if (onay) { app.data.uretimler = app.data.uretimler.filter(u => u.fabrikaId !== fabrikaId); app.data.odemeler = app.data.odemeler.filter(o => o.fabrikaId !== fabrikaId); dataManager.save(); renderer.updateAll(); alert(`'${fabrikaAdi}' fabrikasının hesabı başarıyla sıfırlandı.`); } },
+        openModal: (title, bodyHtml, isLarge = false) => { app.dom.modalTitle.textContent = title; app.dom.modalBody.innerHTML = bodyHtml; if (isLarge) { app.dom.modalContent.classList.add('modal-lg'); } else { app.dom.modalContent.classList.remove('modal-lg'); } app.dom.modalContainer.classList.add('show'); },
+        closeModal: () => { app.dom.modalContainer.classList.remove('show'); app.dom.modalTitle.textContent = ''; app.dom.modalBody.innerHTML = ''; app.dom.modalContent.classList.remove('modal-lg'); },
+        openOdemeModal: (fabrikaId, fabrikaAdi) => {
+            const formHtml = `
+                <form id="odeme-form">
+                    <input type="hidden" id="odeme-fabrika-id" value="${fabrikaId}">
+                    <div class="input-group"><label for="odeme-tutari">Alınan Ödeme Tutarı (₺)</label><input type="number" step="0.01" id="odeme-tutari" required></div>
+                    <div class="input-group"><label for="odeme-tarihi">Ödeme Tarihi</label><input type="date" id="odeme-tarihi" value="${app.helpers.getTodayISO()}" required></div>
+                    <button type="submit" class="btn btn-success btn-full">Ödemeyi Kaydet</button>
+                </form>
+            `;
+            actions.openModal(`${fabrikaAdi} için Ödeme Al`, formHtml);
+            document.getElementById('odeme-form').addEventListener('submit', actions.addPayment);
+        },
+        deleteExpense: (giderId) => { giderId = parseInt(giderId); const gider = app.data.giderler.find(g => g.id === giderId); if (!gider) return; const onay = confirm(`Aşağıdaki gider kaydını silmek istediğinizden emin misiniz?\n\nTarih: ${new Date(gider.tarih).toLocaleDateString('tr-TR')}\nBaşlık: ${gider.aciklama}\nTutar: ${app.helpers.formatCurrency(gider.tutar)}`); if (onay) { app.data.giderler = app.data.giderler.filter(g => g.id !== giderId); dataManager.save(); renderer.updateAll(); alert('Gider kaydı başarıyla silindi.'); } }
+        ,
+
+        /**
+         * Haftalık izin planı formunun submit handler'ı.
+         * Seçilen personel ve tarih için izin kaydı oluşturur.
+         */
+        addManualLeave: (e) => {
+            e.preventDefault();
+            const selectEl = app.dom.izinPersonelSelect;
+            const dateEl = app.dom.izinTarihInput;
+            const personId = parseInt(selectEl.value);
+            const date = dateEl.value;
+            if (!date || isNaN(personId)) {
+                alert('Lütfen bir personel ve izin tarihi seçin.');
+                return;
+            }
+            const person = app.data.personel.find(p => p.id === personId);
+            if (!person) {
+                alert('Personel bulunamadı.');
+                return;
+            }
+            if (!person.attendance) {
+                person.attendance = {};
+            }
+            // Planlı haftalık izinler için status 'weekly' kullanılır
+            person.attendance[date] = { status: 'weekly', hours: null };
+            // Kaydet ve arayüzü hemen güncelle
+            dataManager.save();
+            renderer.updateAll();
+            // Kullanıcı bilgilendirmesi
+            try {
+                alert(`${person.ad} için ${app.helpers.formatDate(date)} tarihli planlı izin kaydedildi.`);
+            } catch (err) {
+                // Bazı ortamlarda alert engellenebilir; bu durumda hatayı yoksay
+                console.log(`${person.ad} için planlı izin oluşturuldu: ${date}`);
+            }
+            // Formu sıfırla
+            app.dom.izinPlanForm.reset();
+        }
+    };
+
+    // --- BÖLÜM 6: CSV YÖNETİCİSİ ---
+    const csvManager = {
+        download: (content, fileName) => { const blob = new Blob([`\uFEFF${content}`], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = fileName; link.click(); URL.revokeObjectURL(link.href); },
+        downloadGenel: () => { let csv = 'Tip,Tarih,Açıklama/Fabrika,Tutar (₺)\n'; const tumIslemler = [ ...app.data.uretimler.map(u => ({ tarih: u.tarih, tip: 'Üretim (Alacak)', aciklama: `${app.data.fabrikalar.find(f => f.id === u.fabrikaId)?.ad || '?' } - ${u.aciklama} (${u.adet} adet)`, tutar: u.adet * u.birimFiyat })), ...app.data.odemeler.map(o => ({ tarih: o.tarih, tip: 'Tahsilat (Nakit Girişi)', aciklama: `${app.data.fabrikalar.find(f => f.id === o.fabrikaId)?.ad || '?' } Ödemesi`, tutar: o.tutar })), ...app.data.giderler.map(g => ({ tarih: g.tarih, tip: 'Gider (Nakit Çıkışı)', aciklama: `${g.aciklama}${g.detay ? ` (${g.detay})` : ''}`, tutar: -g.tutar })) ]; tumIslemler.sort((a, b) => new Date(a.tarih) - new Date(b.tarih)); tumIslemler.forEach(islem => { const tutarString = islem.tutar.toFixed(2); const cleanAciklama = `"${islem.aciklama.replace(/"/g, '""')}"`; csv += `${islem.tip},${islem.tarih},${cleanAciklama},${tutarString}\n`; }); const durum = calculator.genelDurum(); const toplamFinansalDeger = durum.netKar + durum.kalanAlacak; csv += '\n--- GENEL FİNANSAL ÖZET ---\n'; csv += 'Açıklama,,,Tutar (₺)\n'; csv += `1. Toplam Üretim Değeri (Genel Alacak),,,${durum.toplamUretimDegeri.toFixed(2)}\n `; csv += `2. Toplam Tahsilat (Nakit Girişi),,,${durum.toplamTahsilat.toFixed(2)}\n`; csv += `3. Toplam Giderler (Nakit Çıkışı),,,-${durum.toplamGiderler.toFixed(2)}\n`; csv += `NET KÂR (Nakit Bakiye: Tahsilat - Gider),,,${durum.netKar.toFixed(2)}\n`; csv += `KALAN TOPLAM ALACAK (Bakiye: Üretim - Tahsilat),,,${durum.kalanAlacak.toFixed(2)}\n`; csv += `BAKİYE : ${toplamFinansalDeger.toFixed(2)} ₺\n`; csv += `\n*** RAPOR SONU ***\n`; csvManager.download(csv, `genel_rapor_${app.helpers.getTodayISO()}.csv`); },
+        downloadFabrika: (fabrikaId, fabrikaAdi) => { let csv = `Fabrika Hesap Dökümü: ${fabrikaAdi}\n`; const bakiye = calculator.fabrikaBakiyesi(fabrikaId); csv += '\n--- ÜRETİLER ---\n'; csv += 'Tarih,Açıklama,Adet,Birim Fiyat (₺),Toplam Tutar (₺)\n'; app.data.uretimler.filter(u => u.fabrikaId === fabrikaId).forEach(u => { const cleanAciklama = `"${u.aciklama.replace(/"/g, '""')}"`; csv += `${u.tarih},${cleanAciklama},${u.adet},${u.birimFiyat.toFixed(2)},${(u.adet * u.birimFiyat).toFixed(2)}\n`; }); csv += `\nToplam Üretim Değeri:,,,,"${app.helpers.formatCurrency(bakiye.toplamUretim)}"\n`; csv += '\n--- ÖDEMELER ---\n'; csv += 'Tarih,Ödenen Tutar (₺)\n'; app.data.odemeler.filter(o => o.fabrikaId === fabrikaId).forEach(o => { csv += `${o.tarih},${o.tutar.toFixed(2)}\n`; }); csv += `\nToplam Ödenen:,"${app.helpers.formatCurrency(bakiye.toplamOdenen)}"\n`; csv += `\n--- BAKİYE ---\n`; csv += `Kalan Borç (Tahsil Edilecek):,"${app.helpers.formatCurrency(bakiye.kalanBorc)}"\n`; csvManager.download(csv, `rapor_${fabrikaAdi.replace(/ /g, '_')}_${app.helpers.getTodayISO()}.csv`); },
+        downloadGiderler: () => { let csv = 'Tip,Tarih,Başlık,Açıklama,Tutar (₺)\n'; let toplamFabrika = 0; let toplamDiger = 0; const siraliGiderler = [...app.data.giderler].sort((a, b) => new Date(a.tarih) - new Date(b.tarih)); siraliGiderler.forEach(g => { const tip = g.tip === 'fabrika' ? 'Fabrika Gideri' : 'Diğer Gider'; const tutar = g.tutar; const baslik = `"${g.aciklama.replace(/"/g, '""')}"`; const detay = `"${(g.detay || '-').replace(/"/g, '""')}"`; csv += `${tip},${g.tarih},${baslik},${detay},${tutar.toFixed(2)}\n`; if (g.tip === 'fabrika') { toplamFabrika += tutar; } else { toplamDiger += tutar; } }); const toplamGider = toplamFabrika + toplamDiger; csv += '\n--- GİDER ÖZETİ ---\n'; csv += 'Açıklama,,,,Tutar (₺)\n'; csv += `Toplam Fabrika Giderleri,,,,${toplamFabrika.toFixed(2)}\n`; csv += `Toplam Diğer Giderler,,,,${toplamDiger.toFixed(2)}\n`; csv += `GENEL TOPLAM GİDER,,,,${toplamGider.toFixed(2)}\n`; csv += `\n*** RAPOR SONU ***\n`; csvManager.download(csv, `gider_raporu_${app.helpers.getTodayISO()}.csv`); }
+    };
+    
+    // --- BÖLÜM 7: UYGULAMA BAŞLATMA ---
+    main.hideAllAuth = () => {
+        app.dom.setupContainer.style.display = 'none';
+        app.dom.loginChoiceContainer.style.display = 'none';
+        app.dom.adminLoginContainer.style.display = 'none';
+        app.dom.personelLoginContainer.style.display = 'none';
+    };
+    main.showLoginChoice = () => {
+        main.hideAllAuth();
+        app.dom.loginChoiceContainer.style.display = 'block';
+    };
+    main.runAfterLogin = () => {
+        main.attachEventListeners();
+        app.dom.uretimTarihInput.value = app.helpers.getTodayISO();
+        app.dom.giderForm.querySelector('#gider-tarih').value = app.helpers.getTodayISO();
+        app.dom.personelIslemForm.querySelector('#personel-ise-alim-tarihi').value = app.helpers.getTodayISO();
+        
+        // SGK Input Toggle
+        app.dom.personelSgkDurumu.addEventListener('change', (e) => {
+            if(e.target.value === 'Var') {
+                app.dom.personelSgkTutarGroup.style.display = 'block';
+            } else {
+                app.dom.personelSgkTutarGroup.style.display = 'none';
+            }
+        });
+
+        renderer.updateForRole(); 
+        renderer.updateAll(); 
+    };
+    main.attachEventListeners = () => {
+        app.dom.logoutBtn.addEventListener('click', actions.logout);
+        app.dom.navLinks.forEach(link => link.addEventListener('click', actions.navigate));
+        app.dom.fabrikaForm.addEventListener('submit', actions.addFactory);
+        app.dom.listeyeEkleBtn.addEventListener('click', actions.addUretimToList);
+        app.dom.giderForm.addEventListener('submit', actions.addExpense);
+        app.dom.modalCloseBtn.addEventListener('click', actions.closeModal);
+        app.dom.uretimAdetInput.addEventListener('input', actions.updateUretimToplam);
+        app.dom.uretimBirimFiyatInput.addEventListener('input', actions.updateUretimToplam);
+        app.dom.tumunuKaydetBtn.addEventListener('click', actions.saveUretimListesi);
+        app.dom.listeyiTemizleBtn.addEventListener('click', actions.clearUretimListesi);
+        app.dom.fabrikaSilForm.addEventListener('submit', actions.handleFabrikaSilSubmit);
+        app.dom.sifreDegistirForm.addEventListener('submit', actions.changePassword);
+        app.dom.yeniVardiyaForm.addEventListener('submit', actions.startShift);
+        app.dom.vardiyaKapatBtn.addEventListener('click', actions.endShift);
+        app.dom.vardiyaDevretModalBtn.addEventListener('click', actions.transferShift);
+        // Yeni: vardiya personel yönetimi
+        app.dom.vardiyaPersonelYonetBtn.addEventListener('click', actions.manageShiftPersonnel);
+        app.dom.pozisyonEkleForm.addEventListener('submit', actions.addPosition);
+        app.dom.personelIslemForm.addEventListener('submit', actions.handlePersonelFormSubmit);
+        app.dom.personelIslemSelect.addEventListener('change', actions.handlePersonelFormLoad);
+        app.dom.personelListesiContainer.addEventListener('click', (e) => { 
+            const silBtn = e.target.closest('button.personel-sil-btn');
+            const odemeBtn = e.target.closest('button.personel-odeme-btn'); 
+            if (silBtn) { actions.deleteWorker(parseInt(silBtn.dataset.id)); }
+            if (odemeBtn) { actions.openPersonelOdemeModal(parseInt(odemeBtn.dataset.id), odemeBtn.dataset.name); }
+        });
+
+        app.dom.pozisyonListesiContainer.addEventListener('click', (e) => { const target = e.target.closest('button.pozisyon-sil-btn'); if (target) { actions.deletePosition(target.dataset.id, target.dataset.kullanim); } });
+        app.dom.vardiyaGecmisiContainer.addEventListener('click', (e) => { const target = e.target.closest('button.vardiya-sil-btn'); if (target) { actions.deleteShift(parseInt(target.dataset.id)); } });
+        app.dom.kayitListesiContainer.addEventListener('click', (e) => { const target = e.target.closest('button.temp-sil-btn'); if (target) { actions.removeUretimFromList(parseInt(target.dataset.index)); } });
+        app.dom.fabrikaHesapTabloContainer.addEventListener('click', (e) => { const target = e.target.closest('button'); if (!target) return; const id = target.dataset.id; const name = target.dataset.name; if (target.classList.contains('odeme-al-btn')) actions.openOdemeModal(id, name); if (target.classList.contains('fabrika-csv-btn')) csvManager.downloadFabrika(parseInt(id), name); if (target.classList.contains('reset-hesap-btn')) actions.resetFactory(id, name); });
+        app.dom.sonUretimlerContainer.addEventListener('click', (e) => { const target = e.target.closest('button.uretim-sil-btn'); if(target) { actions.deleteProduction(target.dataset.id); } });
+        app.dom.giderTabloContainer.addEventListener('click', (e) => { const target = e.target.closest('button.gider-sil-btn'); if (target) { actions.deleteExpense(target.dataset.id); } });
+        app.dom.genelCsvIndirBtn.addEventListener('click', csvManager.downloadGenel);
+        app.dom.giderCsvIndirBtn.addEventListener('click', csvManager.downloadGiderler);
+        // Yeni: aktif vardiyada çalışan çıkarma butonları dinle
+        app.dom.aktifVardiyaDetaylari.addEventListener('click', (e) => {
+            const btn = e.target.closest('button.calisan-cikart-btn');
+            if (btn) {
+                const pid = parseInt(btn.dataset.personelId);
+                if (!isNaN(pid)) {
+                    actions.removeWorkerFromActiveShift(pid);
+                    dataManager.save();
+                    renderer.updateAll();
+                }
+            }
+        });
+
+        // Haftalık izin planlama formu için dinleyici
+        if (app.dom.izinPlanForm) {
+            app.dom.izinPlanForm.addEventListener('submit', actions.addManualLeave);
+        }
+    };
+    // Uygulama başlangıcında verileri yüklemek için ana boot fonksiyonu
+    main.boot = async () => {
+        // Sunucudan veya localStorage'dan veriyi yükle
+        await dataManager.load();
+        main.hideAllAuth();
+        // Yöneticilerin olup olmadığını kontrol et. Eğer yoksa kurulum ekranını göster.
+        let adminExists = false;
+        try {
+            adminExists = app.data.personel.some(p => {
+                const pos = app.data.pozisyonlar.find(pos => pos.id === p.pozisyonId);
+                return pos && pos.ad && pos.ad.toLowerCase() === 'yönetici';
+            });
+        } catch (e) {
+            adminExists = false;
+        }
+        if (!adminExists) {
+            // İlk kez kullanılıyor, yönetici oluşturma ekranını göster
+            app.dom.setupContainer.style.display = 'block';
+            if (app.dom.setupForm) {
+                app.dom.setupForm.addEventListener('submit', actions.setup);
+            }
+        } else {
+            // En az bir yönetici var, giriş seçeneklerini göster
+            app.dom.loginChoiceContainer.style.display = 'block';
+            app.dom.btnAdminLoginChoice.addEventListener('click', () => {
+                main.hideAllAuth();
+                app.dom.adminLoginContainer.style.display = 'block';
+            });
+            app.dom.btnPersonelLoginChoice.addEventListener('click', () => {
+                main.hideAllAuth();
+                app.dom.personelLoginContainer.style.display = 'block';
+            });
+            if (app.dom.adminLoginForm) {
+                app.dom.adminLoginForm.addEventListener('submit', actions.adminLogin);
+            }
+            if (app.dom.personelLoginForm) {
+                app.dom.personelLoginForm.addEventListener('submit', actions.personelLogin);
+            }
+        }
+    };
+    
+    // UYGULAMAYI BAŞLAT
+    main.boot();
+    // Mobil menü için toggle butonu: sidebar'ı aç/kapat
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle');
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', () => {
+            const sidebarEl = document.getElementById('sidebar');
+            if (sidebarEl) {
+                sidebarEl.classList.toggle('active');
+            }
+        });
+    }
+
+});
+// JAVASCRIPT KODLARI BİTİŞ
+</script>
+
+</body>
+</html>

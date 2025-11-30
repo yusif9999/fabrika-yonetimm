@@ -1,0 +1,31 @@
+{
+  "fabrikalar": [],
+  "uretimler": [],
+  "giderler": [],
+  "odemeler": [],
+  "vardiyalar": [],
+  "personel": [
+    {
+      "id": 1764513602378,
+      "ad": "idris",
+      "telefon": "",
+      "iseAlimTarihi": "2025-11-30",
+      "pozisyonId": 1764513602378,
+      "netMaas": 0,
+      "brutMaas": 0,
+      "maasTipi": "Aylık",
+      "durum": "Aktif",
+      "kullaniciAdi": "idris",
+      "sifre": "9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0",
+      "sgkDurumu": "Yok",
+      "sgkTutar": 0,
+      "attendance": {}
+    }
+  ],
+  "pozisyonlar": [
+    {
+      "id": 1764513602378,
+      "ad": "Yönetici"
+    }
+  ]
+}
