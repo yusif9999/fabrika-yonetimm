@@ -2210,6 +2210,25 @@ document.addEventListener('DOMContentLoaded', () => {
          * Seçilen personel ve tarih için izin kaydı oluşturur.
          */
         addManualLeave: (e) => {
+            // Bu kodu actions nesnesinin içine, diğer fonksiyonların yanına ekleyin
+        deleteShift: (id) => {
+            id = parseInt(id);
+            const shift = app.data.vardiyalar.find(v => v.id === id);
+            if (!shift) return;
+
+            if (confirm("Bu vardiya kaydını kalıcı olarak silmek istediğinizden emin misiniz?")) {
+                // Vardiyayı diziden çıkar
+                app.data.vardiyalar = app.data.vardiyalar.filter(v => v.id !== id);
+                
+                // Veriyi kaydet
+                dataManager.save();
+                
+                // Sadece vardiya geçmişi tablosunu güncelle
+                renderer.vardiyaGecmisi();
+                
+                alert("Vardiya kaydı başarıyla silindi.");
+            }
+        },
             e.preventDefault();
             const selectEl = app.dom.izinPersonelSelect;
             const dateEl = app.dom.izinTarihInput;
