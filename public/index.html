@@ -2329,7 +2329,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         app.dom.pozisyonListesiContainer.addEventListener('click', (e) => { const target = e.target.closest('button.pozisyon-sil-btn'); if (target) { actions.deletePosition(target.dataset.id, target.dataset.kullanim); } });
-        app.dom.vardiyaGecmisiContainer.addEventListener('click', (e) => { const target = e.target.closest('button.vardiya-sil-btn'); if (target) { actions.deleteShift(parseInt(target.dataset.id)); } });
+        // --- DÜZELTİLMİŞ SİLME KODU BAŞLANGIÇ ---
+        app.dom.vardiyaGecmisiContainer.addEventListener('click', (e) => {
+            const target = e.target.closest('button.vardiya-sil-btn');
+            if (target) {
+                // actions.deleteShift çağırmak yerine işi burada bitiriyoruz:
+                const id = parseInt(target.dataset.id);
+                const shift = app.data.vardiyalar.find(v => v.id === id);
+                
+                if (!shift) {
+                    alert("Hata: Vardiya bulunamadı.");
+                    return;
+                }
+
+                if (confirm("Bu vardiya kaydını kalıcı olarak silmek istediğinizden emin misiniz?")) {
+                    // Silme işlemi
+                    app.data.vardiyalar = app.data.vardiyalar.filter(v => v.id !== id);
+                    dataManager.save();
+                    renderer.vardiyaGecmisi(); // Tabloyu yenile
+                }
+            }
+        });
+        // --- DÜZELTİLMİŞ SİLME KODU BİTİŞ ---
         app.dom.kayitListesiContainer.addEventListener('click', (e) => { const target = e.target.closest('button.temp-sil-btn'); if (target) { actions.removeUretimFromList(parseInt(target.dataset.index)); } });
         app.dom.fabrikaHesapTabloContainer.addEventListener('click', (e) => { const target = e.target.closest('button'); if (!target) return; const id = target.dataset.id; const name = target.dataset.name; if (target.classList.contains('odeme-al-btn')) actions.openOdemeModal(id, name); if (target.classList.contains('fabrika-csv-btn')) csvManager.downloadFabrika(parseInt(id), name); if (target.classList.contains('reset-hesap-btn')) actions.resetFactory(id, name); });
         app.dom.sonUretimlerContainer.addEventListener('click', (e) => { const target = e.target.closest('button.uretim-sil-btn'); if(target) { actions.deleteProduction(target.dataset.id); } });
