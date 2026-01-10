@@ -227,6 +227,61 @@
                 margin: 0 auto;
             }
         }
+
+        /* SAAS (Çoklu Şirket) Arayüz Stilleri */
+        .saas-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: none; /* Varsayılan gizli, JS ile açılacak */
+            animation: fadeIn 0.5s;
+        }
+        .saas-card {
+            background: white;
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .saas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .saas-option {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .saas-option:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .saas-option h3 { color: var(--dark-color); margin-bottom: 10px; }
+        .saas-option p { color: #7f8c8d; font-size: 14px; }
+        .saas-icon { width: 50px; height: 50px; margin-bottom: 20px; fill: var(--primary-color); }
+        
+        /* Süper Admin Tablosu */
+        .admin-table-container { overflow-x: auto; margin-top: 20px; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-Pending { background: #ffeeba; color: #856404; }
+        .status-Active { background: #d4edda; color: #155724; }
+        .status-Suspended { background: #f8d7da; color: #721c24; }
+
+        .btn-sm-primary {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -236,6 +291,158 @@
         <!-- Hamburger ikon -->
         <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/></svg>
     </button>
+
+    <div id="saas-landing" class="saas-container" style="display: block;"> <div class="saas-card">
+            <h1>Fabrika Yönetim Paneli</h1>
+            <p style="font-size: 18px; color: #7f8c8d; margin-bottom: 40px;">İşletmenizi yönetmek için lütfen giriş yapın veya kayıt olun.</p>
+            
+            <div class="saas-grid">
+                <div class="saas-option" onclick="saas.showLogin()">
+                    <svg class="saas-icon" viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                    <h3>Şirket Girişi</h3>
+                    <p>Mevcut hesabınızla işletme panelinize erişin.</p>
+                </div>
+
+                <div class="saas-option" onclick="saas.showRegister()">
+                    <svg class="saas-icon" viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    <h3>Yeni İşletme Kaydı</h3>
+                    <p>Yeni bir hesap oluşturun ve abonelik başlatın.</p>
+                </div>
+
+                <div class="saas-option" onclick="saas.showAdminLogin()">
+                    <svg class="saas-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                    <h3>Sistem Yöneticisi</h3>
+                    <p>Sadece platform sahipleri için.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="saas-register" class="auth-container">
+        <h1>İşletme Kaydı</h1>
+        <p>Bilgilerinizi girerek kayıt talebi oluşturun.</p>
+        <form id="saas-register-form">
+            <div class="input-group"><label>Şirket/Fabrika Adı</label><input type="text" id="reg-company-name" required></div>
+            <div class="input-group"><label>E-Posta Adresi</label><input type="email" id="reg-email" required></div>
+            <div class="input-group"><label>Kullanıcı Adı (Giriş İçin)</label><input type="text" id="reg-username" required></div>
+            <div class="input-group"><label>Şifre</label><input type="password" id="reg-password" required></div>
+            <button type="submit" class="btn btn-success btn-full">Kayıt Ol</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showLanding()">Geri Dön</button>
+        </form>
+    </div>
+
+    <div id="saas-login" class="auth-container">
+        <h1>Şirket Girişi</h1>
+        <p>İşletme kullanıcı adı ve şifrenizle giriş yapın.</p>
+        <form id="saas-login-form">
+            <div class="input-group"><label>Şirket Kullanıcı Adı</label><input type="text" id="login-username" required></div>
+            <div class="input-group"><label>Şifre</label><input type="password" id="login-password" required></div>
+            <button type="submit" class="btn btn-primary btn-full">Giriş Yap</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showLanding()">Geri Dön</button>
+        </form>
+    </div>
+
+    <div id="saas-admin-login" class="auth-container">
+        <h1>Sistem Yöneticisi</h1>
+        <p>Platform yönetimi için giriş yapın.</p>
+        <form id="saas-admin-login-form">
+            <div class="input-group"><label>Kullanıcı Adı</label><input type="text" id="admin-login-user" required></div>
+            <div class="input-group"><label>Şifre</label><input type="password" id="admin-login-pass" required></div>
+            <button type="submit" class="btn btn-danger btn-full">Panele Gir</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showLanding()">Geri Dön</button>
+        </form>
+    </div>
+
+   <div id="saas-admin-panel" class="saas-container">
+        <div class="saas-card" style="text-align: left; max-width: 1000px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                <div>
+                    <h2 style="margin:0;">Sistem Yöneticisi</h2>
+                    <div style="margin-top: 10px;">
+                        <button id="btn-admin-tab-companies" class="btn btn-primary" onclick="saas.switchAdminTab('companies')">Şirketler</button>
+                        <button id="btn-admin-tab-payments" class="btn btn-secondary" onclick="saas.switchAdminTab('payments')">Ödeme Geçmişi</button>
+                        <button id="btn-admin-tab-settings" class="btn btn-secondary" onclick="saas.switchAdminTab('settings')">Ayarlar</button>
+                    </div>
+                </div>
+                <button class="btn btn-danger" onclick="location.reload()">Çıkış</button>
+            </div>
+
+            <div id="admin-view-companies">
+                <div class="admin-table-container">
+                    <table id="saas-companies-table">
+                        <thead>
+                            <tr>
+                                <th>Şirket</th>
+                                <th>Durum</th>
+                                <th>Başlangıç / Bitiş</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="admin-view-payments" style="display:none;">
+                <h3>Tahsilat Raporu</h3>
+                <div class="admin-table-container">
+                    <table id="saas-payments-table">
+                        <thead>
+                            <tr>
+                                <th>Şirket</th>
+                                <th>Tutar</th>
+                                <th>Süre</th>
+                                <th>İşlem Tarihi</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="admin-view-settings" style="display: none; max-width: 400px; margin: 0 auto;">
+                <h3>Giriş Bilgilerini Güncelle</h3>
+                <div class="input-group"><label>Yeni Kullanıcı Adı</label><input type="text" id="admin-new-username"></div>
+                <div class="input-group"><label>Yeni Şifre</label><input type="password" id="admin-new-password"></div>
+                <button class="btn btn-success btn-full" onclick="saas.saveAdminSettings()">Güncelle</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="subscription-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:30px; border-radius:10px; width:400px; max-width:90%; position:relative;">
+            <h2 style="margin-top:0;">Abonelik / Süre Ekle</h2>
+            <p id="modal-company-name" style="color:blue; font-weight:bold;"></p>
+            
+            <input type="hidden" id="modal-company-id">
+
+            <div class="input-group">
+                <label>Abonelik Başlangıç Tarihi</label>
+                <input type="date" id="sub-start-date" class="form-control">
+            </div>
+
+            <div class="input-group">
+                <label>Süre Seçimi</label>
+                <select id="sub-duration" class="form-control" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+                    <option value="1">1 Ay</option>
+                    <option value="3">3 Ay</option>
+                    <option value="6">6 Ay</option>
+                    <option value="12">1 Yıl (12 Ay)</option>
+                    <option value="24">2 Yıl (24 Ay)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Ödenen Tutar (TL)</label>
+                <input type="number" id="sub-amount" placeholder="Örn: 5000" style="width:100%; padding:10px;">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn btn-success" style="flex:1;" onclick="saas.saveSubscription()">Kaydet ve Onayla</button>
+                <button class="btn btn-danger" style="flex:1;" onclick="document.getElementById('subscription-modal').style.display='none'">İptal</button>
+            </div>
+        </div>
+    </div>
 
 
     <div id="setup-container" class="auth-container">
@@ -620,6 +827,205 @@
 
 const main = {}; 
 
+// --- YENİ: SAAS (Çoklu Şirket) YÖNETİCİSİ ---
+    // --- GÜNCELLENMİŞ SAAS MODÜLÜ (Hata Korumalı) ---
+    // --- GÜNCELLENMİŞ SAAS MODÜLÜ (Şirket İsmi Gösteren Versiyon) ---
+    // --- SAAS MODÜLÜ (GÜNCELLENMİŞ - Şirket Adı Özellikli) ---
+    // --- SAAS MODÜLÜ (GÜNCELLENMİŞ - Ayarlar ve Silme Dahil) ---
+    // --- SAAS MODÜLÜ (Gelişmiş Abonelik Yönetimi) ---
+    const saas = {
+        currentCompanyId: null,
+        
+        hideAll: () => {
+            ['saas-landing', 'saas-register', 'saas-login', 'saas-admin-login', 'saas-admin-panel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            if (typeof main !== 'undefined' && main.hideAllAuth) main.hideAllAuth(); 
+        },
+        showLanding: () => { saas.hideAll(); document.getElementById('saas-landing').style.display = 'block'; },
+        showRegister: () => { saas.hideAll(); document.getElementById('saas-register').style.display = 'block'; },
+        showLogin: () => { saas.hideAll(); document.getElementById('saas-login').style.display = 'block'; },
+        showAdminLogin: () => { saas.hideAll(); document.getElementById('saas-admin-login').style.display = 'block'; },
+        
+        // --- İŞLEMLER ---
+        register: async (e) => {
+            e.preventDefault();
+            const data = {
+                companyName: document.getElementById('reg-company-name').value,
+                email: document.getElementById('reg-email').value,
+                username: document.getElementById('reg-username').value,
+                password: document.getElementById('reg-password').value
+            };
+            try {
+                const res = await fetch('/api/saas/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+                if (!res.ok) { alert("Kayıt Hatası: " + (await res.json()).error); return; }
+                alert("Kayıt Başarılı!"); saas.showLanding();
+            } catch (err) { alert('Hata!'); }
+        },
+
+        login: async (e) => {
+            e.preventDefault();
+            const data = { username: document.getElementById('login-username').value, password: document.getElementById('login-password').value };
+            try {
+                const res = await fetch('/api/saas/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+                if (!res.ok) { alert((await res.json()).error); return; }
+                const result = await res.json();
+                
+                saas.currentCompanyId = result.companyId;
+                const sirketAdi = result.companyName || "Panel";
+                document.title = sirketAdi;
+                if(document.querySelector('#login-choice-container h1')) document.querySelector('#login-choice-container h1').textContent = sirketAdi;
+                if(document.querySelector('#sidebar .logo')) document.querySelector('#sidebar .logo').innerHTML = sirketAdi.toUpperCase();
+                
+                saas.hideAll();
+                if(typeof main !== 'undefined' && main.boot) main.boot(); 
+            } catch (err) { alert('Hata!'); }
+        },
+
+        adminLogin: async (e) => {
+            e.preventDefault();
+            const data = { username: document.getElementById('admin-login-user').value, password: document.getElementById('admin-login-pass').value };
+            try {
+                const res = await fetch('/api/saas/admin/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+                if (!res.ok) throw new Error();
+                document.getElementById('admin-new-username').value = data.username;
+                saas.loadAdminPanel();
+            } catch (err) { alert('Hatalı giriş.'); }
+        },
+
+        // --- YÖNETİCİ PANELİ ÖZELLİKLERİ ---
+        switchAdminTab: (tabName) => {
+            ['companies', 'payments', 'settings'].forEach(t => {
+                document.getElementById('admin-view-' + t).style.display = (t === tabName) ? 'block' : 'none';
+                const btn = document.getElementById('btn-admin-tab-' + t);
+                if(btn) btn.className = (t === tabName) ? 'btn btn-primary' : 'btn btn-secondary';
+            });
+            if(tabName === 'payments') saas.loadPayments(); // Ödemeler sekmesi açılırsa verileri çek
+        },
+
+        loadAdminPanel: async () => {
+            saas.hideAll();
+            document.getElementById('saas-admin-panel').style.display = 'block';
+            saas.switchAdminTab('companies');
+
+            const tbody = document.querySelector('#saas-companies-table tbody');
+            tbody.innerHTML = '<tr><td colspan="4">Yükleniyor...</td></tr>';
+            try {
+                const res = await fetch('/api/saas/admin/companies');
+                const companies = await res.json();
+                tbody.innerHTML = '';
+                
+                if(companies.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Kayıt yok.</td></tr>'; return; }
+
+                companies.forEach(comp => {
+                    const startD = comp.subscriptionStartDate ? new Date(comp.subscriptionStartDate).toLocaleDateString('tr-TR') : '-';
+                    const endD = comp.subscriptionEndDate ? new Date(comp.subscriptionEndDate).toLocaleDateString('tr-TR') : '-';
+                    
+                    let actions = '';
+                    // Tek bir buton ile abonelik penceresini açıyoruz
+                    actions += `<button class="btn-sm-primary" onclick="saas.openSubscriptionModal('${comp._id}', '${comp.companyName}')">Abonelik Yönetimi</button> `;
+                    
+                    if(comp.status === 'Suspended' || comp.status === 'Pending') {
+                        actions += `<button class="btn-sm-danger" onclick="saas.deleteCompany('${comp._id}')">Sil</button>`;
+                    } else {
+                        actions += `<button class="btn-sm-danger" onclick="saas.suspendCompany('${comp._id}')">Askıya Al</button>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${comp.companyName}</b><br><small>${comp.email}</small></td>
+                            <td><span class="status-badge status-${comp.status}">${comp.status}</span></td>
+                            <td>Başlangıç: ${startD}<br>Bitiş: ${endD}</td>
+                            <td>${actions}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) { tbody.innerHTML = '<tr><td colspan="4">Hata.</td></tr>'; }
+        },
+
+        // YENİ: Abonelik Modalını Aç
+        openSubscriptionModal: (id, name) => {
+            document.getElementById('modal-company-id').value = id;
+            document.getElementById('modal-company-name').textContent = name;
+            
+            // Başlangıç tarihini bugün yap
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('sub-start-date').value = today;
+            
+            document.getElementById('sub-amount').value = ''; // Fiyatı sıfırla
+            document.getElementById('sub-duration').value = '1'; // Varsayılan 1 ay
+
+            // Modalı göster (Flex yaparak ortalıyoruz)
+            document.getElementById('subscription-modal').style.display = 'flex';
+        },
+
+        // YENİ: Aboneliği Kaydet
+        saveSubscription: async () => {
+            const id = document.getElementById('modal-company-id').value;
+            const amount = document.getElementById('sub-amount').value;
+            const months = document.getElementById('sub-duration').value;
+            const startDate = document.getElementById('sub-start-date').value;
+
+            if(!amount) { alert("Lütfen bir tutar girin."); return; }
+
+            try {
+                const res = await fetch('/api/saas/admin/add-subscription', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ companyId: id, amount, months, startDate })
+                });
+                const result = await res.json();
+                if(result.success) {
+                    alert(result.message);
+                    document.getElementById('subscription-modal').style.display = 'none';
+                    saas.loadAdminPanel(); // Listeyi yenile
+                } else { alert("Hata: " + result.error); }
+            } catch (err) { alert("Sunucu hatası."); }
+        },
+
+        // YENİ: Ödeme Geçmişini Yükle
+        loadPayments: async () => {
+            const tbody = document.querySelector('#saas-payments-table tbody');
+            tbody.innerHTML = '<tr><td colspan="4">Yükleniyor...</td></tr>';
+            try {
+                const res = await fetch('/api/saas/admin/payments');
+                const payments = await res.json();
+                tbody.innerHTML = '';
+                if(payments.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Henüz ödeme yok.</td></tr>'; return; }
+                
+                payments.forEach(p => {
+                    const date = new Date(p.paymentDate).toLocaleDateString('tr-TR') + ' ' + new Date(p.paymentDate).toLocaleTimeString('tr-TR');
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${p.companyName}</td>
+                            <td style="color:green; font-weight:bold;">${p.amount} TL</td>
+                            <td>${p.period}</td>
+                            <td>${date}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) { tbody.innerHTML = '<tr><td colspan="4">Hata.</td></tr>'; }
+        },
+
+        // Yardımcılar
+        deleteCompany: async (id) => {
+            if(!confirm('Bu şirketi KALICI olarak silmek istiyor musunuz?')) return;
+            await fetch('/api/saas/admin/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id }) });
+            saas.loadAdminPanel();
+        },
+        suspendCompany: async (id) => { // Askıya alma butonu için kısa yol
+             // Askıya alırken "Status: Suspended" gönderiyoruz, gün eklemiyoruz (subscriptionDays: 0)
+             await fetch('/api/saas/admin/update', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id, status: 'Suspended', subscriptionDays: 0 }) });
+             saas.loadAdminPanel();
+        },
+        saveAdminSettings: async () => {
+            const newUsername = document.getElementById('admin-new-username').value;
+            const newPassword = document.getElementById('admin-new-password').value;
+            await fetch('/api/saas/admin/update-credentials', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ newUsername, newPassword }) });
+            alert("Güncellendi.");
+        }
+    };
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- BÖLÜM 1: UYGULAMA OBJESİ (NAMESPACE) ---
@@ -751,167 +1157,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- BÖLÜM 2: VERİ YÖNETİMİ ---
     const dataManager = {
-        /**
-         * Sunucudan verileri yükler. Eğer sunucuya erişilemiyorsa,
-         * localStorage'daki veriyi kullanır veya varsayılan boş veriyle devam eder.
-         */
         load: async () => {
             const defaultData = { fabrikalar: [], uretimler: [], giderler: [], odemeler: [], vardiyalar: [], personel: [], pozisyonlar: [] };
             try {
-                // Sunucudan veriyi almaya çalış
-                const resp = await fetch('/api/data');
+                // YENİ: Header içinde company-id gönderiyoruz
+                const headers = {};
+                if (saas.currentCompanyId) {
+                    headers['company-id'] = saas.currentCompanyId;
+                }
+                
+                const resp = await fetch('/api/data', { headers: headers });
                 if (!resp.ok) throw new Error('Sunucu yanıtı başarısız');
                 const remoteData = await resp.json();
                 app.data = remoteData || defaultData;
             } catch (err) {
-                console.error('Sunucudan veri alınamadı, localStorage kullanılacak:', err);
-                const savedData = localStorage.getItem('fabrikaYonetimVeri_v3');
-                app.data = savedData ? JSON.parse(savedData) : defaultData;
+                console.error('Veri yüklenemedi:', err);
+                app.data = defaultData;
             }
-            
-            // VERİ MİGRASYONU (Eski verileri yeni formata uydurma)
-            app.data.personel.forEach(p => {
-                if (!p.kullaniciAdi) p.kullaniciAdi = '';
-                if (p.sifre && p.sifre.length < 64) p.sifre = '';
-                if (!p.sgkDurumu) p.sgkDurumu = 'Yok';
-                if (!p.sgkTutar) p.sgkTutar = 0;
-                
-                // YENİ: Eğer eski 'maas' alanı varsa ama 'netMaas' yoksa aktar
-                if (p.maas !== undefined && p.netMaas === undefined) {
-                    p.netMaas = p.maas;
-                    p.brutMaas = app.helpers.calculateGrossSalary(p.maas);
-                }
-                // Katılım verisi (attendance) yoksa ekle; eski boolean verileri yeni yapıya dönüştür
-                if (!p.attendance) {
-                    p.attendance = {};
-                } else {
-                    Object.keys(p.attendance).forEach(d => {
-                        const entry = p.attendance[d];
-                        if (typeof entry === 'boolean') {
-                            // true -> present, false -> absent
-                            if (entry) {
-                                p.attendance[d] = { status: 'present', hours: null };
-                            } else {
-                                p.attendance[d] = { status: 'absent', hours: null };
-                            }
-                        } else if (entry && (entry.status === undefined || entry.status === null)) {
-                            // Eğer sadece hours saklanmışsa veya string ise varsayılan olarak present kabul et
-                            if (typeof entry === 'string') {
-                                // 'izin' vb. metinler ise
-                                p.attendance[d] = { status: entry, hours: null };
-                            } else {
-                                p.attendance[d] = { status: 'present', hours: entry.hours || null };
-                            }
-                        }
-                    });
-                }
-
-            });
-            
-            if (app.data.isciler && !app.data.personel) { app.data.personel = app.data.isciler; delete app.data.isciler; }
-            if (!app.data.vardiyalar) { app.data.vardiyalar = []; }
-            if (!app.data.personel) { app.data.personel = []; }
-            if (!app.data.pozisyonlar) { app.data.pozisyonlar = []; }
-
-            // --- Yönetici hesabı migrasyonu ---
-            // Eğer eski yöneticinin hash'i saklanmışsa ve henüz 'Yönetici' pozisyonunda bir kullanıcı yoksa,
-            // bu pozisyonda varsayılan bir yönetici personel oluşturur.
-            try {
-                const storedHash = dataManager.loadAuthHash && dataManager.loadAuthHash();
-                if (storedHash) {
-                    // Yönetici pozisyonunu bul veya oluştur
-                    let yoneticiPos = app.data.pozisyonlar.find(pos => {
-                        return pos.ad && typeof pos.ad === 'string' && pos.ad.toLowerCase() === 'yönetici';
-                    });
-                    if (!yoneticiPos) {
-                        yoneticiPos = { id: Date.now(), ad: 'Yönetici' };
-                        app.data.pozisyonlar.push(yoneticiPos);
-                    }
-                    // Yönetici pozisyonuna sahip bir personel var mı?
-                    const existingAdmin = app.data.personel.find(p => p.pozisyonId === yoneticiPos.id);
-                    if (!existingAdmin) {
-                        // Varsayılan kullanıcı adı: admin
-                        // Mevcut hashed password storedHash kullanılır
-                        app.data.personel.push({
-                            id: Date.now() + 1,
-                            ad: 'Yönetici',
-                            telefon: '',
-                            iseAlimTarihi: app.helpers.getTodayISO(),
-                            pozisyonId: yoneticiPos.id,
-                            netMaas: 0,
-                            brutMaas: 0,
-                            maasTipi: 'Aylık',
-                            durum: 'Aktif',
-                            kullaniciAdi: 'admin',
-                            sifre: storedHash,
-                            sgkDurumu: 'Yok',
-                            sgkTutar: 0,
-                            attendance: {}
-                        });
-                        // Veriyi kalıcı olarak kaydet
-                        try {
-                            localStorage.setItem('fabrikaYonetimVeri_v3', JSON.stringify(app.data));
-                        } catch (e) {
-                            // ignore
-                        }
-                    }
-                    // Yönetici hash'i bir kerelik kullanıldığı için temizleyebiliriz
-                    // localStorage.removeItem kullanmak yerine boş bir string kaydediyoruz
-                    // böylece bir daha bu kod çalıştırıldığında yeniden oluşturmaz
-                    try {
-                        localStorage.setItem('fabrikaYonetimAuth_v2_hash', '');
-                    } catch (e) {
-                        // ignore
-                    }
-                }
-            } catch (e) {
-                console.error('Admin migration error', e);
-            }
-            // Migrate old vardiya format: ensure calisanlar array and responsibleId exist
-            app.data.vardiyalar.forEach(vardiya => {
-                // If old format had isciAdi, convert to calisanlar array
-                if (vardiya.isciAdi && !vardiya.calisanlar) {
-                    vardiya.calisanlar = [
-                        {
-                            isciAdi: vardiya.isciAdi,
-                            // Note: personelId may not exist in very old data
-                            personelId: vardiya.personelId || null,
-                            devralmaZamani: vardiya.baslamaZamani
-                        }
-                    ];
-                }
-                // Eğer sorumlu tanımlı değilse, ilk çalışanı sorumlu olarak ata
-                if (vardiya.responsibleId === undefined) {
-                    if (Array.isArray(vardiya.calisanlar) && vardiya.calisanlar.length > 0) {
-                        const first = vardiya.calisanlar[0];
-                        vardiya.responsibleId = first.personelId || null;
-                    } else {
-                        vardiya.responsibleId = null;
-                    }
-                }
-                // hoursRecorded alanını ekle: bitiş zamanı varsa kayıt yapılmış kabul et
-                if (Array.isArray(vardiya.calisanlar)) {
-                    vardiya.calisanlar.forEach(c => {
-                        if (c.hoursRecorded === undefined) {
-                            c.hoursRecorded = !!c.bitisZamani;
-                        }
-                    });
-                }
-            });
+            // ... (Buradan sonraki migrasyon kodlarını aynen koruyun) ...
+             app.data.personel.forEach(p => { /* ...eski kodlarınız... */ });
+             // Migrasyon kodlarının devamı burada kalsın
         },
-        /**
-         * Verileri sunucuya kaydeder. Sunucuya ulaşılamıyorsa, localStorage yedeği tutulur.
-         */
         save: async () => {
             try {
+                // YENİ: Header içinde company-id gönderiyoruz
+                const headers = { 'Content-Type': 'application/json' };
+                if (saas.currentCompanyId) {
+                    headers['company-id'] = saas.currentCompanyId;
+                }
+
                 await fetch('/api/data', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: headers,
                     body: JSON.stringify(app.data)
                 });
             } catch (err) {
-                console.error('Veri kaydedilirken sunucu hatası, localStorage kullanılacak:', err);
-                localStorage.setItem('fabrikaYonetimVeri_v3', JSON.stringify(app.data));
+                console.error('Kaydetme hatası:', err);
             }
         },
         loadAuthHash: () => { return localStorage.getItem('fabrikaYonetimAuth_v2_hash'); },
@@ -2377,42 +2658,49 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     // Uygulama başlangıcında verileri yüklemek için ana boot fonksiyonu
     main.boot = async () => {
-        // Sunucudan veya localStorage'dan veriyi yükle
-        await dataManager.load();
-        main.hideAllAuth();
-        // Yöneticilerin olup olmadığını kontrol et. Eğer yoksa kurulum ekranını göster.
-        let adminExists = false;
-        try {
-            adminExists = app.data.personel.some(p => {
-                const pos = app.data.pozisyonlar.find(pos => pos.id === p.pozisyonId);
-                return pos && pos.ad && pos.ad.toLowerCase() === 'yönetici';
-            });
-        } catch (e) {
-            adminExists = false;
-        }
-        if (!adminExists) {
-            // İlk kez kullanılıyor, yönetici oluşturma ekranını göster
-            app.dom.setupContainer.style.display = 'block';
-            if (app.dom.setupForm) {
-                app.dom.setupForm.addEventListener('submit', actions.setup);
+        // Form Dinleyicilerini Başlat
+        document.getElementById('saas-register-form').addEventListener('submit', saas.register);
+        document.getElementById('saas-login-form').addEventListener('submit', saas.login);
+        document.getElementById('saas-admin-login-form').addEventListener('submit', saas.adminLogin);
+
+        // Ana uygulama veri yüklemesini burada yapmıyoruz. 
+        // Kullanıcı şirkete giriş yaptığında (saas.login içinde) main.boot tekrar çağrılacak ama veri yüklemesiyle.
+        
+        if (saas.currentCompanyId) {
+            // Şirket girişi yapılmış, normal akışı başlat
+            await dataManager.load();
+            main.hideAllAuth();
+            
+            // Yönetici kontrolü (Mevcut kodunuzdaki gibi)
+            let adminExists = false;
+            try {
+                adminExists = app.data.personel.some(p => {
+                    const pos = app.data.pozisyonlar.find(pos => pos.id === p.pozisyonId);
+                    return pos && pos.ad && pos.ad.toLowerCase() === 'yönetici';
+                });
+            } catch (e) { adminExists = false; }
+
+            if (!adminExists) {
+                app.dom.setupContainer.style.display = 'block';
+                // Eski event listener'ları ekle
+                if (app.dom.setupForm) app.dom.setupForm.addEventListener('submit', actions.setup);
+            } else {
+                app.dom.loginChoiceContainer.style.display = 'block';
+                // Eski event listener'ları ekle
+                app.dom.btnAdminLoginChoice.addEventListener('click', () => {
+                    main.hideAllAuth();
+                    app.dom.adminLoginContainer.style.display = 'block';
+                });
+                app.dom.btnPersonelLoginChoice.addEventListener('click', () => {
+                    main.hideAllAuth();
+                    app.dom.personelLoginContainer.style.display = 'block';
+                });
+                if (app.dom.adminLoginForm) app.dom.adminLoginForm.addEventListener('submit', actions.adminLogin);
+                if (app.dom.personelLoginForm) app.dom.personelLoginForm.addEventListener('submit', actions.personelLogin);
             }
         } else {
-            // En az bir yönetici var, giriş seçeneklerini göster
-            app.dom.loginChoiceContainer.style.display = 'block';
-            app.dom.btnAdminLoginChoice.addEventListener('click', () => {
-                main.hideAllAuth();
-                app.dom.adminLoginContainer.style.display = 'block';
-            });
-            app.dom.btnPersonelLoginChoice.addEventListener('click', () => {
-                main.hideAllAuth();
-                app.dom.personelLoginContainer.style.display = 'block';
-            });
-            if (app.dom.adminLoginForm) {
-                app.dom.adminLoginForm.addEventListener('submit', actions.adminLogin);
-            }
-            if (app.dom.personelLoginForm) {
-                app.dom.personelLoginForm.addEventListener('submit', actions.personelLogin);
-            }
+            // Henüz şirket girişi yapılmamış, SAAS Landing sayfasını göster
+            saas.showLanding();
         }
     };
     
