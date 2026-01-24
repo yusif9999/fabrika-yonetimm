@@ -526,6 +526,14 @@
                     <li data-role="admin"><a href="#" class="nav-link" data-page="giderler"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm-1 14H5c-.55 0-1-.45-1-1v-5h16v5c0 .55-.45 1-1 1zM20 8H4V6h16v2z"/></svg>Giderler</a></li>
                     <li data-role="admin"><a href="#" class="nav-link" data-page="fabrikalar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>Fabrika Hesapları</a></li>
                     <li data-role="admin"><a href="#" class="nav-link" data-page="raporlar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>Raporlar</a></li>
+                    <li data-role="admin isci">
+    <a href="#" class="nav-link" data-page="stok-yonetimi">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-9.8-3.28l3.1-5.58h1c.55 0 1-.45 1-1s-.45-1-1-1H6.2c-.71 0-1.35.37-1.72.97l-3.2 5.76c-.72 1.3 1.07 2.62 1.92 1.48l.45-.63zM16.5 13c1.93 0 3.5-1.57 3.5-3.5S18.43 6 16.5 6 13 7.57 13 9.5s1.57 3.5 3.5 3.5z"/>
+        </svg>
+        Stok Yönetimi
+    </a>
+</li>
                     <li data-role="admin"><a href="#" class="nav-link" data-page="ayarlar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.4 12.99l-2.07-1.22c.04-.3.07-.61.07-.92s-.03-.62-.07-.92l2.07-1.22c.32-.19.44-.59.24-.91l-1-1.73c-.2-.32-.6-.44-.91-.24l-2.07 1.22c-.44-.33-.92-.6-1.44-.79l-.3-2.28c-.05-.38-.38-.66-.77-.66h-2c-.38 0-.72.28-.77.66l-.3 2.28c-.52.19-1 .46-1.44-.79l-2.07-1.22c-.32-.19-.71-.08-.91.24l-1 1.73c-.2.32-.08.71.24.91l2.07 1.22c-.04.3-.07.61-.07.92s.03.62.07.92l-2.07 1.22c-.32.19-.44.59-.24.91l1 1.73c.2.32.6.44.91.24l2.07-1.22c.44.33.92.6 1.44.79l.3 2.28c.05.38.38.66.77.66h2c.38 0-.72.28-.77-.66l-.3-2.28c.52-.19 1-.46 1.44-.79l2.07 1.22c.32.19.71.08.91-.24l1-1.73c.2-.32.08-.71-.24-.91zM12 15c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>Ayarlar</a></li>
                     <!-- Yeni: Personel Durumu (Yoklama) -->
                     <li data-role="admin"><a href="#" class="nav-link" data-page="personel-durumu"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3H4v18h2V3zm14 0h-2v18h2V3zM11 7h2v10h-2V7z"/></svg>Personel Durumu</a></li>
@@ -747,6 +755,75 @@
                     <button id="genel-csv-indir" class="btn btn-primary">Genel CSV Raporu İndir</button>
                 </div>
             </div>
+
+            <div id="stok-yonetimi" class="page">
+    <div class="card-container">
+        <div class="card">
+            <h3>Toplam Kalem</h3>
+            <div class="value" id="stok-toplam-kalem">0</div>
+        </div>
+        <div class="card">
+            <h3>Kritik Seviyedeki Ürünler</h3>
+            <div class="value loss" id="stok-kritik-sayi">0</div>
+        </div>
+        <div class="card">
+            <h3>Toplam Stok Değeri</h3>
+            <div class="value profit" id="stok-toplam-deger">0 ₺</div>
+        </div>
+    </div>
+
+    <div class="content-box">
+        <h2>Yeni Stok Kartı Oluştur</h2>
+        <form id="stok-ekle-form">
+            <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
+                <div class="input-group">
+                    <label>Ürün/Hammadde Adı</label>
+                    <input type="text" id="stok-adi" placeholder="Örn: Un, İplik, Kumaş" required>
+                </div>
+                <div class="input-group">
+                    <label>Kategori</label>
+                    <select id="stok-kategori">
+                        <option value="Hammadde">Hammadde</option>
+                        <option value="Yarı Mamul">Yarı Mamul</option>
+                        <option value="Bitmiş Ürün">Bitmiş Ürün</option>
+                        <option value="Sarf Malzeme">Sarf Malzeme</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Birim</label>
+                    <select id="stok-birim">
+                        <option value="Adet">Adet</option>
+                        <option value="Kg">Kg</option>
+                        <option value="Lt">Lt</option>
+                        <option value="Metre">Metre</option>
+                        <option value="Paket">Paket</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Mevcut Miktar</label>
+                    <input type="number" id="stok-miktar" placeholder="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Kritik Seviye</label>
+                    <input type="number" id="stok-kritik" placeholder="Uyarı sınırı" value="10">
+                </div>
+                <div class="input-group">
+                    <label>Birim Alış Fiyatı (Ort.)</label>
+                    <input type="number" id="stok-fiyat" placeholder="₺" step="0.01">
+                </div>
+                <div class="input-group" style="align-self: end;">
+                    <button type="submit" class="btn btn-success btn-full">Kaydet</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="content-box">
+        <h2>Stok Listesi</h2>
+        <input type="text" id="stok-ara" placeholder="Stoklarda ara..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;">
+        <div id="stok-tablo-container" style="overflow-x:auto;"></div>
+    </div>
+</div>
 
             <div id="ayarlar" class="page">
                 <div class="content-box">
@@ -1158,7 +1235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- BÖLÜM 2: VERİ YÖNETİMİ ---
     const dataManager = {
         load: async () => {
-            const defaultData = { fabrikalar: [], uretimler: [], giderler: [], odemeler: [], vardiyalar: [], personel: [], pozisyonlar: [] };
+            const defaultData = { fabrikalar: [], uretimler: [], giderler: [], odemeler: [], vardiyalar: [], personel: [], pozisyonlar: [], stoklar: [],stokHareketleri: [] };
             try {
                 // YENİ: Header içinde company-id gönderiyoruz
                 const headers = {};
@@ -1225,6 +1302,8 @@ document.addEventListener('DOMContentLoaded', () => {
             renderer.personelDurumu();
             // Haftalık izin planlama için personel listesini güncelle
             renderer.populateIzinPersonelSelect();
+            // renderer.updateAll fonksiyonunun içine ekleyin:
+renderer.stokListesi();
         },
         updateForRole: () => {
             const role = app.currentUser.role;
@@ -1697,7 +1776,94 @@ document.addEventListener('DOMContentLoaded', () => {
                 options.push(`<option value="${p.id}">${p.ad}</option>`);
             });
             select.innerHTML = options.join('');
+        },
+        // renderer nesnesinin içine ekleyin:
+
+stokListesi: () => {
+    const container = document.getElementById('stok-tablo-container');
+    if (!container) return;
+    
+    // Arama filtresi
+    const aramaMetni = document.getElementById('stok-ara') ? document.getElementById('stok-ara').value.toLowerCase() : '';
+    
+    // Veri yoksa uyar
+    if (!app.data.stoklar) app.data.stoklar = [];
+    let stoklar = app.data.stoklar.filter(s => s.ad.toLowerCase().includes(aramaMetni));
+
+    if (stoklar.length === 0) {
+        container.innerHTML = '<p class="no-data-message">Kayıtlı stok bulunamadı.</p>';
+        renderer.stokOzet(); // Kartları sıfırla
+        return;
+    }
+
+    const table = document.createElement('table');
+    table.innerHTML = `
+        <thead>
+            <tr>
+                <th>Ürün Adı</th>
+                <th>Kategori</th>
+                <th>Miktar / Birim</th>
+                <th>Ort. Birim Fiyat</th>
+                <th>Toplam Değer</th>
+                <th>Durum</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    `;
+    
+    const tbody = table.querySelector('tbody');
+    
+    stoklar.sort((a,b) => a.ad.localeCompare(b.ad)).forEach(s => {
+        const toplamDeger = (s.miktar * (s.alisFiyati || 0));
+        let durumHtml = '<span class="status-badge status-Active">Normal</span>';
+        let rowStyle = '';
+        
+        // Kritik seviye kontrolü
+        if (parseFloat(s.miktar) <= parseFloat(s.kritikSeviye)) {
+            durumHtml = '<span class="status-badge status-Suspended">KRİTİK</span>';
+            rowStyle = 'background-color: #fff0f0;';
         }
+
+        tbody.insertRow().innerHTML = `
+            <tr style="${rowStyle}">
+                <td style="font-weight:bold;">${s.ad}</td>
+                <td>${s.kategori}</td>
+                <td style="font-size:16px;">${parseFloat(s.miktar).toFixed(2)} <small>${s.birim}</small></td>
+                <td>${app.helpers.formatCurrency(s.alisFiyati || 0)}</td>
+                <td>${app.helpers.formatCurrency(toplamDeger)}</td>
+                <td>${durumHtml}</td>
+                <td>
+                    <button class="btn-sm-success stok-giris-btn" data-id="${s.id}">+ Giriş</button>
+                    <button class="btn-sm-warning stok-cikis-btn" data-id="${s.id}">- Çıkış</button>
+                    <button class="btn-sm-danger stok-sil-btn" data-id="${s.id}">Sil</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    container.innerHTML = '';
+    container.appendChild(table);
+    
+    // Özet kartları güncelle
+    renderer.stokOzet();
+},
+
+stokOzet: () => {
+    if (!app.data.stoklar) return;
+    
+    const toplamKalem = app.data.stoklar.length;
+    const kritikSayi = app.data.stoklar.filter(s => parseFloat(s.miktar) <= parseFloat(s.kritikSeviye)).length;
+    const toplamDeger = app.data.stoklar.reduce((acc, s) => acc + (s.miktar * (s.alisFiyati || 0)), 0);
+    
+    const elKalem = document.getElementById('stok-toplam-kalem');
+    const elKritik = document.getElementById('stok-kritik-sayi');
+    const elDeger = document.getElementById('stok-toplam-deger');
+    
+    if (elKalem) elKalem.innerText = toplamKalem;
+    if (elKritik) elKritik.innerText = kritikSayi;
+    if (elDeger) elDeger.innerText = app.helpers.formatCurrency(toplamDeger);
+}
     };
 
     // --- BÖLÜM 5: AKSİYONLAR VE İŞ MANTIĞI ---
@@ -2541,7 +2707,113 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             // Formu sıfırla
             app.dom.izinPlanForm.reset();
+        },
+        // actions nesnesinin içine ekleyin:
+
+stokEkle: (e) => {
+    e.preventDefault();
+    if (!app.data.stoklar) app.data.stoklar = [];
+    
+    const ad = document.getElementById('stok-adi').value.trim();
+    if (!ad) { alert('Ürün adı zorunludur.'); return; }
+    
+    const yeniStok = {
+        id: Date.now(),
+        ad: ad,
+        kategori: document.getElementById('stok-kategori').value,
+        birim: document.getElementById('stok-birim').value,
+        miktar: parseFloat(document.getElementById('stok-miktar').value) || 0,
+        kritikSeviye: parseFloat(document.getElementById('stok-kritik').value) || 10,
+        alisFiyati: parseFloat(document.getElementById('stok-fiyat').value) || 0
+    };
+    
+    app.data.stoklar.push(yeniStok);
+    dataManager.save();
+    document.getElementById('stok-ekle-form').reset();
+    renderer.stokListesi();
+    alert('Stok kartı oluşturuldu.');
+},
+
+stokIslemModalAc: (stokId, tip) => {
+    const stok = app.data.stoklar.find(s => s.id === parseInt(stokId));
+    if (!stok) return;
+    
+    const baslik = tip === 'giris' ? 'Stok Girişi (Satın Alma)' : 'Stok Çıkışı (Kullanım/Satış)';
+    const btnClass = tip === 'giris' ? 'btn-success' : 'btn-danger';
+    const btnText = tip === 'giris' ? 'Stok Ekle' : 'Stok Düş';
+    
+    const html = `
+        <div style="text-align:center; margin-bottom:20px;">
+            <h3>${stok.ad}</h3>
+            <p>Mevcut: <strong>${stok.miktar} ${stok.birim}</strong></p>
+        </div>
+        <form id="stok-islem-form">
+            <input type="hidden" id="modal-stok-id" value="${stokId}">
+            <input type="hidden" id="modal-stok-tip" value="${tip}">
+            
+            <div class="input-group">
+                <label>Miktar (${stok.birim})</label>
+                <input type="number" id="modal-stok-miktar" step="0.01" required placeholder="0">
+            </div>
+            
+            <div class="input-group">
+                <label>${tip === 'giris' ? 'Yeni Birim Fiyat (Güncellemek için)' : 'İşlem Açıklaması'}</label>
+                ${tip === 'giris' 
+                  ? `<input type="number" id="modal-stok-fiyat" step="0.01" value="${stok.alisFiyati}" placeholder="Fiyat değiştiyse girin">` 
+                  : `<input type="text" id="modal-stok-aciklama" placeholder="Örn: Üretimde kullanıldı" required>`
+                }
+            </div>
+            
+            <button type="submit" class="btn ${btnClass} btn-full">${btnText}</button>
+        </form>
+    `;
+    
+    actions.openModal(baslik, html);
+    
+    document.getElementById('stok-islem-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const miktar = parseFloat(document.getElementById('modal-stok-miktar').value);
+        if (miktar <= 0) { alert('Geçerli bir miktar girin.'); return; }
+        
+        if (tip === 'cikis' && miktar > stok.miktar) {
+            alert('Yetersiz stok! Mevcut stoktan fazla çıkış yapılamaz.');
+            return;
         }
+        
+        // Stok güncelleme
+        if (tip === 'giris') {
+            stok.miktar += miktar;
+            const yeniFiyat = parseFloat(document.getElementById('modal-stok-fiyat').value);
+            if (yeniFiyat > 0) stok.alisFiyati = yeniFiyat; // Fiyatı güncelle
+        } else {
+            stok.miktar -= miktar;
+        }
+        
+        // Hareket kaydı (Log)
+        if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
+        app.data.stokHareketleri.push({
+            id: Date.now(),
+            stokId: stok.id,
+            urunAdi: stok.ad,
+            tip: tip,
+            miktar: miktar,
+            tarih: new Date().toISOString(),
+            aciklama: tip === 'giris' ? 'Stok Girişi' : document.getElementById('modal-stok-aciklama').value
+        });
+        
+        dataManager.save();
+        renderer.stokListesi();
+        actions.closeModal();
+    });
+},
+
+stokSil: (stokId) => {
+    if (confirm('Bu stok kartını ve geçmişini silmek istediğinize emin misiniz?')) {
+        app.data.stoklar = app.data.stoklar.filter(s => s.id !== parseInt(stokId));
+        dataManager.save();
+        renderer.stokListesi();
+    }
+}
     };
 
     // --- BÖLÜM 6: CSV YÖNETİCİSİ ---
@@ -2655,6 +2927,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (app.dom.izinPlanForm) {
             app.dom.izinPlanForm.addEventListener('submit', actions.addManualLeave);
         }
+        // main.attachEventListeners fonksiyonunun içine ekleyin:
+
+// Stok Ekleme Formu
+const stokForm = document.getElementById('stok-ekle-form');
+if (stokForm) stokForm.addEventListener('submit', actions.stokEkle);
+
+// Stok Tablosu Butonları (Giriş/Çıkış/Sil)
+const stokContainer = document.getElementById('stok-tablo-container');
+if (stokContainer) {
+    stokContainer.addEventListener('click', (e) => {
+        const girisBtn = e.target.closest('.stok-giris-btn');
+        const cikisBtn = e.target.closest('.stok-cikis-btn');
+        const silBtn = e.target.closest('.stok-sil-btn');
+        
+        if (girisBtn) actions.stokIslemModalAc(girisBtn.dataset.id, 'giris');
+        if (cikisBtn) actions.stokIslemModalAc(cikisBtn.dataset.id, 'cikis');
+        if (silBtn) actions.stokSil(silBtn.dataset.id);
+    });
+}
+
+// Stok Arama Kutusu
+const stokAra = document.getElementById('stok-ara');
+if (stokAra) {
+    stokAra.addEventListener('input', () => {
+        renderer.stokListesi();
+    });
+}
     };
     // Uygulama başlangıcında verileri yüklemek için ana boot fonksiyonu
     main.boot = async () => {
