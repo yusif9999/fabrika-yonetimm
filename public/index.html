@@ -756,72 +756,88 @@
                 </div>
             </div>
 
-            <div id="stok-yonetimi" class="page">
+           <div id="stok-yonetimi" class="page">
+    
     <div class="card-container">
         <div class="card">
             <h3>Toplam Kalem</h3>
             <div class="value" id="stok-toplam-kalem">0</div>
         </div>
         <div class="card">
-            <h3>Kritik Seviyedeki Ürünler</h3>
+            <h3>Kritik Stok Uyarısı</h3>
             <div class="value loss" id="stok-kritik-sayi">0</div>
         </div>
         <div class="card">
-            <h3>Toplam Stok Değeri</h3>
+            <h3>Toplam Envanter Değeri</h3>
             <div class="value profit" id="stok-toplam-deger">0 ₺</div>
         </div>
     </div>
 
-    <div class="content-box">
-        <h2>Yeni Stok Kartı Oluştur</h2>
-        <form id="stok-ekle-form">
-            <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
-                <div class="input-group">
-                    <label>Ürün/Hammadde Adı</label>
-                    <input type="text" id="stok-adi" placeholder="Örn: Un, İplik, Kumaş" required>
-                </div>
-                <div class="input-group">
-                    <label>Kategori</label>
-                    <select id="stok-kategori">
-                        <option value="Hammadde">Hammadde</option>
-                        <option value="Yarı Mamul">Yarı Mamul</option>
-                        <option value="Bitmiş Ürün">Bitmiş Ürün</option>
-                        <option value="Sarf Malzeme">Sarf Malzeme</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>Birim</label>
-                    <select id="stok-birim">
-                        <option value="Adet">Adet</option>
-                        <option value="Kg">Kg</option>
-                        <option value="Lt">Lt</option>
-                        <option value="Metre">Metre</option>
-                        <option value="Paket">Paket</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>Mevcut Miktar</label>
-                    <input type="number" id="stok-miktar" placeholder="0" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label>Kritik Seviye</label>
-                    <input type="number" id="stok-kritik" placeholder="Uyarı sınırı" value="10">
-                </div>
-                <div class="input-group">
-                    <label>Birim Alış Fiyatı (Ort.)</label>
-                    <input type="number" id="stok-fiyat" placeholder="₺" step="0.01">
-                </div>
-                <div class="input-group" style="align-self: end;">
-                    <button type="submit" class="btn btn-success btn-full">Kaydet</button>
-                </div>
-            </div>
-        </form>
+    <div style="margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
+        <button class="btn btn-primary" onclick="renderer.switchStokTab('liste')" id="btn-tab-liste">📦 Stok Listesi & İşlemler</button>
+        <button class="btn btn-secondary" onclick="renderer.switchStokTab('gecmis')" id="btn-tab-gecmis">🕒 Stok Geçmişi (Loglar)</button>
     </div>
 
-    <div class="content-box">
-        <h2>Stok Listesi</h2>
-        <input type="text" id="stok-ara" placeholder="Stoklarda ara..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;">
-        <div id="stok-tablo-container" style="overflow-x:auto;"></div>
+    <div id="tab-stok-liste">
+        <div class="content-box">
+            <h2>Hızlı Stok Kartı Oluştur</h2>
+            <form id="stok-ekle-form">
+                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end;">
+                    <div class="input-group">
+                        <label>Ürün Adı</label>
+                        <input type="text" id="stok-adi" placeholder="Örn: İplik, Kumaş" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Kategori</label>
+                        <select id="stok-kategori">
+                            <option value="Hammadde">Hammadde</option>
+                            <option value="Yarı Mamul">Yarı Mamul</option>
+                            <option value="Bitmiş Ürün">Bitmiş Ürün</option>
+                            <option value="Sarf Malzeme">Sarf Malzeme</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Birim</label>
+                        <select id="stok-birim">
+                            <option value="Adet">Adet</option>
+                            <option value="Kg">Kg</option>
+                            <option value="Lt">Lt</option>
+                            <option value="Metre">Metre</option>
+                            <option value="Paket">Paket</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Kritik Seviye</label>
+                        <input type="number" id="stok-kritik" value="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Birim Maliyet (₺)</label>
+                        <input type="number" id="stok-fiyat" step="0.01" value="0">
+                    </div>
+                    <div class="input-group">
+                        <button type="submit" class="btn btn-success btn-full">Kaydet</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="content-box">
+            <h2>Stok Durumu</h2>
+            <input type="text" id="stok-ara" placeholder="Ürün ara..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px;">
+            <div id="stok-tablo-container" style="overflow-x:auto;"></div>
+        </div>
+    </div>
+
+    <div id="tab-stok-gecmis" style="display: none;">
+        <div class="content-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2>Hareket Geçmişi</h2>
+                <button class="btn btn-info" onclick="renderer.stokGecmisiIndir()">Excel (CSV) İndir</button>
+            </div>
+            <p style="color:#666; margin-bottom:15px;">Bu bölümde depoya giren ve çıkan tüm ürünlerin tarihçesini, kimin işlem yaptığını ve miktarları görebilirsiniz.</p>
+            
+            <div id="stok-gecmis-container" style="overflow-x:auto;"></div>
+        </div>
     </div>
 </div>
 
@@ -1304,6 +1320,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderer.populateIzinPersonelSelect();
             // renderer.updateAll fonksiyonunun içine ekleyin:
 renderer.stokListesi();
+renderer.stokGecmisi(); // <-- BU SATIRI EKLEYİN
         },
         updateForRole: () => {
             const role = app.currentUser.role;
@@ -1866,6 +1883,72 @@ stokOzet: () => {
 }
     };
 
+    // renderer objesinin içine ekleyin:
+        stokGecmisi: () => {
+            const container = document.getElementById('stok-gecmisi-container');
+            if (!container) return;
+
+            // Veri yoksa boş array oluştur
+            if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
+            
+            // Arama metni
+            const aramaInput = document.getElementById('stok-gecmisi-ara');
+            const aramaMetni = aramaInput ? aramaInput.value.toLowerCase() : '';
+
+            // Filtreleme ve Sıralama (En yeniden eskiye)
+            const history = app.data.stokHareketleri.filter(item => 
+                (item.urunAdi && item.urunAdi.toLowerCase().includes(aramaMetni)) ||
+                (item.aciklama && item.aciklama.toLowerCase().includes(aramaMetni))
+            ).sort((a, b) => new Date(b.tarih) - new Date(a.tarih)).slice(0, 50); // Son 50 kayıt
+
+            if (history.length === 0) {
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Henüz işlem kaydı yok.</div>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.style.fontSize = '13px';
+            table.innerHTML = `
+                <thead style="background:#f1f2f6;">
+                    <tr>
+                        <th style="padding:10px;">Tarih</th>
+                        <th style="padding:10px;">Ürün</th>
+                        <th style="padding:10px;">İşlem</th>
+                        <th style="padding:10px;">Miktar</th>
+                        <th style="padding:10px;">Açıklama</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            const tbody = table.querySelector('tbody');
+
+            history.forEach(item => {
+                const isGiris = item.tip === 'giris';
+                // Renk ve Stil Ayarları
+                const rowBg = isGiris ? '#f0fdf4' : '#fef2f2'; // Giriş için açık yeşil, Çıkış için açık kırmızı arka plan
+                const icon = isGiris ? 'fa-arrow-down' : 'fa-arrow-up';
+                const badgeStyle = isGiris 
+                    ? 'background:#dcfce7; color:#166534; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;' 
+                    : 'background:#fee2e2; color:#991b1b; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;';
+                
+                const tipYazisi = isGiris ? '⬇ GİRİŞ' : '⬆ ÇIKIŞ';
+                const miktarRenk = isGiris ? '#166534' : '#991b1b';
+                const tarihStr = new Date(item.tarih).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour:'2-digit', minute:'2-digit' });
+
+                tbody.insertRow().innerHTML = `
+                    <td style="padding:10px; color:#666;">${tarihStr}</td>
+                    <td style="padding:10px; font-weight:600;">${item.urunAdi}</td>
+                    <td style="padding:10px;"><span style="${badgeStyle}">${tipYazisi}</span></td>
+                    <td style="padding:10px; font-weight:bold; color:${miktarRenk}; font-size:14px;">
+                        ${isGiris ? '+' : '-'}${item.miktar}
+                    </td>
+                    <td style="padding:10px; color:#555;">${item.aciklama || '-'}</td>
+                `;
+            });
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
     // --- BÖLÜM 5: AKSİYONLAR VE İŞ MANTIĞI ---
     const actions = {
         setup: async (e) => {
@@ -2734,79 +2817,101 @@ stokEkle: (e) => {
     alert('Stok kartı oluşturuldu.');
 },
 
-stokIslemModalAc: (stokId, tip) => {
-    const stok = app.data.stoklar.find(s => s.id === parseInt(stokId));
-    if (!stok) return;
-    
-    const baslik = tip === 'giris' ? 'Stok Girişi (Satın Alma)' : 'Stok Çıkışı (Kullanım/Satış)';
-    const btnClass = tip === 'giris' ? 'btn-success' : 'btn-danger';
-    const btnText = tip === 'giris' ? 'Stok Ekle' : 'Stok Düş';
-    
-    const html = `
-        <div style="text-align:center; margin-bottom:20px;">
-            <h3>${stok.ad}</h3>
-            <p>Mevcut: <strong>${stok.miktar} ${stok.birim}</strong></p>
-        </div>
-        <form id="stok-islem-form">
-            <input type="hidden" id="modal-stok-id" value="${stokId}">
-            <input type="hidden" id="modal-stok-tip" value="${tip}">
+// actions objesinin içine (eski stokIslemModalAc yerine):
+        stokIslemModalAc: (stokId, tip) => {
+            const stok = app.data.stoklar.find(s => s.id === parseInt(stokId));
+            if (!stok) return;
             
-            <div class="input-group">
-                <label>Miktar (${stok.birim})</label>
-                <input type="number" id="modal-stok-miktar" step="0.01" required placeholder="0">
-            </div>
+            const isGiris = tip === 'giris';
+            const baslik = isGiris ? 'Stok Girişi (Ekleme)' : 'Stok Çıkışı (Düşme)';
+            const btnClass = isGiris ? 'btn-success' : 'btn-danger';
+            const btnText = isGiris ? 'Stoğu Ekle (+)' : 'Stoğu Düş (-)';
             
-            <div class="input-group">
-                <label>${tip === 'giris' ? 'Yeni Birim Fiyat (Güncellemek için)' : 'İşlem Açıklaması'}</label>
-                ${tip === 'giris' 
-                  ? `<input type="number" id="modal-stok-fiyat" step="0.01" value="${stok.alisFiyati}" placeholder="Fiyat değiştiyse girin">` 
-                  : `<input type="text" id="modal-stok-aciklama" placeholder="Örn: Üretimde kullanıldı" required>`
-                }
-            </div>
-            
-            <button type="submit" class="btn ${btnClass} btn-full">${btnText}</button>
-        </form>
-    `;
-    
-    actions.openModal(baslik, html);
-    
-    document.getElementById('stok-islem-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const miktar = parseFloat(document.getElementById('modal-stok-miktar').value);
-        if (miktar <= 0) { alert('Geçerli bir miktar girin.'); return; }
-        
-        if (tip === 'cikis' && miktar > stok.miktar) {
-            alert('Yetersiz stok! Mevcut stoktan fazla çıkış yapılamaz.');
-            return;
-        }
-        
-        // Stok güncelleme
-        if (tip === 'giris') {
-            stok.miktar += miktar;
-            const yeniFiyat = parseFloat(document.getElementById('modal-stok-fiyat').value);
-            if (yeniFiyat > 0) stok.alisFiyati = yeniFiyat; // Fiyatı güncelle
-        } else {
-            stok.miktar -= miktar;
-        }
-        
-        // Hareket kaydı (Log)
-        if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
-        app.data.stokHareketleri.push({
-            id: Date.now(),
-            stokId: stok.id,
-            urunAdi: stok.ad,
-            tip: tip,
-            miktar: miktar,
-            tarih: new Date().toISOString(),
-            aciklama: tip === 'giris' ? 'Stok Girişi' : document.getElementById('modal-stok-aciklama').value
-        });
-        
-        dataManager.save();
-        renderer.stokListesi();
-        actions.closeModal();
-    });
-},
+            // Modal İçeriği
+            const html = `
+                <div style="background:${isGiris ? '#f0fdf4' : '#fef2f2'}; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center; border:1px solid ${isGiris ? '#bbf7d0' : '#fecaca'};">
+                    <h3 style="margin:0; color:${isGiris ? '#166534' : '#991b1b'};">${stok.ad}</h3>
+                    <p style="margin:5px 0 0 0; font-size:14px;">Mevcut: <strong>${parseFloat(stok.miktar).toFixed(2)} ${stok.birim}</strong></p>
+                </div>
 
+                <form id="stok-islem-form">
+                    <input type="hidden" id="modal-stok-id" value="${stokId}">
+                    
+                    <div class="input-group">
+                        <label>İşlem Miktarı (${stok.birim})</label>
+                        <input type="number" id="modal-stok-miktar" step="0.01" min="0" required placeholder="0" style="font-size:18px; font-weight:bold; padding:15px;">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>${isGiris ? 'Yeni Birim Fiyat (Güncellemek isterseniz)' : 'Çıkış Nedeni / Açıklama'}</label>
+                        ${isGiris 
+                          ? `<input type="number" id="modal-stok-input-extra" step="0.01" value="${stok.alisFiyati}" placeholder="Fiyat">` 
+                          : `<input type="text" id="modal-stok-input-extra" placeholder="Örn: Üretimde kullanıldı, Zayi oldu..." required>`
+                        }
+                    </div>
+                    
+                    <button type="submit" class="btn ${btnClass} btn-full" style="padding:15px; font-size:16px;">${btnText}</button>
+                </form>
+            `;
+            
+            actions.openModal(baslik, html);
+            
+            // HATA ÇÖZÜMÜ: Form elementini yeniden seçip listener ekliyoruz.
+            const form = document.getElementById('stok-islem-form');
+            
+            // Önceki listenerları temizlemek için klonlama yöntemi veya one-time check
+            // Ancak openModal innerHTML ile içeriği değiştirdiği için eski form DOM'dan silinir.
+            // Sadece submit anında formun varlığını kontrol edelim.
+            
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation(); // Önemli: Çoklu tetiklemeyi önler
+
+                const miktarInput = document.getElementById('modal-stok-miktar');
+                const extraInput = document.getElementById('modal-stok-input-extra');
+                
+                if (!miktarInput) return; // Form kapanmışsa dur
+
+                const miktar = parseFloat(miktarInput.value);
+                if (isNaN(miktar) || miktar <= 0) { alert('Lütfen geçerli bir miktar girin.'); return; }
+                
+                // Stok Yetersiz Kontrolü (Sadece çıkışta)
+                if (!isGiris && miktar > stok.miktar) {
+                    alert(`HATA: Yetersiz Stok!\nMevcut: ${stok.miktar} ${stok.birim}\nDüşülmek istenen: ${miktar} ${stok.birim}`);
+                    return;
+                }
+                
+                // İşlemi Uygula
+                if (isGiris) {
+                    stok.miktar = parseFloat(stok.miktar) + miktar;
+                    const yeniFiyat = parseFloat(extraInput.value);
+                    if (!isNaN(yeniFiyat) && yeniFiyat > 0) stok.alisFiyati = yeniFiyat;
+                } else {
+                    stok.miktar = parseFloat(stok.miktar) - miktar;
+                }
+                
+                // Geçmişe Kaydet
+                if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
+                app.data.stokHareketleri.push({
+                    id: Date.now(),
+                    stokId: stok.id,
+                    urunAdi: stok.ad,
+                    tip: tip,
+                    miktar: miktar,
+                    tarih: new Date().toISOString(),
+                    aciklama: isGiris ? 'Stok Girişi' : (extraInput.value || 'Stok Çıkışı')
+                });
+                
+                dataManager.save();
+                renderer.stokListesi();
+                // renderer.stokGecmisi(); // Geçmiş tablosunu anında güncelle
+                renderer.stokOzet();
+                actions.closeModal();
+                
+                // Ufak bir bildirim (Opsiyonel)
+                // alert('İşlem başarıyla kaydedildi.');
+            });
+        },
 stokSil: (stokId) => {
     if (confirm('Bu stok kartını ve geçmişini silmek istediğinize emin misiniz?')) {
         app.data.stoklar = app.data.stoklar.filter(s => s.id !== parseInt(stokId));
@@ -2954,6 +3059,13 @@ if (stokAra) {
         renderer.stokListesi();
     });
 }
+// Stok Geçmişi Arama Kutusu
+        const stokGecmisiAra = document.getElementById('stok-gecmisi-ara');
+        if (stokGecmisiAra) {
+            stokGecmisiAra.addEventListener('input', () => {
+                renderer.stokGecmisi();
+            });
+        }
     };
     // Uygulama başlangıcında verileri yüklemek için ana boot fonksiyonu
     main.boot = async () => {
@@ -3002,6 +3114,315 @@ if (stokAra) {
             saas.showLanding();
         }
     };
+
+    // --- SİSTEM BAĞLANTILARI (BUNU EKLEMEZSENİZ BUTONLAR ÇALIŞMAZ) ---
+window.app = app;
+// --- STOK YÖNETİMİ VE GEÇMİŞİ ENTEGRASYONU ---
+
+// 1. Veri Yapısını Hazırla
+if (!app.data.stoklar) app.data.stoklar = [];
+if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
+
+// 2. Renderer (Görünüm) Fonksiyonları
+renderer.switchStokTab = function(tab) {
+    const tabListe = document.getElementById('tab-stok-liste');
+    const tabGecmis = document.getElementById('tab-stok-gecmis');
+    const btnListe = document.getElementById('btn-tab-liste');
+    const btnGecmis = document.getElementById('btn-tab-gecmis');
+    
+    if (tabListe && tabGecmis) {
+        tabListe.style.display = tab === 'liste' ? 'block' : 'none';
+        tabGecmis.style.display = tab === 'gecmis' ? 'block' : 'none';
+        
+        btnListe.className = tab === 'liste' ? 'btn btn-primary' : 'btn btn-secondary';
+        btnGecmis.className = tab === 'gecmis' ? 'btn btn-primary' : 'btn btn-secondary';
+        
+        if (tab === 'liste') renderer.stokListesi();
+        if (tab === 'gecmis') renderer.stokGecmisiListesi();
+    }
+};
+
+renderer.stokListesi = function() {
+    const container = document.getElementById('stok-tablo-container');
+    if (!container) return;
+    
+    const arama = document.getElementById('stok-ara') ? document.getElementById('stok-ara').value.toLowerCase() : '';
+    const stoklar = (app.data.stoklar || []).filter(s => s.ad.toLowerCase().includes(arama));
+
+    if (stoklar.length === 0) {
+        container.innerHTML = '<p class="no-data-message">Kayıtlı stok bulunamadı.</p>';
+        renderer.stokOzetGuncelle();
+        return;
+    }
+
+    let html = `
+    <table>
+        <thead>
+            <tr>
+                <th>Ürün</th>
+                <th>Kategori</th>
+                <th>Mevcut Miktar</th>
+                <th>Birim Fiyat</th>
+                <th>Toplam Değer</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    stoklar.sort((a,b) => a.ad.localeCompare(b.ad)).forEach(s => {
+        const miktar = parseFloat(s.miktar || 0);
+        const kritik = parseFloat(s.kritikSeviye || 0);
+        const fiyat = parseFloat(s.alisFiyati || 0);
+        const toplamDeger = miktar * fiyat;
+        
+        // Kritik seviye kontrolü
+        let trStyle = '';
+        let miktarStyle = 'font-weight:bold; font-size:16px;';
+        if (miktar <= kritik) {
+            trStyle = 'background-color: #ffecec;';
+            miktarStyle += ' color: var(--danger-color);';
+        } else {
+            miktarStyle += ' color: var(--success-color);';
+        }
+
+        html += `
+            <tr style="${trStyle}">
+                <td>${s.ad}</td>
+                <td><span class="status-badge status-Pending" style="color:#333;">${s.kategori}</span></td>
+                <td style="${miktarStyle}">${miktar} <small>${s.birim}</small> ${miktar <= kritik ? '⚠️' : ''}</td>
+                <td>${app.helpers.formatCurrency(fiyat)}</td>
+                <td>${app.helpers.formatCurrency(toplamDeger)}</td>
+                <td>
+                    <button class="btn-sm-success" onclick="actions.stokIslemModalAc(${s.id}, 'giris')">➕ Giriş</button>
+                    <button class="btn-sm-warning" onclick="actions.stokIslemModalAc(${s.id}, 'cikis')">➖ Çıkış</button>
+                    <button class="btn-sm-danger" onclick="actions.stokSil(${s.id})">🗑️</button>
+                </td>
+            </tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+    renderer.stokOzetGuncelle();
+};
+
+renderer.stokGecmisiListesi = function() {
+    const container = document.getElementById('stok-gecmis-container');
+    if (!container) return;
+    
+    // Hareketleri tarihe göre tersten sırala (En yeni en üstte)
+    const hareketler = (app.data.stokHareketleri || []).sort((a,b) => new Date(b.tarih) - new Date(a.tarih));
+
+    if (hareketler.length === 0) {
+        container.innerHTML = '<p class="no-data-message">Henüz bir hareket kaydı yok.</p>';
+        return;
+    }
+
+    let html = `
+    <table>
+        <thead>
+            <tr>
+                <th>Tarih / Saat</th>
+                <th>Ürün</th>
+                <th>İşlem Tipi</th>
+                <th>Miktar</th>
+                <th>Kalan Stok</th>
+                <th>Açıklama</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    hareketler.forEach(h => {
+        const tarih = app.helpers.formatDateTime(h.tarih);
+        const isGiris = h.tip === 'giris';
+        const tipBadge = isGiris 
+            ? '<span class="status-badge status-Active">GİRİŞ (ALIM)</span>' 
+            : '<span class="status-badge status-Suspended">ÇIKIŞ (SATIM)</span>';
+        const miktarRenk = isGiris ? 'green' : 'red';
+        const isaret = isGiris ? '+' : '-';
+
+        html += `
+            <tr>
+                <td>${tarih}</td>
+                <td style="font-weight:600;">${h.urunAdi}</td>
+                <td>${tipBadge}</td>
+                <td style="color:${miktarRenk}; font-weight:bold; font-size:15px;">${isaret}${h.miktar} ${h.birim || ''}</td>
+                <td style="color:#7f8c8d;">${h.kalanStok}</td>
+                <td>${h.aciklama}</td>
+            </tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+};
+
+renderer.stokOzetGuncelle = function() {
+    const stoklar = app.data.stoklar || [];
+    const toplamKalem = stoklar.length;
+    const kritik = stoklar.filter(s => (s.miktar || 0) <= (s.kritikSeviye || 0)).length;
+    const deger = stoklar.reduce((acc, s) => acc + ((s.miktar || 0) * (s.alisFiyati || 0)), 0);
+
+    if(document.getElementById('stok-toplam-kalem')) document.getElementById('stok-toplam-kalem').innerText = toplamKalem;
+    if(document.getElementById('stok-kritik-sayi')) document.getElementById('stok-kritik-sayi').innerText = kritik;
+    if(document.getElementById('stok-toplam-deger')) document.getElementById('stok-toplam-deger').innerText = app.helpers.formatCurrency(deger);
+};
+
+renderer.stokGecmisiIndir = function() {
+    let csv = 'Tarih,Urun Adi,Islem Tipi,Miktar,Birim,Kalan Stok,Aciklama\n';
+    (app.data.stokHareketleri || []).forEach(h => {
+        csv += `${h.tarih},"${h.urunAdi}",${h.tip},${h.miktar},${h.birim},${h.kalanStok},"${h.aciklama}"\n`;
+    });
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `stok_gecmisi_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+};
+
+// 3. Actions (İş Mantığı) Fonksiyonları
+actions.stokKartEkle = function(e) {
+    if(e) e.preventDefault();
+    const ad = document.getElementById('stok-adi').value.trim();
+    if (!ad) return alert('Ürün adı yazmalısınız.');
+
+    if (!app.data.stoklar) app.data.stoklar = [];
+    
+    const yeniStok = {
+        id: Date.now(),
+        ad: ad,
+        kategori: document.getElementById('stok-kategori').value,
+        birim: document.getElementById('stok-birim').value,
+        miktar: 0,
+        kritikSeviye: parseFloat(document.getElementById('stok-kritik').value) || 10,
+        alisFiyati: parseFloat(document.getElementById('stok-fiyat').value) || 0
+    };
+    
+    app.data.stoklar.push(yeniStok);
+    dataManager.save();
+    document.getElementById('stok-ekle-form').reset();
+    renderer.stokListesi();
+    alert('Stok kartı açıldı.');
+};
+
+actions.stokIslemModalAc = function(id, tip) {
+    const stok = app.data.stoklar.find(s => s.id == id);
+    if (!stok) return;
+
+    const baslik = tip === 'giris' ? 'Mal Kabul / Giriş' : 'Üretim / Çıkış';
+    const renk = tip === 'giris' ? 'btn-success' : 'btn-danger';
+    
+    const html = `
+        <div style="text-align:center; margin-bottom:15px;">
+            <h3>${stok.ad}</h3>
+            <p>Mevcut: <strong>${stok.miktar} ${stok.birim}</strong></p>
+        </div>
+        <form id="stok-hareket-form">
+            <input type="hidden" id="modal-stok-id" value="${stok.id}">
+            <input type="hidden" id="modal-stok-tip" value="${tip}">
+            
+            <div class="input-group">
+                <label>İşlem Miktarı (${stok.birim})</label>
+                <input type="number" id="modal-miktar" step="0.01" placeholder="0" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Açıklama / Kim Aldı?</label>
+                <input type="text" id="modal-aciklama" placeholder="${tip === 'giris' ? 'Örn: Faturadan giriş' : 'Örn: Ahmet Usta aldı'}" required>
+            </div>
+            
+            ${tip === 'giris' ? `
+            <div class="input-group">
+                <label>Güncel Birim Fiyat (₺) (Opsiyonel)</label>
+                <input type="number" id="modal-fiyat" step="0.01" value="${stok.alisFiyati}">
+                <small>Fiyat değiştiyse güncelleyin.</small>
+            </div>` : ''}
+            
+            <button type="submit" class="btn ${renk} btn-full">Kaydet</button>
+        </form>
+    `;
+    
+    actions.openModal(baslik, html);
+    
+    setTimeout(() => {
+        const form = document.getElementById('stok-hareket-form');
+        if(form) form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            actions.stokHareketKaydet();
+        });
+    }, 100);
+};
+
+actions.stokHareketKaydet = function() {
+    const id = document.getElementById('modal-stok-id').value;
+    const tip = document.getElementById('modal-stok-tip').value;
+    const miktar = parseFloat(document.getElementById('modal-miktar').value);
+    const aciklama = document.getElementById('modal-aciklama').value;
+    const yeniFiyat = document.getElementById('modal-fiyat') ? parseFloat(document.getElementById('modal-fiyat').value) : null;
+
+    if (isNaN(miktar) || miktar <= 0) return alert('Geçerli bir miktar girin.');
+    
+    const stok = app.data.stoklar.find(s => s.id == id);
+    if (!stok) return;
+
+    if (tip === 'cikis' && miktar > stok.miktar) {
+        return alert(`Hata: Stokta sadece ${stok.miktar} ${stok.birim} var.`);
+    }
+
+    if (tip === 'giris') {
+        stok.miktar += miktar;
+        if (yeniFiyat !== null && yeniFiyat > 0) stok.alisFiyati = yeniFiyat;
+    } else {
+        stok.miktar -= miktar;
+    }
+
+    // GEÇMİŞ KAYDI OLUŞTURMA (ÖNEMLİ: Tüm detaylar burada)
+    if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
+    app.data.stokHareketleri.push({
+        id: Date.now(),
+        stokId: stok.id,
+        urunAdi: stok.ad,
+        birim: stok.birim,
+        tip: tip,
+        miktar: miktar,
+        kalanStok: stok.miktar,
+        tarih: new Date().toISOString(),
+        aciklama: aciklama
+    });
+
+    dataManager.save();
+    actions.closeModal();
+    renderer.stokListesi();
+    
+    // Geçmiş sekmesi açıksa orayı da yenile
+    if(document.getElementById('tab-stok-gecmis').style.display !== 'none') {
+        renderer.stokGecmisiListesi();
+    }
+    alert('İşlem kaydedildi.');
+};
+
+actions.stokSil = function(id) {
+    if(confirm('Bu stok kartını silmek istiyor musunuz?')) {
+        app.data.stoklar = app.data.stoklar.filter(s => s.id != id);
+        dataManager.save();
+        renderer.stokListesi();
+    }
+};
+
+// 4. Olay Dinleyicileri (Manuel Tanımlama)
+const stokForm = document.getElementById('stok-ekle-form');
+if (stokForm) {
+    // Klonlayarak eski dinleyicileri temizle (varsa)
+    const newForm = stokForm.cloneNode(true);
+    stokForm.parentNode.replaceChild(newForm, stokForm);
+    newForm.addEventListener('submit', actions.stokKartEkle);
+}
+
+const stokAra = document.getElementById('stok-ara');
+if (stokAra) stokAra.oninput = renderer.stokListesi;
+
+// Sayfa yenilendiğinde listeyi yükle
+setTimeout(renderer.stokListesi, 1000);
+window.renderer = renderer;
+window.actions = actions;
+window.dataManager = dataManager;
+// ------------------------------------------------------------------
     
     // UYGULAMAYI BAŞLAT
     main.boot();
@@ -3017,6 +3438,16 @@ if (stokAra) {
     }
 
 });
+
+// --- STOK SİSTEMİ TAMİR VE SİLME MODÜLÜ ---
+    
+    // 1. Sistem Bağlantılarını Garantiye Al (Hata Çözümü)
+    window.app = app;
+    window.renderer = renderer;
+    window.actions = actions;
+    window.dataManager = dataManager;
+
+    
 // JAVASCRIPT KODLARI BİTİŞ
 </script>
 
