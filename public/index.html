@@ -3275,7 +3275,6 @@ renderer.stokGecmisiListesi = function() {
     const container = document.getElementById('stok-gecmis-container');
     if (!container) return;
     
-    // Hareketleri tarihe göre tersten sırala (En yeni en üstte)
     const hareketler = (app.data.stokHareketleri || []).sort((a,b) => new Date(b.tarih) - new Date(a.tarih));
 
     if (hareketler.length === 0) {
@@ -3287,13 +3286,13 @@ renderer.stokGecmisiListesi = function() {
     <table>
         <thead>
             <tr>
-                <th>Tarih / Saat</th>
+                <th>Tarih</th>
                 <th>Ürün</th>
-                <th>İşlem Tipi</th>
-                <th>Miktar</th>
-                <th>Kalan Stok</th>
+                <th>İşlem</th>
+                <th>Lot / SKT</th> <th>Miktar</th>
                 <th>Açıklama</th>
-                <th>İşlemler</th> </tr>
+                <th>İşlemler</th> 
+            </tr>
         </thead>
         <tbody>`;
 
@@ -3301,19 +3300,34 @@ renderer.stokGecmisiListesi = function() {
         const tarih = app.helpers.formatDateTime(h.tarih);
         const isGiris = h.tip === 'giris';
         const tipBadge = isGiris 
-            ? '<span class="status-badge status-Active">GİRİŞ (ALIM)</span>' 
-            : '<span class="status-badge status-Suspended">ÇIKIŞ (SATIM)</span>';
+            ? '<span class="status-badge status-Active">GİRİŞ</span>' 
+            : '<span class="status-badge status-Suspended">ÇIKIŞ</span>';
         const miktarRenk = isGiris ? 'green' : 'red';
         const isaret = isGiris ? '+' : '-';
+        
+        // Lot ve SKT Gösterimi
+        let lotBilgisi = '-';
+        if (h.lotNo || h.skt) {
+            lotBilgisi = `<div style="font-size:12px;">`;
+            if(h.lotNo) lotBilgisi += `<strong>Lot:</strong> ${h.lotNo}<br>`;
+            if(h.skt) {
+                const sktDate = new Date(h.skt).toLocaleDateString('tr-TR');
+                const isExpired = new Date(h.skt) < new Date();
+                const color = isExpired ? 'red' : 'black';
+                const warning = isExpired ? ' (DOLDU)' : '';
+                lotBilgisi += `<span style="color:${color}"><strong>SKT:</strong> ${sktDate}${warning}</span>`;
+            }
+            lotBilgisi += `</div>`;
+        }
 
         html += `
             <tr>
                 <td>${tarih}</td>
                 <td style="font-weight:600;">${h.urunAdi}</td>
                 <td>${tipBadge}</td>
+                <td>${lotBilgisi}</td>
                 <td style="color:${miktarRenk}; font-weight:bold; font-size:15px;">${isaret}${h.miktar} ${h.birim || ''}</td>
-                <td style="color:#7f8c8d;">${h.kalanStok}</td>
-                <td>${h.aciklama}</td>
+                <td style="font-size:13px; color:#555;">${h.aciklama}</td>
                 <td>
                     <button class="btn-sm-danger" onclick="actions.stokGecmisSil(${h.id})">Sil</button>
                 </td>
@@ -3374,33 +3388,41 @@ actions.stokIslemModalAc = function(id, tip) {
     const stok = app.data.stoklar.find(s => s.id == id);
     if (!stok) return;
 
-    // Sayım Kilidi Kontrolü
     if (stok.sayimKilitli) {
-        alert("BU ÜRÜN ŞU AN SAYIMDA! \nİşlem yapmak için önce sayım sürecini tamamlayın.");
+        alert("BU ÜRÜN ŞU AN SAYIMDA! İşlem yapılamaz.");
         return;
     }
 
     const isGiris = tip === 'giris';
-    const baslik = isGiris ? '📦 MAL KABUL GİRİŞİ (Stok Ekleme)' : '📤 STOK ÇIKIŞI (Stok Düşme)';
+    const baslik = isGiris ? '📦 MAL KABUL (GİRİŞ)' : '📤 STOK ÇIKIŞI';
     const renk = isGiris ? 'btn-success' : 'btn-danger';
     const btnMetni = isGiris ? 'Mal Kabulünü Kaydet' : 'Çıkışı Kaydet';
-
-    // Tarih ve Saat (Şimdiki zaman)
+    
+    // Tarih ve Kullanıcı
     const simdi = new Date();
     simdi.setMinutes(simdi.getMinutes() - simdi.getTimezoneOffset());
     const varsayilanTarih = simdi.toISOString().slice(0, 16);
-
-    // Kabul Eden Kişi (Varsayılan: Giriş yapan kullanıcı)
     const aktifKullanici = app.currentUser ? app.currentUser.ad : '';
 
     let formIcerigi = '';
 
     if (isGiris) {
-        // --- SENARYO 1: DETAYLI MAL KABUL FORMU ---
+        // --- GİRİŞ FORMU (Lot ve SKT alanları eklendi) ---
         formIcerigi = `
             <div style="background:#f0fdf4; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #22c55e;">
                 <h4 style="margin:0; color:#166534;">${stok.ad}</h4>
-                <small>Mevcut Stok: <strong>${stok.miktar} ${stok.birim}</strong></small>
+                <small>Mevcut: <strong>${stok.miktar} ${stok.birim}</strong></small>
+            </div>
+            
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px; background:#fffbe6; padding:10px; border:1px solid #ffe58f; border-radius:5px; margin-bottom:10px;">
+                <div class="input-group" style="margin-bottom:0;">
+                    <label style="color:#d48806; font-weight:bold;">Lot / Parti No</label>
+                    <input type="text" id="mk-lot" placeholder="Örn: L-202401" style="border:1px solid #ffe58f;">
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                    <label style="color:#d48806; font-weight:bold;">Son Kullanma Tarihi</label>
+                    <input type="date" id="mk-skt" style="border:1px solid #ffe58f;">
+                </div>
             </div>
 
             <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
@@ -3413,10 +3435,9 @@ actions.stokIslemModalAc = function(id, tip) {
                     <input type="text" id="mk-fatura" placeholder="Belge No" required>
                 </div>
             </div>
-
             <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                 <div class="input-group">
-                    <label>Gelen Miktar (${stok.birim})</label>
+                    <label>Miktar (${stok.birim})</label>
                     <input type="number" id="mk-miktar" step="0.01" placeholder="0" required oninput="actions.malKabulHesapla()">
                 </div>
                 <div class="input-group">
@@ -3424,40 +3445,35 @@ actions.stokIslemModalAc = function(id, tip) {
                     <input type="number" id="mk-fiyat" step="0.01" value="${stok.alisFiyati || 0}" required oninput="actions.malKabulHesapla()">
                 </div>
                 <div class="input-group">
-                    <label>Toplam Tutar (₺)</label>
-                    <input type="text" id="mk-toplam" disabled style="background:#eee; font-weight:bold; color:#333;" value="0.00 ₺">
+                    <label>Toplam</label>
+                    <input type="text" id="mk-toplam" disabled style="background:#eee; font-weight:bold;" value="0.00 ₺">
                 </div>
             </div>
-
             <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
                 <div class="input-group">
                     <label>Tarih & Saat</label>
                     <input type="datetime-local" id="mk-tarih" value="${varsayilanTarih}" required>
                 </div>
                 <div class="input-group">
-                    <label>Kabul Eden Kişi</label>
-                    <input type="text" id="mk-kabul-eden" value="${aktifKullanici}" placeholder="Personel Adı" required>
+                    <label>Kabul Eden</label>
+                    <input type="text" id="mk-kabul-eden" value="${aktifKullanici}" required>
                 </div>
-            </div>
-        `;
+            </div>`;
     } else {
-        // --- SENARYO 2: STOK ÇIKIŞ FORMU ---
+        // Çıkış Formu (Değişmedi)
         formIcerigi = `
             <div style="background:#fee2e2; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #ef4444;">
                 <h4 style="margin:0; color:#991b1b;">${stok.ad}</h4>
-                <small>Mevcut Stok: <strong>${stok.miktar} ${stok.birim}</strong></small>
+                <small>Mevcut: <strong>${stok.miktar} ${stok.birim}</strong></small>
             </div>
-
             <div class="input-group">
                 <label>Çıkış Miktarı (${stok.birim})</label>
                 <input type="number" id="cikis-miktar" step="0.01" placeholder="0" required>
             </div>
-
             <div class="input-group">
                 <label>Çıkış Nedeni / Açıklama</label>
-                <input type="text" id="cikis-aciklama" placeholder="Örn: Üretim, Fire, Numune..." required>
-            </div>
-        `;
+                <input type="text" id="cikis-aciklama" placeholder="Örn: Üretim, Fire..." required>
+            </div>`;
     }
 
     const html = `
@@ -3465,28 +3481,25 @@ actions.stokIslemModalAc = function(id, tip) {
             <input type="hidden" id="modal-stok-id" value="${stok.id}">
             <input type="hidden" id="modal-islem-tip" value="${tip}">
             ${formIcerigi}
-            <button type="submit" class="btn ${renk} btn-full" style="margin-top:15px; font-weight:bold;">${btnMetni}</button>
+            <button type="submit" class="btn ${renk} btn-full" style="margin-top:15px;">${btnMetni}</button>
         </form>
     `;
     
-    // Modalı aç (Giriş ise geniş, çıkış ise normal)
+    // Modalı aç (Giriş ise geniş modal)
     actions.openModal(baslik, html, isGiris);
 
-    // Form submit olayını güvenli bir şekilde bağla
+    // Form submit olayını dinle
     setTimeout(() => {
         const form = document.getElementById('stok-islem-form');
         if (form) {
             form.onsubmit = function(e) {
                 e.preventDefault();
-                actions.stokHareketKaydet();
+                actions.stokHareketKaydet(); 
             };
-            
-            // Eğer giriş işlemiyse, açılışta toplam tutarı bir kez hesapla
-            if(isGiris) actions.malKabulHesapla();
+            if(isGiris && typeof actions.malKabulHesapla === 'function') actions.malKabulHesapla();
         }
     }, 100);
 };
-
 actions.stokGecmisSil = function(id) {
     if(confirm('Bu işlem kaydını silmek istediğinize emin misiniz? (Bu işlem sadece kayıt logunu siler, stok miktarını değiştirmez.)')) {
         // İlgili ID'ye sahip kaydı listeden çıkar
@@ -3503,12 +3516,11 @@ actions.stokGecmisSil = function(id) {
     }
 };
 actions.stokHareketKaydet = function() {
-    // 1. Temel ID ve Tip kontrolü
     const idEl = document.getElementById('modal-stok-id');
     const tipEl = document.getElementById('modal-islem-tip');
 
     if (!idEl || !tipEl) {
-        console.error("Hata: Modal parametreleri okunamadı.");
+        alert("Hata: Modal parametreleri bulunamadı.");
         return;
     }
 
@@ -3521,61 +3533,51 @@ actions.stokHareketKaydet = function() {
     let miktar = 0;
     let aciklama = '';
     let yeniFiyat = null;
+    let lotNo = ''; // Yeni değişken
+    let skt = '';   // Yeni değişken
 
     if (tip === 'giris') {
-        // --- GİRİŞ (MAL KABUL) ---
         const tedarikciEl = document.getElementById('mk-tedarikci');
         const faturaEl = document.getElementById('mk-fatura');
         const miktarEl = document.getElementById('mk-miktar');
-        const fiyatEl = document.getElementById('mk-fiyat');
-        const tarihEl = document.getElementById('mk-tarih');
-        const kabulEdenEl = document.getElementById('mk-kabul-eden');
-
-        // Form elemanları ekranda var mı? (Hata koruması)
-        if (!tedarikciEl || !faturaEl || !miktarEl || !fiyatEl) {
-            alert("Form verileri okunamadı. Lütfen sayfayı yenileyip tekrar deneyin.");
-            return;
-        }
+        const lotEl = document.getElementById('mk-lot'); // Yeni element
+        const sktEl = document.getElementById('mk-skt'); // Yeni element
+        
+        if (!tedarikciEl || !faturaEl || !miktarEl) { alert("Form alanları yüklenemedi."); return; }
 
         const tedarikci = tedarikciEl.value.trim();
         const fatura = faturaEl.value.trim();
-        const tarih = tarihEl ? tarihEl.value : new Date().toISOString();
-        const kabulEden = kabulEdenEl ? kabulEdenEl.value.trim() : 'Bilinmiyor';
-
+        const kabulEden = document.getElementById('mk-kabul-eden').value;
         miktar = parseFloat(miktarEl.value);
-        yeniFiyat = parseFloat(fiyatEl.value);
+        yeniFiyat = parseFloat(document.getElementById('mk-fiyat').value);
+        
+        // Değerleri Al
+        lotNo = lotEl ? lotEl.value.trim() : '';
+        skt = sktEl ? sktEl.value : '';
 
-        // Zorunlu alan kontrolleri
-        if (isNaN(miktar) || miktar <= 0) { alert("Lütfen geçerli bir miktar girin."); return; }
-        if (!tedarikci) { alert("Tedarikçi Firma adı zorunludur."); return; }
-        if (!fatura) { alert("Fatura / İrsaliye No zorunludur."); return; }
+        if (isNaN(miktar) || miktar <= 0) { alert("Geçerli bir miktar girin."); return; }
+        if (!tedarikci) { alert("Tedarikçi adı zorunludur."); return; }
+        if (!fatura) { alert("Fatura No zorunludur."); return; }
 
-        // Stoğu Arttır
         stok.miktar = (parseFloat(stok.miktar) || 0) + miktar;
-        
-        // Fiyat değiştiyse güncelle
         if (!isNaN(yeniFiyat) && yeniFiyat > 0) stok.alisFiyati = yeniFiyat;
-
-        aciklama = `[MAL KABUL] Tedarikçi: ${tedarikci} | Belge: ${fatura} | Alan: ${kabulEden}`;
         
+        aciklama = `[MAL KABUL] ${tedarikci} | Belge: ${fatura}`;
+        if(lotNo) aciklama += ` | Lot: ${lotNo}`;
+
     } else {
-        // --- ÇIKIŞ ---
         const miktarEl = document.getElementById('cikis-miktar');
         const aciklamaEl = document.getElementById('cikis-aciklama');
-
-        if (!miktarEl || !aciklamaEl) {
-            alert("Form verileri okunamadı.");
-            return;
-        }
+        
+        if (!miktarEl || !aciklamaEl) { alert("Form hatalı."); return; }
 
         miktar = parseFloat(miktarEl.value);
         const neden = aciklamaEl.value.trim();
 
-        if (isNaN(miktar) || miktar <= 0) { alert("Lütfen geçerli bir miktar girin."); return; }
-        if (miktar > stok.miktar) { alert(`Yetersiz stok! Mevcut: ${stok.miktar}`); return; }
-        if (!neden) { alert("Çıkış nedeni/açıklaması zorunludur."); return; }
+        if (isNaN(miktar) || miktar <= 0) { alert("Geçerli bir miktar girin."); return; }
+        if (miktar > stok.miktar) { alert("Yetersiz Stok!"); return; }
+        if (!neden) { alert("Çıkış nedeni zorunludur."); return; }
 
-        // Stoğu Azalt
         stok.miktar = (parseFloat(stok.miktar) || 0) - miktar;
         aciklama = `[ÇIKIŞ] ${neden}`;
     }
@@ -3591,23 +3593,22 @@ actions.stokHareketKaydet = function() {
         miktar: miktar,
         kalanStok: stok.miktar,
         tarih: new Date().toISOString(),
-        aciklama: aciklama
+        aciklama: aciklama,
+        lotNo: lotNo,  // YENİ
+        skt: skt       // YENİ
     });
 
     dataManager.save();
     actions.closeModal();
     renderer.stokListesi();
     
-    // Geçmiş sekmesi açıksa yenile (Fonksiyon adınız neyse onu kullanın, genelde ikisinden biridir)
+    // Geçmiş tablosunu güncelle
     if (typeof renderer.stokGecmisiListesi === 'function') {
         renderer.stokGecmisiListesi();
-    } else if (typeof renderer.stokGecmisi === 'function') {
-        renderer.stokGecmisi();
     }
 
     alert("İşlem başarıyla kaydedildi.");
 };
-
 // Mal Kabul Formunda Tutar Hesaplama (Miktar * Fiyat)
 actions.malKabulHesapla = function() {
     const miktarEl = document.getElementById('mk-miktar');
@@ -3704,68 +3705,116 @@ actions.stokIslemModalAc = function(id, tip) {
     const stok = app.data.stoklar.find(s => s.id == id);
     if (!stok) return;
 
-    // Eğer sayım kilidi varsa işlem yapma
     if (stok.sayimKilitli) {
-        alert("BU ÜRÜN ŞU AN SAYIMDA! \nStok güncellemesi yapmak için önce sayım işleminin yönetici tarafından onaylanması gerekir.");
+        alert("BU ÜRÜN ŞU AN SAYIMDA! İşlem yapılamaz.");
         return;
     }
 
     const isGiris = tip === 'giris';
-    const baslik = isGiris ? 'Stok Girişi' : 'Stok Çıkışı';
+    const baslik = isGiris ? '📦 MAL KABUL (GİRİŞ)' : '📤 STOK ÇIKIŞI';
     const renk = isGiris ? 'btn-success' : 'btn-danger';
+    const btnMetni = isGiris ? 'Mal Kabulünü Kaydet' : 'Çıkışı Kaydet';
+    
+    // Tarih ve Kullanıcı
+    const simdi = new Date();
+    simdi.setMinutes(simdi.getMinutes() - simdi.getTimezoneOffset());
+    const varsayilanTarih = simdi.toISOString().slice(0, 16);
+    const aktifKullanici = app.currentUser ? app.currentUser.ad : '';
 
-    // Çıkış Nedenleri Listesi
-    const cikisNedenleri = `
-        <select id="modal-aciklama" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
-            <option value="" disabled selected>Çıkış Nedeni Seçin...</option>
-            <option value="Üretim Kullanımı">Üretim Kullanımı</option>
-            <option value="Satış">Satış</option>
-            <option value="Fire / Bozulma">🔥 Fire / Bozulma</option>
-            <option value="İade">İade (Tedarikçiye)</option>
-            <option value="Numune">Numune / AR-GE</option>
-            <option value="Diğer">Diğer</option>
-        </select>
-    `;
+    let formIcerigi = '';
 
-    // Giriş için standart input, çıkış için Select kutusu
-    const aciklamaAlani = isGiris 
-        ? `<input type="text" id="modal-aciklama" placeholder="Örn: Fatura No: 12345" required>` 
-        : cikisNedenleri;
+    if (isGiris) {
+        // --- GİRİŞ FORMU HTML (GÜNCELLENDİ: LOT VE SKT EKLENDİ) ---
+        formIcerigi = `
+            <div style="background:#f0fdf4; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #22c55e;">
+                <h4 style="margin:0; color:#166534;">${stok.ad}</h4>
+                <small>Mevcut: <strong>${stok.miktar} ${stok.birim}</strong></small>
+            </div>
+            
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px; background:#fffbe6; padding:10px; border:1px solid #ffe58f; border-radius:5px; margin-bottom:10px;">
+                <div class="input-group" style="margin-bottom:0;">
+                    <label style="color:#d48806; font-weight:bold;">Lot / Parti No</label>
+                    <input type="text" id="mk-lot" placeholder="Örn: L-202401" style="border:1px solid #ffe58f;">
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                    <label style="color:#d48806; font-weight:bold;">Son Kullanma Tarihi</label>
+                    <input type="date" id="mk-skt" style="border:1px solid #ffe58f;">
+                </div>
+            </div>
+
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="input-group">
+                    <label>Tedarikçi Firma</label>
+                    <input type="text" id="mk-tedarikci" placeholder="Firma Adı" required>
+                </div>
+                <div class="input-group">
+                    <label>Fatura / İrsaliye No</label>
+                    <input type="text" id="mk-fatura" placeholder="Belge No" required>
+                </div>
+            </div>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                <div class="input-group">
+                    <label>Miktar (${stok.birim})</label>
+                    <input type="number" id="mk-miktar" step="0.01" placeholder="0" required oninput="actions.malKabulHesapla()">
+                </div>
+                <div class="input-group">
+                    <label>Birim Fiyat (₺)</label>
+                    <input type="number" id="mk-fiyat" step="0.01" value="${stok.alisFiyati || 0}" required oninput="actions.malKabulHesapla()">
+                </div>
+                <div class="input-group">
+                    <label>Toplam</label>
+                    <input type="text" id="mk-toplam" disabled style="background:#eee; font-weight:bold;" value="0.00 ₺">
+                </div>
+            </div>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="input-group">
+                    <label>Tarih & Saat</label>
+                    <input type="datetime-local" id="mk-tarih" value="${varsayilanTarih}" required>
+                </div>
+                <div class="input-group">
+                    <label>Kabul Eden</label>
+                    <input type="text" id="mk-kabul-eden" value="${aktifKullanici}" required>
+                </div>
+            </div>`;
+    } else {
+        // ÇIKIŞ FORMU HTML (Değişmedi)
+        formIcerigi = `
+            <div style="background:#fee2e2; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #ef4444;">
+                <h4 style="margin:0; color:#991b1b;">${stok.ad}</h4>
+                <small>Mevcut: <strong>${stok.miktar} ${stok.birim}</strong></small>
+            </div>
+            <div class="input-group">
+                <label>Çıkış Miktarı (${stok.birim})</label>
+                <input type="number" id="cikis-miktar" step="0.01" placeholder="0" required>
+            </div>
+            <div class="input-group">
+                <label>Çıkış Nedeni / Açıklama</label>
+                <input type="text" id="cikis-aciklama" placeholder="Örn: Üretim, Fire..." required>
+            </div>`;
+    }
 
     const html = `
-        <div style="text-align:center; margin-bottom:15px;">
-            <h3>${stok.ad}</h3>
-            <p>Mevcut Stok: <strong>${stok.miktar} ${stok.birim}</strong></p>
-        </div>
-        <form id="stok-hareket-form">
+        <form id="stok-islem-form">
             <input type="hidden" id="modal-stok-id" value="${stok.id}">
-            <input type="hidden" id="modal-stok-tip" value="${tip}">
-            
-            <div class="input-group">
-                <label>Miktar (${stok.birim})</label>
-                <input type="number" id="modal-miktar" step="0.01" placeholder="0" required>
-            </div>
-            
-            <div class="input-group">
-                <label>${isGiris ? 'Açıklama' : 'Çıkış Nedeni'}</label>
-                ${aciklamaAlani}
-            </div>
-            
-            <button type="submit" class="btn ${renk} btn-full">İşlemi Kaydet</button>
+            <input type="hidden" id="modal-islem-tip" value="${tip}">
+            ${formIcerigi}
+            <button type="submit" class="btn ${renk} btn-full" style="margin-top:15px;">${btnMetni}</button>
         </form>
     `;
     
-    actions.openModal(baslik, html);
-    
+    actions.openModal(baslik, html, isGiris);
+
     setTimeout(() => {
-        const form = document.getElementById('stok-hareket-form');
-        if(form) form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            actions.stokHareketKaydet(); // Mevcut kaydetme fonksiyonunuzu kullanır
-        });
+        const form = document.getElementById('stok-islem-form');
+        if (form) {
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                actions.stokHareketKaydet(); 
+            };
+            if(isGiris) actions.malKabulHesapla();
+        }
     }, 100);
 };
-
 // --- 2. Sayım Başlatma (Kilitleme) ---
 actions.stokSayimBaslat = function(id) {
     const stok = app.data.stoklar.find(s => s.id == id);
@@ -4042,12 +4091,11 @@ actions.malKabulHesapla = function() {
 
 // 3. Kayıt Fonksiyonu (Hata Korumalı)
 actions.stokHareketKaydet = function() {
-    // ID ve Tip kutularını bul (Hem yeni hem eski ID ihtimaline karşı kontrol)
     const idEl = document.getElementById('modal-stok-id');
     const tipEl = document.getElementById('modal-islem-tip');
 
     if (!idEl || !tipEl) {
-        alert("Hata: Modal parametreleri (ID veya Tip) bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.");
+        alert("Hata: Modal parametreleri bulunamadı.");
         return;
     }
 
@@ -4055,27 +4103,34 @@ actions.stokHareketKaydet = function() {
     const tip = tipEl.value;
     const stok = app.data.stoklar.find(s => s.id === stokId);
 
-    if (!stok) { alert("Stok kartı veritabanında bulunamadı!"); return; }
+    if (!stok) { alert("Stok kartı bulunamadı!"); return; }
 
     let miktar = 0;
     let aciklama = '';
     let yeniFiyat = null;
+    
+    // Yeni Alanlar için değişkenler
+    let lotNo = '';
+    let skt = '';
 
     if (tip === 'giris') {
-        // Giriş Alanlarını Kontrol Et
         const tedarikciEl = document.getElementById('mk-tedarikci');
         const faturaEl = document.getElementById('mk-fatura');
         const miktarEl = document.getElementById('mk-miktar');
+        const lotEl = document.getElementById('mk-lot');
+        const sktEl = document.getElementById('mk-skt');
         
-        if (!tedarikciEl || !faturaEl || !miktarEl) {
-            alert("Form alanları yüklenemedi."); return;
-        }
+        if (!tedarikciEl || !faturaEl || !miktarEl) { alert("Form alanları yüklenemedi."); return; }
 
         const tedarikci = tedarikciEl.value.trim();
         const fatura = faturaEl.value.trim();
         const kabulEden = document.getElementById('mk-kabul-eden').value;
         miktar = parseFloat(miktarEl.value);
         yeniFiyat = parseFloat(document.getElementById('mk-fiyat').value);
+        
+        // Lot ve SKT Değerlerini Al
+        lotNo = lotEl ? lotEl.value.trim() : '';
+        skt = sktEl ? sktEl.value : '';
 
         if (isNaN(miktar) || miktar <= 0) { alert("Geçerli bir miktar girin."); return; }
         if (!tedarikci) { alert("Tedarikçi adı zorunludur."); return; }
@@ -4084,27 +4139,27 @@ actions.stokHareketKaydet = function() {
         stok.miktar = (parseFloat(stok.miktar) || 0) + miktar;
         if (!isNaN(yeniFiyat) && yeniFiyat > 0) stok.alisFiyati = yeniFiyat;
         
-        aciklama = `[MAL KABUL] ${tedarikci} | Belge: ${fatura} | Alan: ${kabulEden}`;
+        aciklama = `[MAL KABUL] ${tedarikci} | Belge: ${fatura}`;
+        if(lotNo) aciklama += ` | Lot: ${lotNo}`;
 
     } else {
-        // Çıkış Alanlarını Kontrol Et
         const miktarEl = document.getElementById('cikis-miktar');
         const aciklamaEl = document.getElementById('cikis-aciklama');
         
-        if (!miktarEl || !aciklamaEl) { alert("Çıkış formu alanları bulunamadı."); return; }
+        if (!miktarEl || !aciklamaEl) { alert("Form hatalı."); return; }
 
         miktar = parseFloat(miktarEl.value);
         const neden = aciklamaEl.value.trim();
 
         if (isNaN(miktar) || miktar <= 0) { alert("Geçerli bir miktar girin."); return; }
         if (miktar > stok.miktar) { alert("Yetersiz Stok!"); return; }
-        if (!neden) { alert("Çıkış nedeni yazılmalıdır."); return; }
+        if (!neden) { alert("Çıkış nedeni zorunludur."); return; }
 
         stok.miktar = (parseFloat(stok.miktar) || 0) - miktar;
         aciklama = `[ÇIKIŞ] ${neden}`;
     }
 
-    // Geçmişe Ekle
+    // Geçmişe Kaydet (Lot ve SKT eklenmiş hali)
     if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
     app.data.stokHareketleri.push({
         id: Date.now(),
@@ -4115,22 +4170,21 @@ actions.stokHareketKaydet = function() {
         miktar: miktar,
         kalanStok: stok.miktar,
         tarih: new Date().toISOString(),
-        aciklama: aciklama
+        aciklama: aciklama,
+        lotNo: lotNo,  // YENİ
+        skt: skt       // YENİ
     });
 
     dataManager.save();
     actions.closeModal();
     renderer.stokListesi();
     
-    // Geçmiş tablosu açıksa güncelle
-    const gecmisTabloFunc = renderer.stokGecmisiListesi || renderer.stokGecmisi;
-    if (typeof gecmisTabloFunc === 'function') {
-        gecmisTabloFunc();
+    if (typeof renderer.stokGecmisiListesi === 'function') {
+        renderer.stokGecmisiListesi();
     }
 
     alert("İşlem başarıyla kaydedildi.");
 };
-
 // --- ORTAK KAYDETME FONKSİYONU (YENİLENMİŞ) ---
 
 // 4. Olay Dinleyicileri (Manuel Tanımlama)
