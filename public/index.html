@@ -678,15 +678,52 @@
                 <div class="content-box">
                     <h2>Yeni Üretim Kalemi Ekle</h2>
                     <form id="uretim-ekle-form">
-                        <div class="form-grid" style="grid-template-columns: 2fr 1fr;"><div class="input-group"><label for="uretim-fabrika">Fabrika Seçin</label><select id="uretim-fabrika" required></select></div><div class="input-group"><label for="uretim-tarih">Tarih</label><input type="date" id="uretim-tarih" required></div></div>
-                        <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr; align-items: flex-end;">
-                            <div class="input-group"><label for="uretim-aciklama">Ürün / Hizmet Açıklaması</label><input type="text" id="uretim-aciklama" placeholder="Örn: Standart Öğle Yemeği" required></div>
-                            <div class="input-group"><label for="uretim-adet">Adet</label><input type="number" id="uretim-adet" placeholder="Örn: 150" required></div>
-                            <div class="input-group"><label for="uretim-birim-fiyat">Birim Fiyat (₺)</label><input type="number" step="0.01" id="uretim-birim-fiyat" placeholder="Örn: 85.50" required></div>
-                            <div class="input-group"><label for="uretim-toplam-tutar">Toplam Tutar</label><input type="text" id="uretim-toplam-tutar" disabled></div>
-                        </div>
-                        <div class="full-width" style="text-align: right;"><button type="submit" id="listeye-ekle-btn" class="btn btn-primary">Listeye Ekle</button></div>
-                    </form>
+    <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
+        <div class="input-group">
+            <label for="uretim-fabrika">Fabrika Seçin</label>
+            <select id="uretim-fabrika" required></select>
+        </div>
+        <div class="input-group">
+            <label for="uretim-tarih">Tarih</label>
+            <input type="date" id="uretim-tarih" required>
+        </div>
+    </div>
+    
+    <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr; align-items: flex-end;">
+        <div class="input-group">
+            <label for="uretim-aciklama">Ürün / Hizmet Açıklaması</label>
+            <input type="text" id="uretim-aciklama" placeholder="Örn: Yemek, Servis..." required>
+        </div>
+        <div class="input-group">
+            <label for="uretim-adet">Adet</label>
+            <input type="number" id="uretim-adet" placeholder="0" required>
+        </div>
+        
+        <div class="input-group">
+            <label for="uretim-birim-maliyet" style="color: #e67e22; font-weight:bold;">Birim Maliyet</label>
+            <input type="number" step="0.01" id="uretim-birim-maliyet" placeholder="Opsiyonel" style="border: 2px solid #e67e22;">
+        </div>
+
+        <div class="input-group">
+            <label for="uretim-kdv-orani" style="color: #8e44ad; font-weight:bold;">KDV Oranı (%)</label>
+            <input type="number" step="1" id="uretim-kdv-orani" placeholder="%10, %20" style="border: 2px solid #8e44ad;">
+        </div>
+
+        <div class="input-group">
+            <label for="uretim-birim-fiyat" style="color: var(--success-color); font-weight:bold;">Satış Fiyatı</label>
+            <input type="number" step="0.01" id="uretim-birim-fiyat" placeholder="Toplam Fiyat" required style="border: 2px solid var(--success-color);">
+        </div>
+    </div>
+    
+    <div class="input-group full-width" style="margin-top: 10px;">
+        <label for="uretim-toplam-tutar">Toplam Satış Tutarı (Fabrika Borcu)</label>
+        <input type="text" id="uretim-toplam-tutar" disabled style="font-weight: bold; font-size: 16px;">
+    </div>
+
+    <div class="full-width" style="text-align: right; margin-top: 15px;">
+        <button type="submit" id="listeye-ekle-btn" class="btn btn-primary">Listeye Ekle</button>
+    </div>
+</form>
                 </div>
                 <div class="content-box">
                     <h2>Kaydedilecek Üretimler Listesi</h2>
@@ -908,7 +945,14 @@
                 <div class="content-box">
                     <h2>Personel Durumu (Günlük Yoklama)</h2>
                     <p style="margin-bottom:20px;">Personellerin işe gelip gelmediğini kontrol etmek için tabloyu kullanabilirsiniz. ✔ işaretli günler çalıştığı, × işaretli günler çalışmadığı, turuncu <strong>İzin</strong> hücreleri planlı haftalık izinleri, kırmızı <strong>İzin</strong> hücreleri ise devamsızlık/mazeretli izin günlerini gösterir.</p>
-                    <div id="personel-durumu-container" style="overflow-x:auto;"></div>
+                    
+                    <div style="margin-bottom: 15px; text-align: right; display: flex; justify-content: flex-end; gap: 10px;">
+    <button class="btn btn-warning" onclick="actions.showMissingHoursReport()">⚠️ Eksik Çalışma Hesapla</button>
+    <button class="btn btn-info" onclick="actions.openAnnualLeaveModal()">🏖️ Toplu Yıllık İzin Girişi</button>
+</div>
+
+<div id="personel-durumu-container" style="overflow-x:auto;"></div>
+
                     <!-- Özet alanı: Çalışma günleri toplamlarını gösterecek -->
                     <div id="personel-durumu-summary-container"></div>
 
@@ -1559,20 +1603,52 @@ renderer.stokGecmisi(); // <-- BU SATIRI EKLEYİN
         dashboard: () => { const durum = calculator.genelDurum(); const elements = { gelir: document.getElementById('dashboard-gelir'), gider: document.getElementById('dashboard-gider'), kar: document.getElementById('dashboard-kar'), alacak: document.getElementById('dashboard-alacak') }; renderer.updateCardValues(elements, durum); renderer.nakitAkisChart(); },
         raporlarOzeti: () => { const durum = calculator.genelDurum(); const elements = { gelir: document.getElementById('rapor-gelir'), gider: document.getElementById('rapor-gider'), kar: document.getElementById('rapor-kar'), alacak: document.getElementById('rapor-alacak') }; renderer.updateCardValues(elements, durum); },
         nakitAkisChart: () => { const ctx = document.getElementById('nakitAkisChart').getContext('2d'); const etiketler = [], tahsilatlar = [], giderler = [], simdi = new Date(); for (let i = 5; i >= 0; i--) { const tarih = new Date(simdi.getFullYear(), simdi.getMonth() - i, 1); etiketler.push(tarih.toLocaleString('tr-TR', { month: 'long' })); const ayFiltre = item => { const it = new Date(item.tarih); return it.getFullYear() === tarih.getFullYear() && it.getMonth() === tarih.getMonth(); }; tahsilatlar.push(app.data.odemeler.filter(ayFiltre).reduce((sum, o) => sum + o.tutar, 0)); giderler.push(app.data.giderler.filter(ayFiltre).reduce((sum, g) => sum + g.tutar, 0)); } if (app.charts.nakitAkis) app.charts.nakitAkis.destroy(); app.charts.nakitAkis = new Chart(ctx, { type: 'bar', data: { labels: etiketler, datasets: [{ label: 'Tahsilatlar', data: tahsilatlar, backgroundColor: 'var(--success-color)' }, { label: 'Giderler', data: giderler, backgroundColor: 'var(--danger-color)' }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: value => app.helpers.formatCurrency(value) } } } } }); },
-        uretimEkleListesi: () => {
-            app.dom.kayitListesiContainer.innerHTML = '';
-            const list = app.temp.uretimListesi;
-            if (list.length === 0) { app.dom.kayitListesiContainer.innerHTML = '<p class="no-data-message">Kaydedilecek bir kalem bulunmuyor.</p>'; app.dom.kayitListesiGenelToplam.textContent = 'Genel Toplam: 0,00 ₺'; return; }
-            const table = document.createElement('table'); table.id = "kayit-listesi-tablosu"; table.innerHTML = '<thead><tr><th>Fabrika</th><th>Tarih</th><th>Açıklama</th><th>Adet</th><th>Birim Fiyat</th><th>Toplam Tutar</th><th>İşlem</th></tr></thead><tbody></tbody>';
-            const tbody = table.querySelector('tbody');
-            let genelToplam = 0;
-            list.forEach((item, index) => {
-                const fabrika = app.data.fabrikalar.find(f => f.id === item.fabrikaId); const toplam = item.adet * item.birimFiyat; genelToplam += toplam;
-                const row = tbody.insertRow();
-                row.innerHTML = `<td>${fabrika ? fabrika.ad : 'Bilinmeyen'}</td><td>${new Date(item.tarih).toLocaleDateString('tr-TR')}</td><td>${item.aciklama}</td><td>${item.adet}</td><td>${app.helpers.formatCurrency(item.birimFiyat)}</td><td>${app.helpers.formatCurrency(toplam)}</td><td><button class="btn-sm-danger temp-sil-btn" data-index="${index}">Listeden Sil</button></td>`;
-            });
-            app.dom.kayitListesiContainer.appendChild(table); app.dom.kayitListesiGenelToplam.textContent = `Genel Toplam: ${app.helpers.formatCurrency(genelToplam)}`;
-        },
+        // renderer nesnesinin içindeki uretimEkleListesi fonksiyonunu bununla değiştir:
+// renderer nesnesinin içine yapıştır (Eskisini sil)
+uretimEkleListesi: () => {
+    app.dom.kayitListesiContainer.innerHTML = '';
+    const list = app.temp.uretimListesi;
+    
+    if (list.length === 0) { 
+        app.dom.kayitListesiContainer.innerHTML = '<p class="no-data-message">Kaydedilecek bir kalem bulunmuyor.</p>'; 
+        app.dom.kayitListesiGenelToplam.textContent = 'Genel Toplam: 0,00 ₺'; 
+        return; 
+    }
+
+    const table = document.createElement('table'); 
+    table.id = "kayit-listesi-tablosu"; 
+    // Tablo başlıklarına KDV sütunu eklendi
+    table.innerHTML = '<thead><tr><th>Fabrika</th><th>Tarih</th><th>Açıklama</th><th>Adet</th><th style="color:#e67e22">Maliyet</th><th style="color:#8e44ad">KDV</th><th>Satış Fiyatı</th><th>Toplam Satış</th><th>İşlem</th></tr></thead><tbody></tbody>';
+    const tbody = table.querySelector('tbody');
+    
+    let genelToplam = 0;
+    list.forEach((item, index) => {
+        const fabrika = app.data.fabrikalar.find(f => f.id === item.fabrikaId); 
+        const toplamSatis = item.adet * item.birimFiyat; 
+        
+        // KDV Tutarı Hesaplama (Bilgi amaçlı gösterim)
+        const kdvTutari = toplamSatis * (item.kdvOrani / 100);
+
+        genelToplam += toplamSatis;
+        
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${fabrika ? fabrika.ad : 'Bilinmeyen'}</td>
+            <td>${new Date(item.tarih).toLocaleDateString('tr-TR')}</td>
+            <td>${item.aciklama}</td>
+            <td>${item.adet}</td>
+            <td style="color:#e67e22;">${app.helpers.formatCurrency(item.birimMaliyet || 0)}</td>
+            <td style="color:#8e44ad; font-weight:bold;">%${item.kdvOrani} <br><small>(${app.helpers.formatCurrency(kdvTutari)})</small></td>
+            <td>${app.helpers.formatCurrency(item.birimFiyat)}</td>
+            <td style="font-weight:bold;">${app.helpers.formatCurrency(toplamSatis)}</td>
+            <td><button class="btn-sm-danger temp-sil-btn" data-index="${index}">Sil</button></td>
+        `;
+    });
+    
+    app.dom.kayitListesiContainer.appendChild(table); 
+    app.dom.kayitListesiGenelToplam.textContent = `Toplam Ciro: ${app.helpers.formatCurrency(genelToplam)}`;
+},
+
         sonUretimler: () => {
             app.dom.sonUretimlerContainer.innerHTML = '';
             const sonBes = [...app.data.uretimler].sort((a,b) => b.id - a.id).slice(0, 5);
@@ -1588,227 +1664,106 @@ renderer.stokGecmisi(); // <-- BU SATIRI EKLEYİN
             app.dom.sonUretimlerContainer.appendChild(table);
         },
         // Yeni: Personel Durumu tablosu
-        personelDurumu: () => {
-            const container = app.dom.personelDurumuContainer;
-            if (!container) return;
-            container.innerHTML = '';
-            const personeller = app.data.personel.sort((a,b) => a.ad.localeCompare(b.ad));
-            if (personeller.length === 0) {
-                container.innerHTML = '<p class="no-data-message">Henüz personel kaydı yok.</p>';
-                return;
-            }
-            // Tüm günleri en eski kayıt tarihinden bugüne kadar listele.
-            const today = new Date();
-            let days = [];
-            let earliestDate = null;
-            // Personellerin katılım kayıtlarından en eski tarihi bul.
-            // Iterate through each person to find earliest attendance date
-            personeller.forEach(p => {
-                if (p.attendance) {
-                    Object.keys(p.attendance).forEach(dateKey => {
-                        const d = new Date(dateKey);
-                        if (!isNaN(d)) {
-                            if (!earliestDate || d < earliestDate) {
-                                earliestDate = new Date(d);
-                            }
-                        }
-                    });
+        // renderer nesnesinin içine yapıştırın (Eskisini silin)
+// renderer nesnesinin içine yapıştır (Eskisini sil)
+// renderer nesnesinin içine yapıştır (Eskisini sil)
+// renderer nesnesinin içine yapıştırın (Eskisini silin)
+personelDurumu: () => {
+    const container = app.dom.personelDurumuContainer;
+    if (!container) return;
+    container.innerHTML = '';
+    
+    const personeller = app.data.personel.sort((a,b) => a.ad.localeCompare(b.ad));
+    if (personeller.length === 0) {
+        container.innerHTML = '<p class="no-data-message">Henüz personel kaydı yok.</p>';
+        return;
+    }
+
+    const today = new Date();
+    let days = [];
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 29); 
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + 7); 
+
+    const current = new Date(startDate);
+    while (current <= endDate) {
+        days.push(current.toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 1);
+    }
+
+    const table = document.createElement('table');
+    table.className = 'attendance-table';
+    let theadHtml = '<thead><tr><th style="background:#2c3e50; color:white; position:sticky; left:0; z-index:2;">Personel</th>';
+    
+    days.forEach(d => {
+        const dt = new Date(d);
+        const gunIsmi = dt.toLocaleDateString('tr-TR', { weekday: 'short' });
+        const gunNo = dt.getDate();
+        const ayNo = dt.getMonth() + 1;
+        const isWeekend = (dt.getDay() === 0 || dt.getDay() === 6);
+        const thStyle = isWeekend ? 'background-color:#ffe0b2;' : '';
+        theadHtml += `<th style="${thStyle} min-width:60px; font-size:11px;">${gunNo}/${ayNo}<br>${gunIsmi}</th>`;
+    });
+    theadHtml += '</tr></thead>';
+
+    let tbodyHtml = '<tbody>';
+    personeller.forEach(p => {
+        tbodyHtml += `<tr><td style="background:#f8f9fa; font-weight:bold; position:sticky; left:0; z-index:1; border-right:2px solid #ddd;">${p.ad}</td>`;
+        
+        days.forEach(d => {
+            const entry = p.attendance ? p.attendance[d] : undefined;
+            let cellHtml = '<span style="color:#ddd; font-size:18px;">•</span>';
+            let cellStyle = 'cursor:pointer; transition:all 0.2s; text-align:center; vertical-align:middle;';
+            let title = 'Veri Girmek İçin Tıklayın';
+
+            if (entry) {
+                if (entry.status === 'present') {
+                    // Sadece 'present' durumunda saat kontrolü yap
+                    const calisilanSaat = entry.hours !== null ? parseFloat(entry.hours) : 9;
+                    
+                    if (calisilanSaat >= 9) {
+                        cellHtml = `<div style="color:#27ae60; font-weight:bold; font-size:12px;">✔ ${calisilanSaat}s</div>`;
+                        cellStyle += 'background-color:#e8f8f5;';
+                    } else {
+                        const eksik = (9 - calisilanSaat).toFixed(1);
+                        cellHtml = `
+                            <div style="color:#d35400; font-weight:bold; font-size:12px;">⚠️ ${calisilanSaat}s</div>
+                            <div style="color:red; font-size:10px; font-weight:bold;">(-${eksik})</div>
+                        `;
+                        cellStyle += 'background-color:#fdebd0;';
+                        title = `Eksik Çalışma: ${eksik} saat`;
+                    }
+
+                } else if (entry.status === 'weekly') {
+                    // SARI İZİN: Sadece 'İZİN' yaz, hesaplama yapma
+                    cellHtml = '<span style="color:#f39c12; font-weight:bold; font-size:11px;">İZİN</span>';
+                    cellStyle += 'background-color:#fcf3cf;';
+                } else if (entry.status === 'izin') {
+                    // MOR RAPOR: Sadece 'RAPOR' yaz, hesaplama yapma
+                    cellHtml = '<span style="color:#8e44ad; font-weight:bold; font-size:11px;">RAPOR</span>';
+                    cellStyle += 'background-color:#f4ecf7;';
+                } else if (entry.status === 'devamsiz') {
+                    // KIRMIZI DEVAMSIZ
+                    cellHtml = '<span style="color:white; font-weight:bold; font-size:11px;">YOK</span>';
+                    cellStyle += 'background-color:#c0392b;';
+                    title = 'Devamsız (-9 Saat)';
+                } else if (entry.status === 'yillik_izin') {
+                    cellHtml = '<span style="color:white; font-weight:bold; font-size:11px;">Y.İZİN</span>';
+                    cellStyle += 'background-color:#2980b9;';
                 }
-            });
-            let startDate;
-            if (earliestDate) {
-                // En eski kayıt tarihinden başlayarak bugüne kadar tüm günleri göster
-                startDate = new Date(earliestDate);
-            } else {
-                // Hiç kayıt yoksa, son 30 günü göster
-                startDate = new Date(today);
-                startDate.setDate(today.getDate() - 29);
-            }
-            // Takvim aralığını belirle: bugün dahil olmak üzere
-            // kullanıcının planlama yapabilmesi için gelecekteki 30 günü de ekleyelim
-            const endDate = new Date(today);
-            endDate.setDate(today.getDate() + 30);
-            // startDate ile endDate arasındaki tüm günlerin listesini oluştur
-            const current = new Date(startDate);
-            while (current <= endDate) {
-                days.push(current.toISOString().split('T')[0]);
-                current.setDate(current.getDate() + 1);
-            }
-            // tablo oluştur
-            const table = document.createElement('table');
-            table.className = 'attendance-table';
-            let theadHtml = '<thead><tr><th>Personel</th>';
-            days.forEach(d => {
-                const dt = new Date(d);
-                const label = (`${dt.getDate().toString().padStart(2,'0')}.${(dt.getMonth()+1).toString().padStart(2,'0')}`);
-                theadHtml += `<th>${label}</th>`;
-            });
-            theadHtml += '</tr></thead>';
-            let tbodyHtml = '<tbody>';
-            personeller.forEach(p => {
-                tbodyHtml += `<tr><td style="white-space: nowrap; text-align:left;">${p.ad}</td>`;
-                days.forEach(d => {
-                    let cellHtml = '';
-                    const entry = p.attendance ? p.attendance[d] : undefined;
-                    if (entry) {
-                        // Haftalık planlı izinler: turuncu renk
-                        if (entry.status === 'weekly') {
-                            cellHtml = '<span class="attendance-weekly">İzin</span>';
-                        } else if (entry.status === 'izin') {
-                            // Manuel olarak işaretlenen veya devamsızlık günü: kırmızı
-                            cellHtml = '<span class="attendance-absent">İzin</span>';
-                        } else if (entry.status === 'present') {
-                            // Çalışılan günler
-                            if (entry.hours !== null && entry.hours !== undefined) {
-                                const durStr = app.helpers.formatHoursDecimal(entry.hours);
-                                cellHtml = `<span class="attendance-present">✔ ${durStr}</span>`;
-                            } else {
-                                cellHtml = '<span class="attendance-present">✔</span>';
-                            }
-                        } else if (entry.status === 'absent') {
-                            // Absent statüsü (şimdilik kullanılmıyor)
-                            cellHtml = '<span class="attendance-absent">×</span>';
-                        } else {
-                            cellHtml = '<span class="attendance-absent">×</span>';
-                        }
-                    } else {
-                        // Kayıt yok: default olarak devamsız (×)
-                        cellHtml = '<span class="attendance-absent">×</span>';
-                    }
-                    // veri attributeleri ekle: personelId ve tarih
-                    tbodyHtml += `<td data-person-id="${p.id}" data-date="${d}">${cellHtml}</td>`;
-                });
-                tbodyHtml += '</tr>';
-            });
-            tbodyHtml += '</tbody>';
-            table.innerHTML = theadHtml + tbodyHtml;
-            container.appendChild(table);
-            // Admin yetkisi varsa, izin/absent işaretlemek için hücre tıklama olayını ekle
-            if (app.currentUser && app.currentUser.role === 'admin') {
-                const tbodyEl = table.querySelector('tbody');
-                tbodyEl.addEventListener('click', (e) => {
-                    const td = e.target.closest('td');
-                    if (!td) return;
-                    const pid = parseInt(td.dataset.personId);
-                    const dateKey = td.dataset.date;
-                    // Personel adı hücreleri veya geçersiz veri için işlem yapmayalım
-                    if (!pid || !dateKey) return;
-                    const person = app.data.personel.find(per => per.id === pid);
-                    if (!person) return;
-                    const entry = person.attendance ? person.attendance[dateKey] : undefined;
-                    // Çalışılan veya planlı izin (weekly) günleri değiştirme
-                    if (entry && (entry.status === 'present' || entry.status === 'weekly')) {
-                        return;
-                    }
-                    if (entry && entry.status === 'izin') {
-                        // İzin (kırmızı) > sil (devamsız)
-                        delete person.attendance[dateKey];
-                    } else {
-                        // Devamsız (veya hiç kayıt yok) > izin (kırmızı)
-                        if (!person.attendance) person.attendance = {};
-                        person.attendance[dateKey] = { status: 'izin', hours: null };
-                    }
-                    dataManager.save();
-                    renderer.personelDurumu();
-                });
             }
 
-            // --- Aylık Çalışma ve İzin Günleri Özetlerini Hesapla ve Göster ---
-            const summaryContainer = app.dom.personelDurumuSummaryContainer;
-            if (summaryContainer) {
-                // İçeriği temizle
-                summaryContainer.innerHTML = '';
-                const wrapper = document.createElement('div');
-                wrapper.className = 'attendance-summary';
-                // Aylara göre toplam gün sayısını hesapla (gösterilen günler)
-                const monthDayCount = {};
-                // Yalnızca bugüne kadar olan günleri sayarak aylık çalışma/izin oranlarını hesaplarken gelecek günleri payda olarak kullanma
-                days.forEach(dateStr => {
-                    const dt = new Date(dateStr);
-                    // Sadece bugün veya daha önceki tarihleri hesaba kat
-                    if (dt <= today) {
-                        const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
-                        if (!monthDayCount[key]) monthDayCount[key] = 0;
-                        monthDayCount[key] += 1;
-                    }
-                });
-                const monthNames = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-                // Çalışma özeti başlığı
-                const summaryTitle = document.createElement('h3');
-                summaryTitle.textContent = 'Aylık Çalışma Günleri Özeti';
-                wrapper.appendChild(summaryTitle);
-                const summaryList = document.createElement('ul');
-                // 'personeller' isimli değişkeni kullanarak aylık çalışma günleri özetini oluşturalım
-                personeller.forEach(p => {
-                    // Her ay için çalışılan gün sayısını hesapla
-                    const monthWorked = {};
-                    days.forEach(dateStr => {
-                        const dt = new Date(dateStr);
-                        const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
-                        const entry = p.attendance ? p.attendance[dateStr] : undefined;
-                        if (!monthWorked[key]) monthWorked[key] = 0;
-                        if (entry && entry.status === 'present') monthWorked[key] += 1;
-                    });
-                    const parts = [];
-                    Object.keys(monthWorked).forEach(key => {
-                        const [year, month] = key.split('-');
-                        const name = monthNames[parseInt(month) - 1];
-                        const worked = monthWorked[key];
-                        // Sabit payda olarak 30 gün kullanıyoruz
-                        const totalDays = 30;
-                        parts.push(`${name}: ${worked}/${totalDays} gün`);
-                    });
-                    const li = document.createElement('li');
-                    li.textContent = `${p.ad}: ${parts.join(', ')}`;
-                    summaryList.appendChild(li);
-                });
-                wrapper.appendChild(summaryList);
-                // İzin özeti başlığı
-                const izinTitle = document.createElement('h3');
-                izinTitle.textContent = 'Aylık İzin Günleri Özeti';
-                wrapper.appendChild(izinTitle);
-                const izinList = document.createElement('ul');
-                // Aylık izin günleri özetini oluştururken de aynı personeller listesini kullan
-                personeller.forEach(p => {
-                    const monthWeekly = {};
-                    const monthIzin = {};
-                    days.forEach(dateStr => {
-                        const dt = new Date(dateStr);
-                        const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
-                        const entry = p.attendance ? p.attendance[dateStr] : undefined;
-                        if (!monthWeekly[key]) monthWeekly[key] = 0;
-                        if (!monthIzin[key]) monthIzin[key] = 0;
-                        if (entry) {
-                            if (entry.status === 'weekly') monthWeekly[key] += 1;
-                            else if (entry.status === 'izin') monthIzin[key] += 1;
-                        }
-                    });
-                    const parts2 = [];
-                    const keys = Object.keys(monthDayCount);
-                    keys.forEach(key => {
-                        const [year, month] = key.split('-');
-                        const name = monthNames[parseInt(month) - 1];
-                        const weekly = monthWeekly[key] || 0;
-                        const izin = monthIzin[key] || 0;
-                        const total = weekly + izin;
-                        // Sabit payda olarak 30 gün kullanıyoruz
-                        const totalDaysIzin = 30;
-                        parts2.push(`${name}: ${total}/${totalDaysIzin} gün (planlı ${weekly}, devamsızlık ${izin})`);
-                    });
-                    const li2 = document.createElement('li');
-                    li2.textContent = `${p.ad}: ${parts2.join(', ')}`;
-                    izinList.appendChild(li2);
-                });
-                wrapper.appendChild(izinList);
-                summaryContainer.appendChild(wrapper);
-            }
-            // Son olarak, varsa haftalık izin planlama formunu güncelle
-            if (renderer.populateIzinPersonelSelect) {
-                renderer.populateIzinPersonelSelect();
-            }
-        },
-
-        /**
+            tbodyHtml += `<td style="${cellStyle}" onclick="actions.openAttendanceModal(${p.id}, '${d}')" title="${title}">${cellHtml}</td>`;
+        });
+        tbodyHtml += '</tr>';
+    });
+    tbodyHtml += '</tbody>';
+    
+    table.innerHTML = theadHtml + tbodyHtml;
+    container.appendChild(table);
+},
+/**
          * Haftalık izin planlama formundaki personel select'ini doldurur.
          * Sadece aktif durumdaki personeller listelenir.
          */
@@ -2254,6 +2209,270 @@ stokOzet: () => {
             });
         },
         // Yeni: aktif vardiyaya personel ekleme/çıkarma yöneticisi
+        // actions nesnesinin içine ekleyin:
+
+// actions nesnesinin içine ekleyin/güncelleyin:
+
+// 1. Güncellenmiş Modal (Devamsızlık Seçeneği Eklendi)
+openAttendanceModal: (personelId, date) => {
+    if (app.currentUser && app.currentUser.role !== 'admin') return;
+
+    const person = app.data.personel.find(p => p.id === personelId);
+    if (!person) return;
+
+    const entry = person.attendance && person.attendance[date] ? person.attendance[date] : { status: '', hours: 9 };
+    const durum = entry.status || 'bos';
+    const tarihFormat = new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
+
+    const html = `
+        <div style="text-align:center; margin-bottom:20px;">
+            <h3 style="color:#2c3e50;">${person.ad}</h3>
+            <p style="color:#7f8c8d;">${tarihFormat}</p>
+        </div>
+        <form id="attendance-form">
+            <input type="hidden" id="att-person-id" value="${personelId}">
+            <input type="hidden" id="att-date" value="${date}">
+
+            <div class="input-group">
+                <label>Günün Durumu</label>
+                <select id="att-status" onchange="actions.toggleHourInput()" style="padding:10px; font-size:16px; width:100%;">
+                    <option value="present" ${durum === 'present' ? 'selected' : ''}>✅ Çalıştı (Geldi)</option>
+                    <option value="weekly" ${durum === 'weekly' ? 'selected' : ''}>📅 Haftalık İzin</option>
+                    <option value="izin" ${durum === 'izin' ? 'selected' : ''}>💊 Raporlu / Mazeretli</option>
+                    <option value="devamsiz" ${durum === 'devamsiz' ? 'selected' : ''}>🟥 Raporsuz / Mazeretsiz (Devamsız)</option>
+                    <option value="yillik_izin" ${durum === 'yillik_izin' ? 'selected' : ''}>🏖️ Yıllık İzin</option>
+                    <option value="delete" ${durum === 'bos' ? 'selected' : ''}>🗑️ Kaydı Sil</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="att-hours-group" style="display:${durum === 'present' ? 'block' : 'none'};">
+                <label>Çalışılan Saat</label>
+                <input type="number" id="att-hours" value="${entry.hours || 9}" step="0.5" class="form-control">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" style="margin-top:15px;">Kaydet</button>
+        </form>
+    `;
+
+    actions.openModal('Günlük Kayıt', html);
+    setTimeout(() => {
+        document.getElementById('attendance-form').addEventListener('submit', actions.saveAttendanceManual);
+    }, 100);
+},
+
+// 2. YENİ: Toplu Yıllık İzin Modalı
+openAnnualLeaveModal: () => {
+    // Personel Listesi
+    const personeller = app.data.personel.filter(p => p.durum === 'Aktif').sort((a,b) => a.ad.localeCompare(b.ad));
+    let options = personeller.map(p => `<option value="${p.id}">${p.ad}</option>`).join('');
+
+    const html = `
+        <div class="alert alert-info" style="background:#e8f8f5; color:#0e6251; padding:10px; border-radius:5px; margin-bottom:15px;">
+            Seçilen tarih aralığındaki tüm günlere "Yıllık İzin" kaydı işlenecektir.
+        </div>
+        <form id="annual-leave-form">
+            <div class="input-group">
+                <label>Personel Seçin</label>
+                <select id="al-person" required style="width:100%; padding:10px;">${options}</select>
+            </div>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+                <div class="input-group">
+                    <label>Başlangıç Tarihi</label>
+                    <input type="date" id="al-start" required>
+                </div>
+                <div class="input-group">
+                    <label>Bitiş Tarihi (Dahil)</label>
+                    <input type="date" id="al-end" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success btn-full">İzinleri İşle</button>
+        </form>
+    `;
+
+    actions.openModal('Toplu Yıllık İzin Girişi', html);
+    setTimeout(() => {
+        document.getElementById('annual-leave-form').addEventListener('submit', actions.saveAnnualLeave);
+    }, 100);
+},
+
+
+// 3. YENİ: Yıllık İzin Kaydetme Mantığı
+saveAnnualLeave: (e) => {
+    e.preventDefault();
+    const pid = parseInt(document.getElementById('al-person').value);
+    const startStr = document.getElementById('al-start').value;
+    const endStr = document.getElementById('al-end').value;
+
+    if (!startStr || !endStr) { alert('Tarihleri giriniz.'); return; }
+    if (startStr > endStr) { alert('Başlangıç tarihi bitişten büyük olamaz.'); return; }
+
+    const person = app.data.personel.find(p => p.id === pid);
+    if (!person) return;
+    if (!person.attendance) person.attendance = {};
+
+    let current = new Date(startStr);
+    const end = new Date(endStr);
+    let count = 0;
+
+    // Tarih aralığını döngüye al
+    while (current <= end) {
+        const dateKey = current.toISOString().split('T')[0];
+        
+        // Mevcut kaydı ez, Yıllık İzin yap
+        person.attendance[dateKey] = { status: 'yillik_izin', hours: null };
+        
+        current.setDate(current.getDate() + 1);
+        count++;
+    }
+
+    dataManager.save();
+    actions.closeModal();
+    renderer.personelDurumu();
+    alert(`${person.ad} için ${count} günlük Yıllık İzin kaydedildi.`);
+},
+// actions nesnesinin içine ekleyin:
+
+// actions nesnesinin içine yapıştırın (Eskisini silin)
+showMissingHoursReport: () => {
+    const personeller = app.data.personel;
+    let raporData = [];
+
+    // Hesaplama Aralığı: Son 30 Gün
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 30); 
+
+    personeller.forEach(p => {
+        let toplamEksikSaat = 0;
+        let eksikGunSayisi = 0;
+        let devamsizlikSayisi = 0;
+
+        if (p.attendance) {
+            Object.keys(p.attendance).forEach(date => {
+                const recordDate = new Date(date);
+                
+                // Sadece son 30 günü hesapla
+                if (recordDate >= startDate && recordDate <= today) {
+                    const entry = p.attendance[date];
+                    
+                    // --- HESAPLAMA MANTIĞI ---
+                    
+                    if (entry.status === 'present') {
+                        // DURUM 1: GELDİ (Çalıştı)
+                        // Saati al, eğer boşsa veya hatalıysa 9 kabul et (Eksik yok say)
+                        let saat = 9;
+                        if (entry.hours !== undefined && entry.hours !== null && entry.hours !== '') {
+                            saat = parseFloat(entry.hours);
+                        }
+                        
+                        // Eğer 9 saatten az çalıştıysa eksik yaz
+                        if (saat < 9) {
+                            toplamEksikSaat += (9 - saat);
+                            eksikGunSayisi++;
+                        }
+
+                    } else if (entry.status === 'devamsiz') {
+                        // DURUM 2: DEVAMSIZ (Kırmızı)
+                        // Mazeretsiz gelmediği için tam gün (9 saat) ceza
+                        toplamEksikSaat += 9;
+                        devamsizlikSayisi++;
+                    
+                    } else if (entry.status === 'weekly' || entry.status === 'izin' || entry.status === 'yillik_izin') {
+                        // DURUM 3: İZİNLER (Sarı, Mor, Mavi)
+                        // BU GÜNLER KESİNLİKLE EKSİK SAYILMAZ!
+                        // İşlem yapma, pas geç.
+                    }
+                }
+            });
+        }
+
+        // Eğer eksik çalışma varsa listeye ekle
+        if (toplamEksikSaat > 0) {
+            raporData.push({
+                ad: p.ad,
+                eksikSaat: toplamEksikSaat,
+                detay: `${eksikGunSayisi} gün erken çıkış, ${devamsizlikSayisi} gün devamsızlık.`
+            });
+        }
+    });
+
+    // Raporu Sırala (En çok eksiği olan en üstte)
+    raporData.sort((a, b) => b.eksikSaat - a.eksikSaat);
+
+    let html = `
+        <div class="alert alert-warning" style="margin-bottom:15px; color:#856404; background-color:#fff3cd; border-color:#ffeeba; padding:10px;">
+            <strong>Bilgi:</strong> Bu rapor son 30 günü kapsar. <br>
+            Sadece <b>"Geldi (Eksik Saat)"</b> ve <b>"Devamsız (Kırmızı)"</b> durumları hesaplanır.<br>
+            Haftalık İzin (Sarı) ve Raporlu (Mor) günler <u>hesaba katılmaz.</u>
+        </div>
+        <table class="table" style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr style="background:#f39c12; color:white;">
+                    <th style="padding:10px; text-align:left;">Personel</th>
+                    <th style="padding:10px; text-align:center;">Toplam Eksik</th>
+                    <th style="padding:10px; text-align:left;">Detay</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    if (raporData.length === 0) {
+        html += '<tr><td colspan="3" style="padding:20px; text-align:center; font-weight:bold; color:#27ae60;">Tebrikler! Son 30 günde eksik çalışan personel yok.</td></tr>';
+    } else {
+        raporData.forEach(r => {
+            html += `
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:10px; font-weight:bold;">${r.ad}</td>
+                    <td style="padding:10px; text-align:center; color:#c0392b; font-weight:bold; font-size:18px;">
+                        -${r.eksikSaat.toFixed(1)} saat
+                    </td>
+                    <td style="padding:10px; font-size:13px; color:#555;">${r.detay}</td>
+                </tr>
+            `;
+        });
+    }
+
+    html += '</tbody></table>';
+
+    actions.openModal('⚠️ Eksik Çalışma Raporu', html);
+},
+toggleHourInput: () => {
+    const status = document.getElementById('att-status').value;
+    const group = document.getElementById('att-hours-group');
+    if (status === 'present') {
+        group.style.display = 'block';
+    } else {
+        group.style.display = 'none';
+    }
+},
+
+saveAttendanceManual: (e) => {
+    e.preventDefault();
+    const pid = parseInt(document.getElementById('att-person-id').value);
+    const date = document.getElementById('att-date').value;
+    const status = document.getElementById('att-status').value;
+    const hours = parseFloat(document.getElementById('att-hours').value);
+
+    const person = app.data.personel.find(p => p.id === pid);
+    if (!person) return;
+    if (!person.attendance) person.attendance = {};
+
+    if (status === 'delete') {
+        delete person.attendance[date]; // Kaydı sil
+    } else if (status === 'present') {
+        // Saat doğrulaması
+        if (isNaN(hours) || hours < 0) { alert('Lütfen geçerli bir saat girin.'); return; }
+        person.attendance[date] = { status: 'present', hours: hours };
+    } else {
+        // İzin veya Rapor durumunda saat null olabilir veya 0 girilebilir
+        person.attendance[date] = { status: status, hours: null };
+    }
+
+    dataManager.save();
+    actions.closeModal();
+    renderer.personelDurumu(); // Tabloyu yenile
+    // alert('Kayıt güncellendi.'); // İsterseniz açabilirsiniz
+},
         manageShiftPersonnel: () => {
             const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
             if (!activeShift) { alert('Şu anda aktif vardiya bulunmuyor.'); return; }
@@ -2743,10 +2962,114 @@ stokOzet: () => {
         },
         addFactory: (e) => { e.preventDefault(); const name = app.dom.fabrikaForm.querySelector('#fabrika-adi').value.trim(); if (name) { app.data.fabrikalar.push({ id: Date.now(), ad: name }); dataManager.save(); app.dom.fabrikaForm.reset(); renderer.updateAll(); } },
         updateUretimToplam: () => { const adet = parseFloat(app.dom.uretimAdetInput.value) || 0; const birimFiyat = parseFloat(app.dom.uretimBirimFiyatInput.value) || 0; app.dom.uretimToplamTutarInput.value = app.helpers.formatCurrency(adet * birimFiyat); },
-        addUretimToList: (e) => { e.preventDefault(); const form = app.dom.uretimEkleForm; const uretim = { fabrikaId: parseInt(form.querySelector('#uretim-fabrika').value), tarih: form.querySelector('#uretim-tarih').value, aciklama: form.querySelector('#uretim-aciklama').value.trim(), adet: parseInt(form.querySelector('#uretim-adet').value), birimFiyat: parseFloat(form.querySelector('#uretim-birim-fiyat').value) }; if (!uretim.fabrikaId || !uretim.tarih || !uretim.aciklama || isNaN(uretim.adet) || uretim.adet <= 0 || isNaN(uretim.birimFiyat) || uretim.birimFiyat <= 0) { alert('Lütfen tüm alanları (Açıklama, Adet, Fiyat) doğru ve eksiksiz doldurun.'); return; } app.temp.uretimListesi.push(uretim); renderer.uretimEkleListesi(); form.querySelector('#uretim-aciklama').value = ''; form.querySelector('#uretim-adet').value = ''; form.querySelector('#uretim-birim-fiyat').value = ''; form.querySelector('#uretim-toplam-tutar').value = ''; form.querySelector('#uretim-aciklama').focus(); },
+        // actions nesnesinin içindeki addUretimToList fonksiyonunu bununla değiştir:
+// actions nesnesinin içine yapıştırın (Eskisini silin)
+// actions nesnesinin içine yapıştır (Eskisini sil)
+addUretimToList: (e) => { 
+    e.preventDefault(); 
+    const form = app.dom.uretimEkleForm; 
+    
+    // Değerleri alıyoruz
+    const birimMaliyet = parseFloat(form.querySelector('#uretim-birim-maliyet').value) || 0;
+    const kdvOrani = parseFloat(form.querySelector('#uretim-kdv-orani').value) || 0;
+
+    const uretim = { 
+        fabrikaId: parseInt(form.querySelector('#uretim-fabrika').value), 
+        tarih: form.querySelector('#uretim-tarih').value, 
+        aciklama: form.querySelector('#uretim-aciklama').value.trim(), 
+        adet: parseInt(form.querySelector('#uretim-adet').value), 
+        birimFiyat: parseFloat(form.querySelector('#uretim-birim-fiyat').value),
+        birimMaliyet: birimMaliyet,
+        kdvOrani: kdvOrani // <-- KDV verisi eklendi
+    }; 
+
+    if (!uretim.fabrikaId || !uretim.tarih || !uretim.aciklama || isNaN(uretim.adet) || uretim.adet <= 0 || isNaN(uretim.birimFiyat) || uretim.birimFiyat <= 0) { 
+        alert('Lütfen zorunlu alanları (Fabrika, Tarih, Açıklama, Adet, Satış Fiyatı) doldurun.'); 
+        return; 
+    } 
+
+    app.temp.uretimListesi.push(uretim); 
+    renderer.uretimEkleListesi(); 
+
+    // Formu temizle (Tarih hariç)
+    form.querySelector('#uretim-aciklama').value = ''; 
+    form.querySelector('#uretim-adet').value = ''; 
+    form.querySelector('#uretim-birim-fiyat').value = ''; 
+    form.querySelector('#uretim-birim-maliyet').value = ''; 
+    form.querySelector('#uretim-kdv-orani').value = ''; // KDV alanını temizle
+    form.querySelector('#uretim-toplam-tutar').value = ''; 
+    form.querySelector('#uretim-aciklama').focus(); 
+},
+
+
         removeUretimFromList: (index) => { app.temp.uretimListesi.splice(index, 1); renderer.uretimEkleListesi(); },
         clearUretimListesi: () => { if (app.temp.uretimListesi.length > 0 && confirm('Kaydedilmemiş tüm kalemler silinecek. Emin misiniz?')) { app.temp.uretimListesi = []; renderer.uretimEkleListesi(); } },
-        saveUretimListesi: () => { const list = app.temp.uretimListesi; if (list.length === 0) { alert('Kaydedilecek bir kalem bulunmuyor.'); return; } if (confirm(`${list.length} adet üretim kalemini kaydetmek istediğinizden emin misiniz?`)) { list.forEach((item, index) => app.data.uretimler.push({ ...item, id: Date.now() + index })); dataManager.save(); app.temp.uretimListesi = []; alert(`${list.length} adet üretim kaydı başarıyla eklendi.`); renderer.updateAll(); } },
+        // actions nesnesinin içine yapıştırın (Eskisini silin)
+// actions nesnesinin içine yapıştır (Eskisini sil)
+saveUretimListesi: () => {
+    const list = app.temp.uretimListesi;
+    if (list.length === 0) {
+        alert('Kaydedilecek bir kalem bulunmuyor.');
+        return;
+    }
+
+    if (confirm(`${list.length} adet üretim kalemini kaydetmek istediğinizden emin misiniz?`)) {
+        let toplamMaliyetGideri = 0;
+        let toplamKdvGideri = 0;
+
+        list.forEach((item, index) => {
+            // 1. ÜRETİMİ KAYDET (Fabrika Borçlanır)
+            const uretimId = Date.now() + index;
+            app.data.uretimler.push({ ...item, id: uretimId });
+
+            // Fabrika adını bul
+            const fabrika = app.data.fabrikalar.find(f => f.id === item.fabrikaId);
+            const fabrikaAdi = fabrika ? fabrika.ad : 'Bilinmeyen';
+            const toplamSatis = item.adet * item.birimFiyat;
+
+            // 2. MALİYET GİDERİ KAYDI (Varsa)
+            if (item.birimMaliyet && item.birimMaliyet > 0) {
+                const maliyetTutari = item.adet * item.birimMaliyet;
+                toplamMaliyetGideri += maliyetTutari;
+
+                app.data.giderler.push({
+                    id: Date.now() + index + 50000,
+                    tip: 'diger',
+                    aciklama: `[MALİYET] ${item.aciklama}`,
+                    detay: `Otomatik Kayıt: ${fabrikaAdi} - ${item.aciklama} üretimi için birim maliyet gideri.`,
+                    tutar: maliyetTutari,
+                    tarih: item.tarih
+                });
+            }
+
+            // 3. KDV GİDERİ KAYDI (Varsa)
+            if (item.kdvOrani && item.kdvOrani > 0) {
+                // KDV Hesabı: Satış Tutarı * (Oran / 100)
+                const kdvTutari = toplamSatis * (item.kdvOrani / 100);
+                toplamKdvGideri += kdvTutari;
+
+                app.data.giderler.push({
+                    id: Date.now() + index + 90000,
+                    tip: 'diger', // KDV de bir gider/kesintidir
+                    aciklama: `[KDV] %${item.kdvOrani} - ${item.aciklama}`,
+                    detay: `Otomatik Kayıt: ${fabrikaAdi} satışından doğan KDV yükümlülüğü. (Satış: ${app.helpers.formatCurrency(toplamSatis)})`,
+                    tutar: kdvTutari,
+                    tarih: item.tarih
+                });
+            }
+        });
+
+        dataManager.save();
+        app.temp.uretimListesi = [];
+        
+        let mesaj = `${list.length} adet üretim başarıyla kaydedildi.`;
+        if (toplamMaliyetGideri > 0) mesaj += `\n- Toplam ${app.helpers.formatCurrency(toplamMaliyetGideri)} maliyet gideri işlendi.`;
+        if (toplamKdvGideri > 0) mesaj += `\n- Toplam ${app.helpers.formatCurrency(toplamKdvGideri)} KDV gideri işlendi.`;
+        
+        alert(mesaj);
+        renderer.updateAll();
+    }
+},
         deleteProduction: (uretimId) => { uretimId = parseInt(uretimId); const uretim = app.data.uretimler.find(u => u.id === uretimId); if (!uretim) return; const fabrikaAdi = app.data.fabrikalar.find(f => f.id === uretim.fabrikaId)?.ad || 'Bilinmeyen Fabrika'; const onay = confirm(`Aşağıdaki üretim kaydını kalıcı olarak silmek istediğinizden emin misiniz?\n\nFabrika: ${fabrikaAdi}\nTarih: ${uretim.tarih}\nAçıklama: ${uretim.aciklama}\nTutar: ${app.helpers.formatCurrency(uretim.adet * uretim.birimFiyat)}`); if (onay) { app.data.uretimler = app.data.uretimler.filter(u => u.id !== uretimId); dataManager.save(); renderer.updateAll(); alert('Üretim kaydı silindi.'); } },
         addExpense: (e) => { e.preventDefault(); const form = app.dom.giderForm; const gider = { id: Date.now(), tip: form.querySelector('#gider-tip').value, aciklama: form.querySelector('#gider-aciklama').value.trim(), detay: form.querySelector('#gider-detay').value.trim(), tutar: parseFloat(form.querySelector('#gider-tutar').value), tarih: form.querySelector('#gider-tarih').value }; if (!gider.tip || !gider.aciklama || isNaN(gider.tutar) || !gider.tarih) { alert('Lütfen Tip, Başlık, Tutar ve Tarih alanlarını doğru doldurun.'); return; } app.data.giderler.push(gider); dataManager.save(); form.reset(); form.querySelector('#gider-tarih').value = app.helpers.getTodayISO(); alert('Gider kaydedildi!'); renderer.updateAll(); },
         addPayment: (e) => { e.preventDefault(); const form = e.target; const odeme = { id: Date.now(), fabrikaId: parseInt(form.querySelector('#odeme-fabrika-id').value), tutar: parseFloat(form.querySelector('#odeme-tutari').value), tarih: form.querySelector('#odeme-tarihi').value }; if (isNaN(odeme.tutar) || !odeme.tarih) { alert('Lütfen tüm alanları doğru doldurun.'); return; } app.data.odemeler.push(odeme); dataManager.save(); actions.closeModal(); alert('Ödeme kaydedildi!'); renderer.updateAll(); },
