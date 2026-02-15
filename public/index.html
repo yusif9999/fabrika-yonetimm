@@ -4751,26 +4751,73 @@ actions.addUretimToList = function(e) {
 };
 
 // 5. Stok Düşüm Motoru (Tek Seferlik Garanti)
+
+// --- GÜNCELLENMİŞ STOK DÜŞÜM MOTORU (HAMMADDE LOTLARINI DA GÜNCELLER) ---
+
+// --- KESİN ÇÖZÜM: STOK VE LOT DÜŞÜM MOTORU (AKILLI EŞLEŞTİRME) ---
+
+// --- KESİN VE NET ÇÖZÜM: REÇETE İÇİNDEKİ HAMMADDENİN LOTUNU DÜŞÜRME ---
 actions.otomatikStokDus = function(uretimItem) {
-    const recete = (app.data.receteler || []).find(r => r.ad.trim() === uretimItem.aciklama.trim());
+    // 1. Üretilen Ürünün Reçetesini Bul (Örn: Tabldot Menü)
+    const recete = app.data.receteler.find(r => r.ad.trim() === uretimItem.aciklama.trim());
+    
+    // Reçete yoksa işlem yapma
     if (!recete) return 0;
 
-    let islenenMalzeme = 0;
-    recete.malzemeler.forEach(malzeme => {
-        const stokKart = app.data.stoklar.find(s => s.id === malzeme.stokId);
-        if (stokKart) {
-            if (!stokKart.depolar) stokKart.depolar = { "Ana Depo": parseFloat(stokKart.miktar) || 0 };
-            if (stokKart.depolar["Ana Depo"] === undefined) stokKart.depolar["Ana Depo"] = 0;
+    let islenenMalzemeSayisi = 0;
 
+    // 2. Reçetenin içindeki malzemeleri tek tek gez (Örn: Rus Salatası, Tavuk, Pilav)
+    recete.malzemeler.forEach(malzeme => {
+        // Bu malzemenin stok kartını bul
+        const stokKart = app.data.stoklar.find(s => s.id === malzeme.stokId);
+
+        if (stokKart) {
+            // --- A) ÖNCE GENEL DEPO STOĞUNU DÜŞ ---
+            if (!stokKart.depolar) stokKart.depolar = { "Ana Depo": parseFloat(stokKart.miktar) || 0 };
+            
+            // Düşülecek Miktar Hesabı (Üretim Adedi x Reçetedeki Miktar)
+            // Örn: 1 Tabldot x 1 Rus Salatası = 1 Adet Düşecek
             const dusulecekMiktar = uretimItem.adet * malzeme.miktar;
-            
-            // Stoktan Düş
+
+            // Depodan düş
             stokKart.depolar["Ana Depo"] -= dusulecekMiktar;
-            
-            // Ana Miktarı Güncelle
             stokKart.miktar = Object.values(stokKart.depolar).reduce((a, b) => a + b, 0);
 
-            // Hareket Kaydı
+            // --- B) ŞİMDİ BU HAMMADDENİN LOTLARINI BUL VE DÜŞ ---
+            if (app.data.lotlar && app.data.lotlar.length > 0) {
+                
+                // ADIM 1: "Rus Salatası" adına sahip olan Lotları getir.
+                // Stok kartındaki isim ile Lot'taki ürün adı BİREBİR AYNI olmalı.
+                let hammaddeLotlari = app.data.lotlar.filter(lot => 
+                    lot.urunAdi.trim() === stokKart.ad.trim() && lot.miktar > 0
+                );
+
+                // ADIM 2: Eskiden yeniye sırala (FIFO) - İlk giren ilk çıkar
+                hammaddeLotlari.sort((a, b) => (a.uretimTarihi > b.uretimTarihi ? 1 : -1));
+
+                let kalanDusulecek = dusulecekMiktar;
+
+                // ADIM 3: Sırayla Lotlardan düş
+                for (let lot of hammaddeLotlari) {
+                    if (kalanDusulecek <= 0) break; // Düşülecek miktar bittiyse dur
+
+                    if (lot.miktar >= kalanDusulecek) {
+                        // Bu lotun miktarı yetiyor (Örn: Lotta 20 var, lazım olan 1)
+                        lot.miktar -= kalanDusulecek; // 20 - 1 = 19
+                        kalanDusulecek = 0;
+                    } else {
+                        // Bu lot yetmiyor (Örn: Lotta 0.5 var, lazım olan 1)
+                        kalanDusulecek -= lot.miktar;
+                        lot.miktar = 0; // Bu lot bitti
+                    }
+                    
+                    // Matematiksel küsurat hatasını temizle
+                    lot.miktar = Math.round(lot.miktar * 1000) / 1000;
+                }
+            }
+            // -----------------------------------------------------
+
+            // C) HAREKET KAYDI (Log)
             if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
             app.data.stokHareketleri.push({
                 id: Date.now() + Math.random(),
@@ -4783,40 +4830,72 @@ actions.otomatikStokDus = function(uretimItem) {
                 miktar: dusulecekMiktar,
                 kalanStok: stokKart.miktar,
                 tarih: new Date().toISOString(),
-                aciklama: `[OTOMATİK] ${uretimItem.adet} adet "${uretimItem.aciklama}" üretimi.`
+                aciklama: `[OTOMATİK] ${uretimItem.adet} adet "${uretimItem.aciklama}" üretimi için kullanıldı.`
             });
-            islenenMalzeme++;
+            
+            islenenMalzemeSayisi++;
         }
     });
-    return islenenMalzeme;
+
+    return islenenMalzemeSayisi;
 };
 
-// 6. Kaydetme Fonksiyonu
+// 6. YENİ: Otomatik Lot Oluşturma Fonksiyonu
+actions.lotOlustur = function(uretimItem) {
+    if (!app.data.lotlar) app.data.lotlar = [];
+
+    // Lot Numarası Formatı: LOT-YYYYMMDD-RastgeleSayi (Örn: LOT-20231027-482)
+    const tarihKodu = new Date().toISOString().slice(0,10).replace(/-/g, '');
+    const rastgeleKod = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const lotNo = `LOT-${tarihKodu}-${rastgeleKod}`;
+
+    const yeniLot = {
+        id: Date.now() + Math.random(),
+        lotNo: lotNo,
+        urunAdi: uretimItem.aciklama,
+        miktar: uretimItem.adet,
+        uretimTarihi: uretimItem.tarih,
+        sonKullanmaTarihi: "", // İstersen buraya otomatik tarih ekleyebiliriz (Örn: +30 gün)
+        durum: 'Aktif', // Aktif, Karantina, Sevk Edildi vs.
+        notlar: `Otomatik oluşturuldu. Fabrika ID: ${uretimItem.fabrikaId}`
+    };
+
+    app.data.lotlar.push(yeniLot);
+    return lotNo;
+};
+
 actions.saveUretimListesi = function() {
     const list = app.temp.uretimListesi;
     if (list.length === 0) { alert('Kaydedilecek kalem yok.'); return; }
 
-    // Çift tıklama koruması
     const btn = document.getElementById('tumunu-kaydet-btn');
     if(btn) btn.disabled = true;
 
     if (confirm(`${list.length} kalem üretimi kaydetmek istiyor musunuz?`)) {
         let toplamDusum = 0;
+        let olusturulanLotSayisi = 0;
         
         list.forEach((item, index) => {
-            // Sadece ID ekleyip kaydediyoruz
-            app.data.uretimler.push({ ...item, id: Date.now() + index });
+            // A) Üretimi Kaydet
+            const yeniKayit = { ...item, id: Date.now() + index };
             
-            // Stok düşümü
+            // B) Lot Oluştur ve Kayda Ekle (Önemli: Üretim kaydında da lot numarası görünsün)
+            const lotNo = actions.lotOlustur(item);
+            yeniKayit.lotNo = lotNo; // Üretim geçmişine lot numarasını da ekledik
+            olusturulanLotSayisi++;
+
+            app.data.uretimler.push(yeniKayit);
+            
+            // C) Stoktan Düş
             toplamDusum += actions.otomatikStokDus(item);
             
-            // Maliyet Kaydı
+            // D) Maliyet Kaydı
             if (item.birimMaliyet > 0) {
                 app.data.giderler.push({
                     id: Date.now() + index + 5000,
                     tip: 'diger',
                     aciklama: `[MALİYET] ${item.aciklama}`,
-                    detay: `Üretim Maliyeti`,
+                    detay: `Üretim: ${item.adet} ad. (Lot: ${lotNo})`,
                     tutar: item.adet * item.birimMaliyet,
                     tarih: item.tarih
                 });
@@ -4824,9 +4903,14 @@ actions.saveUretimListesi = function() {
         });
 
         dataManager.save();
-        app.temp.uretimListesi = []; // Listeyi boşalt
+        app.temp.uretimListesi = [];
         renderer.updateAll();
-        alert(`✅ Üretim Kaydedildi!\n📦 Stoktan düşülen kalem sayısı: ${toplamDusum}`);
+        
+        let mesaj = `✅ Üretim Başarıyla Kaydedildi!`;
+        if (toplamDusum > 0) mesaj += `\n📦 Stoktan ${toplamDusum} kalem hammadde düşüldü.`;
+        if (olusturulanLotSayisi > 0) mesaj += `\n🏷️ ${olusturulanLotSayisi} adet yeni LOT kartı oluşturuldu.`;
+        
+        alert(mesaj);
     }
     
     if(btn) btn.disabled = false;
@@ -4870,6 +4954,15 @@ actions.navigate = function(e, page) {
         butonlariTamirEt(); // Sayfa değişince de butonları sağlama al
     }
 };
+
+// Lot Ekranını da Basitçe Gösterelim (Eğer fonksiyon yoksa)
+if (!renderer.lotListesi) {
+    renderer.lotListesi = function() {
+        // Burası Lot Sorgulama EkraniAc içinde kullanılabilir
+        // Basit bir liste döndürme mantığı
+        console.log("Lot Listesi Hazırlandı");
+    };
+}
 
 // Reçete Sekme Geçişi
 renderer.switchStokTab = function(tab) {
