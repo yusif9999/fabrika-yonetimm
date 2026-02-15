@@ -811,10 +811,11 @@
     </div>
 
     <div style="margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
-        <button class="btn btn-primary" onclick="renderer.switchStokTab('liste')" id="btn-tab-liste">📦 Stok Listesi & İşlemler</button>
-        <button class="btn btn-secondary" onclick="renderer.switchStokTab('gecmis')" id="btn-tab-gecmis">🕒 Stok Geçmişi (Loglar)</button>
-        <button class="btn btn-warning" onclick="actions.lotSorgulamaEkraniAc()">🔍 Lot / Parti Takibi (Dedektif)</button>
-    </div>
+    <button class="btn btn-primary" onclick="renderer.switchStokTab('liste')" id="btn-tab-liste">📦 Stok Listesi</button>
+    <button class="btn btn-secondary" onclick="renderer.switchStokTab('gecmis')" id="btn-tab-gecmis">🕒 Stok Geçmişi</button>
+    <button class="btn btn-warning" onclick="actions.lotSorgulamaEkraniAc()">🔍 Lot Takibi</button>
+    <button class="btn btn-info" onclick="renderer.switchStokTab('recete')" id="btn-tab-recete">📜 Reçeteler (Menüler)</button>
+</div>
 
     <div id="tab-stok-liste">
         <div class="content-box">
@@ -912,6 +913,17 @@
             <div id="stok-gecmis-container" style="overflow-x:auto;"></div>
         </div>
     </div>
+    <div id="tab-stok-recete" style="display: none;">
+    <div class="content-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>Ürün Reçeteleri</h2>
+            <button class="btn btn-success" onclick="actions.yeniReceteModalAc()">+ Yeni Reçete Oluştur</button>
+        </div>
+        <p style="color:#666; margin-bottom:15px;">Üretim yapıldığında stoktan otomatik düşülecek malzemeleri buradan tanımlayın.</p>
+        
+        <div id="recete-listesi-container"></div>
+    </div>
+</div>
 </div>
 
             <div id="ayarlar" class="page">
@@ -4532,6 +4544,384 @@ if (stokForm) {
 
 const stokAra = document.getElementById('stok-ara');
 if (stokAra) stokAra.oninput = renderer.stokListesi;
+
+// --- JS KISMI: Reçete Yönetim Sistemi ---
+
+// 1. Veri Başlatma (App Loaded olduğunda çalışması için kontrol)
+if (!app.data.receteler) app.data.receteler = [];
+
+// 2. Sekme Geçişini Güncelle (renderer.switchStokTab fonksiyonunu bununla DEĞİŞTİRİN)
+renderer.switchStokTab = function(tab) {
+    const tabListe = document.getElementById('tab-stok-liste');
+    const tabGecmis = document.getElementById('tab-stok-gecmis');
+    const tabRecete = document.getElementById('tab-stok-recete'); // YENİ
+
+    const btnListe = document.getElementById('btn-tab-liste');
+    const btnGecmis = document.getElementById('btn-tab-gecmis');
+    const btnRecete = document.getElementById('btn-tab-recete'); // YENİ
+    
+    if (tabListe && tabGecmis && tabRecete) {
+        tabListe.style.display = tab === 'liste' ? 'block' : 'none';
+        tabGecmis.style.display = tab === 'gecmis' ? 'block' : 'none';
+        tabRecete.style.display = tab === 'recete' ? 'block' : 'none'; // YENİ
+        
+        btnListe.className = tab === 'liste' ? 'btn btn-primary' : 'btn btn-secondary';
+        btnGecmis.className = tab === 'gecmis' ? 'btn btn-primary' : 'btn btn-secondary';
+        btnRecete.className = tab === 'recete' ? 'btn btn-primary' : 'btn btn-secondary'; // YENİ
+        
+        if (tab === 'liste') renderer.stokListesi();
+        if (tab === 'gecmis') renderer.stokGecmisiListesi();
+        if (tab === 'recete') renderer.receteListesi(); // YENİ
+    }
+};
+
+// 3. Reçeteleri Ekrana Basma
+renderer.receteListesi = function() {
+    const container = document.getElementById('recete-listesi-container');
+    if (!container) return;
+    
+    if (!app.data.receteler || app.data.receteler.length === 0) {
+        container.innerHTML = '<p class="no-data-message">Henüz tanımlanmış bir reçete yok.</p>';
+        return;
+    }
+
+    let html = '<div class="card-container" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">';
+    
+    app.data.receteler.forEach(recete => {
+        let icerikHtml = '<ul style="font-size:13px; color:#555; padding-left:20px; margin-top:10px;">';
+        recete.malzemeler.forEach(m => {
+            const stokKart = app.data.stoklar.find(s => s.id == m.stokId);
+            const stokAdi = stokKart ? stokKart.ad : 'Silinmiş Stok';
+            const birim = stokKart ? stokKart.birim : '';
+            icerikHtml += `<li>${stokAdi}: <strong>${m.miktar} ${birim}</strong></li>`;
+        });
+        icerikHtml += '</ul>';
+
+        html += `
+            <div class="card" style="border-left:5px solid #3498db; position:relative;">
+                <button class="btn-sm-danger" style="position:absolute; top:10px; right:10px;" onclick="actions.receteSil(${recete.id})">Sil</button>
+                <h3 style="color:#2c3e50; margin:0;">${recete.ad}</h3>
+                <small style="color:#7f8c8d;">1 Adet Üretim İçin Gerekli:</small>
+                ${icerikHtml}
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+};
+
+// 4. Yeni Reçete Modalı Açma
+actions.yeniReceteModalAc = function() {
+    // Stok seçeneklerini hazırla
+    let stokOptions = '<option value="" disabled selected>Hammadde Seçin...</option>';
+    app.data.stoklar.sort((a,b) => a.ad.localeCompare(b.ad)).forEach(s => {
+        stokOptions += `<option value="${s.id}">${s.ad} (${s.birim})</option>`;
+    });
+
+    const html = `
+        <div class="input-group">
+            <label>Reçete Adı (Ürün Adı)</label>
+            <input type="text" id="recete-adi" placeholder="Örn: Tabldot Menü, Karışık Tost..." required style="font-weight:bold;">
+        </div>
+        
+        <hr>
+        <label>Malzemeler (İçerik)</label>
+        <div id="recete-malzemeler-container">
+            </div>
+        
+        <button type="button" class="btn btn-sm-warning" onclick="actions.receteSatirEkle()" style="margin-bottom:15px;">+ Malzeme Ekle</button>
+
+        <button type="button" class="btn btn-success btn-full" onclick="actions.receteKaydet()">Reçeteyi Kaydet</button>
+    `;
+
+    // Global değişkene stok seçeneklerini atıyoruz ki satır eklerken kullanalım
+    window.tempStokOptions = stokOptions;
+
+    actions.openModal('Yeni Reçete Tanımla', html, true);
+    
+    // İlk satırı otomatik ekle
+    setTimeout(actions.receteSatirEkle, 100);
+};
+
+// 5. Modala Malzeme Satırı Ekleme
+actions.receteSatirEkle = function() {
+    const container = document.getElementById('recete-malzemeler-container');
+    if(!container) return;
+
+    const div = document.createElement('div');
+    div.className = 'form-grid';
+    div.style.gridTemplateColumns = '2fr 1fr 50px';
+    div.style.gap = '10px';
+    div.style.marginBottom = '10px';
+    
+    div.innerHTML = `
+        <select class="recete-stok-select" style="padding:8px;">${window.tempStokOptions}</select>
+        <input type="number" class="recete-miktar" placeholder="Miktar" step="0.01" style="padding:8px;">
+        <button type="button" class="btn-sm-danger" onclick="this.parentElement.remove()">X</button>
+    `;
+    
+    container.appendChild(div);
+};
+
+// 6. Reçeteyi Veritabanına Kaydetme
+actions.receteKaydet = function() {
+    const ad = document.getElementById('recete-adi').value.trim();
+    if (!ad) { alert("Lütfen reçete adı girin."); return; }
+
+    const malzemeSatirlari = document.querySelectorAll('#recete-malzemeler-container .form-grid');
+    const malzemeler = [];
+
+    malzemeSatirlari.forEach(row => {
+        const select = row.querySelector('.recete-stok-select');
+        const input = row.querySelector('.recete-miktar');
+        
+        if (select.value && input.value > 0) {
+            malzemeler.push({
+                stokId: parseInt(select.value),
+                miktar: parseFloat(input.value)
+            });
+        }
+    });
+
+    if (malzemeler.length === 0) { alert("En az bir malzeme eklemelisiniz."); return; }
+
+    const yeniRecete = {
+        id: Date.now(),
+        ad: ad,
+        malzemeler: malzemeler
+    };
+
+    if (!app.data.receteler) app.data.receteler = [];
+    app.data.receteler.push(yeniRecete);
+    
+    dataManager.save();
+    actions.closeModal();
+    renderer.receteListesi();
+    alert("Reçete başarıyla oluşturuldu.");
+};
+
+// 7. Reçete Silme
+actions.receteSil = function(id) {
+    if(confirm('Bu reçeteyi silmek istediğinize emin misiniz?')) {
+        app.data.receteler = app.data.receteler.filter(r => r.id !== id);
+        dataManager.save();
+        renderer.receteListesi();
+    }
+};
+
+// --- JS KISMI: Otomatik Stok Düşüm Motoru ---
+
+// 1. YENİ YARDIMCI FONKSİYON: Tek bir üretim kalemi için stok düşer
+
+// --- DÜZELTME BAŞLANGIÇ: OTOMATİK STOK DÜŞÜM MOTORU ---
+
+// 1. Yardımcı Fonksiyon: Bir üretim kalemi için reçeteyi bulup stoktan düşer
+actions.otomatikStokDus = function(uretimItem) {
+    // Reçete verisi yoksa boş dizi ata
+    if (!app.data.receteler) app.data.receteler = [];
+
+    // Üretim ismini reçetelerde ara (Büyük/küçük harf duyarlılığı olmadan)
+    const recete = app.data.receteler.find(r => r.ad.trim().toLowerCase() === uretimItem.aciklama.trim().toLowerCase());
+    
+    // Eğer bu isme ait bir reçete yoksa işlem yapmadan çık
+    if (!recete) return 0;
+
+    let islenenMalzemeSayisi = 0;
+
+    // Reçetedeki her malzemeyi döngüye al
+    recete.malzemeler.forEach(malzeme => {
+        const stokKart = app.data.stoklar.find(s => s.id === malzeme.stokId);
+        
+        if (stokKart) {
+            // Depo yapısı yoksa oluştur (Eski verileri korumak için)
+            if (!stokKart.depolar) stokKart.depolar = { "Ana Depo": parseFloat(stokKart.miktar) || 0 };
+            if (stokKart.depolar["Ana Depo"] === undefined) stokKart.depolar["Ana Depo"] = 0;
+
+            // Düşülecek miktarı hesapla (Üretim Adedi * Reçetedeki Birim Miktar)
+            const dusulecekMiktar = uretimItem.adet * malzeme.miktar;
+            
+            // "Ana Depo"dan düş (Varsayılan olarak buradan düşüyoruz)
+            stokKart.depolar["Ana Depo"] -= dusulecekMiktar;
+            
+            // Toplam Ana Stoğu (stok.miktar) Güncelle
+            stokKart.miktar = Object.values(stokKart.depolar).reduce((a, b) => a + b, 0);
+
+            // Hareket Geçmişine Kaydet (Log)
+            if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
+            
+            app.data.stokHareketleri.push({
+                id: Date.now() + Math.random(), // Çakışmayı önlemek için
+                stokId: stokKart.id,
+                urunAdi: stokKart.ad,
+                birim: stokKart.birim,
+                tip: 'cikis',
+                altTip: 'Uretim', // Hareket tipi: Üretim
+                depo: 'Ana Depo',
+                miktar: dusulecekMiktar,
+                kalanStok: stokKart.miktar,
+                tarih: new Date().toISOString(),
+                aciklama: `[OTOMATİK] ${uretimItem.adet} adet "${uretimItem.aciklama}" üretimi için kullanıldı.`
+            });
+
+            islenenMalzemeSayisi++;
+        }
+    });
+
+    return islenenMalzemeSayisi;
+};
+
+// 2. Ana Fonksiyon: Üretim Listesini Kaydederken Düşümü Tetikler
+actions.saveUretimListesi = function() {
+    const list = app.temp.uretimListesi;
+    if (list.length === 0) {
+        alert('Kaydedilecek bir kalem bulunmuyor.');
+        return;
+    }
+
+    if (confirm(`${list.length} kalem üretimi kaydetmek istiyor musunuz?\n(Tanımlı reçeteler stoktan otomatik düşülecektir)`)) {
+        let toplamMaliyetGideri = 0;
+        let toplamKdvGideri = 0;
+        let toplamOtomatikDusum = 0; // Kaç kalem hammadde düştük?
+
+        list.forEach((item, index) => {
+            // A) ÜRETİMİ KAYDET
+            const uretimId = Date.now() + index;
+            app.data.uretimler.push({ ...item, id: uretimId });
+
+            // B) --- KRİTİK NOKTA: OTOMATİK STOK DÜŞÜMÜ ---
+            // Bu satır reçeteyi kontrol eder ve varsa stoktan düşer
+            const dusumSonuc = actions.otomatikStokDus(item);
+            toplamOtomatikDusum += dusumSonuc;
+            // ---------------------------------------------------
+
+            // Fabrika adını bul (Raporlama için)
+            const fabrika = app.data.fabrikalar.find(f => f.id === item.fabrikaId);
+            const fabrikaAdi = fabrika ? fabrika.ad : 'Bilinmeyen';
+            const toplamSatis = item.adet * item.birimFiyat;
+
+            // C) MALİYET GİDERİ KAYDI (Manuel girilen maliyet varsa)
+            if (item.birimMaliyet && item.birimMaliyet > 0) {
+                const maliyetTutari = item.adet * item.birimMaliyet;
+                toplamMaliyetGideri += maliyetTutari;
+
+                app.data.giderler.push({
+                    id: Date.now() + index + 50000,
+                    tip: 'diger',
+                    aciklama: `[MALİYET] ${item.aciklama}`,
+                    detay: `Otomatik Kayıt: ${fabrikaAdi} - ${item.aciklama} üretimi için birim maliyet gideri.`,
+                    tutar: maliyetTutari,
+                    tarih: item.tarih
+                });
+            }
+
+            // D) KDV GİDERİ KAYDI
+            if (item.kdvOrani && item.kdvOrani > 0) {
+                const kdvTutari = toplamSatis * (item.kdvOrani / 100);
+                toplamKdvGideri += kdvTutari;
+
+                app.data.giderler.push({
+                    id: Date.now() + index + 90000,
+                    tip: 'diger',
+                    aciklama: `[KDV] %${item.kdvOrani} - ${item.aciklama}`,
+                    detay: `Otomatik Kayıt: ${fabrikaAdi} satışından doğan KDV yükümlülüğü.`,
+                    tutar: kdvTutari,
+                    tarih: item.tarih
+                });
+            }
+        });
+
+        // Verileri Kaydet ve Ekranı Yenile
+        dataManager.save();
+        app.temp.uretimListesi = [];
+        renderer.updateAll(); 
+        
+        // Kullanıcıya Bilgi Ver
+        let mesaj = `${list.length} adet üretim başarıyla kaydedildi.`;
+        if (toplamOtomatikDusum > 0) {
+            mesaj += `\n\n📦 SİSTEM NOTU: ${toplamOtomatikDusum} kalem hammadde, reçeteye göre stoktan otomatik düşüldü.`;
+        }
+        
+        alert(mesaj);
+    }
+};
+// --- DÜZELTME BİTİŞ ---
+
+// 2. MEVCUT FONKSİYONU GÜNCELLE: Üretim Listesini Kaydetme
+// (Eski actions.saveUretimListesi fonksiyonunu silip yerine bunu yapıştırın)
+actions.saveUretimListesi = function() {
+    const list = app.temp.uretimListesi;
+    if (list.length === 0) {
+        alert('Kaydedilecek bir kalem bulunmuyor.');
+        return;
+    }
+
+    if (confirm(`${list.length} kalem üretimi kaydetmek istiyor musunuz?\n(Tanımlı reçeteler stoktan otomatik düşülecektir)`)) {
+        let toplamMaliyetGideri = 0;
+        let toplamKdvGideri = 0;
+        let toplamOtomatikDusum = 0;
+
+        list.forEach((item, index) => {
+            // A) ÜRETİMİ KAYDET
+            const uretimId = Date.now() + index;
+            app.data.uretimler.push({ ...item, id: uretimId });
+
+            // B) --- YENİ EKLENEN KISIM: OTOMATİK STOK DÜŞÜMÜ ---
+            // Bu satır reçeteyi kontrol eder ve varsa stoktan düşer
+            const dusumSonuc = actions.otomatikStokDus(item);
+            toplamOtomatikDusum += dusumSonuc;
+            // ---------------------------------------------------
+
+            // Fabrika adını bul (Raporlama için)
+            const fabrika = app.data.fabrikalar.find(f => f.id === item.fabrikaId);
+            const fabrikaAdi = fabrika ? fabrika.ad : 'Bilinmeyen';
+            const toplamSatis = item.adet * item.birimFiyat;
+
+            // C) MALİYET GİDERİ KAYDI (Manuel girilen maliyet varsa)
+            if (item.birimMaliyet && item.birimMaliyet > 0) {
+                const maliyetTutari = item.adet * item.birimMaliyet;
+                toplamMaliyetGideri += maliyetTutari;
+
+                app.data.giderler.push({
+                    id: Date.now() + index + 50000,
+                    tip: 'diger',
+                    aciklama: `[MALİYET] ${item.aciklama}`,
+                    detay: `Otomatik Kayıt: ${fabrikaAdi} - ${item.aciklama} üretimi için birim maliyet gideri.`,
+                    tutar: maliyetTutari,
+                    tarih: item.tarih
+                });
+            }
+
+            // D) KDV GİDERİ KAYDI
+            if (item.kdvOrani && item.kdvOrani > 0) {
+                const kdvTutari = toplamSatis * (item.kdvOrani / 100);
+                toplamKdvGideri += kdvTutari;
+
+                app.data.giderler.push({
+                    id: Date.now() + index + 90000,
+                    tip: 'diger',
+                    aciklama: `[KDV] %${item.kdvOrani} - ${item.aciklama}`,
+                    detay: `Otomatik Kayıt: ${fabrikaAdi} satışından doğan KDV yükümlülüğü.`,
+                    tutar: kdvTutari,
+                    tarih: item.tarih
+                });
+            }
+        });
+
+        // Verileri Kaydet ve Ekranı Yenile
+        dataManager.save();
+        app.temp.uretimListesi = [];
+        renderer.updateAll(); // Bu sayede stok listesindeki düşüşleri anında göreceksiniz
+        
+        // Kullanıcıya Bilgi Ver
+        let mesaj = `${list.length} adet üretim başarıyla kaydedildi.`;
+        if (toplamOtomatikDusum > 0) {
+            mesaj += `\n\n📦 SİSTEM NOTU: ${toplamOtomatikDusum} kalem hammadde, tanımlı reçetelere göre stoktan otomatik düşüldü.`;
+        }
+        
+        alert(mesaj);
+    }
+};
 
 // Sayfa yenilendiğinde listeyi yükle
 setTimeout(renderer.stokListesi, 1000);
