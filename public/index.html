@@ -678,65 +678,75 @@
                 <div class="content-box">
                     <h2>Yeni Üretim Kalemi Ekle</h2>
                     <form id="uretim-ekle-form">
-    <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
-        <div class="input-group">
-            <label for="uretim-fabrika">Fabrika Seçin</label>
-            <select id="uretim-fabrika" required></select>
-        </div>
-        <div class="input-group">
-            <label for="uretim-tarih">Tarih</label>
-            <input type="date" id="uretim-tarih" required>
-        </div>
-    </div>
-    
-    <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr; align-items: flex-end;">
-        <div class="input-group">
-            <label for="uretim-aciklama">Ürün / Hizmet Açıklaması</label>
-            <input type="text" id="uretim-aciklama" placeholder="Örn: Yemek, Servis..." required>
-        </div>
-        <div class="input-group">
-            <label for="uretim-adet">Adet</label>
-            <input type="number" id="uretim-adet" placeholder="0" required>
-        </div>
-        
-        <div class="input-group">
-            <label for="uretim-birim-maliyet" style="color: #e67e22; font-weight:bold;">Birim Maliyet</label>
-            <input type="number" step="0.01" id="uretim-birim-maliyet" placeholder="Opsiyonel" style="border: 2px solid #e67e22;">
-        </div>
+                        <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
+                            <div class="input-group">
+                                <label for="uretim-fabrika">Fabrika Seçin</label>
+                                <select id="uretim-fabrika" required></select>
+                            </div>
+                            <div class="input-group">
+                                <label for="uretim-tarih">Tarih</label>
+                                <input type="date" id="uretim-tarih" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr; align-items: flex-end;">
+                            <div class="input-group">
+                                <label style="color:#2c3e50; font-weight:bold;">Üretilen Ürün / Yemek</label>
+                                <select id="uretim-urun-secimi" onchange="actions.uretimUrunSecildi()" style="font-weight:bold; border: 2px solid #3498db; background:#f0f8ff;">
+                                    <option value="" disabled selected>Listeden Seçiniz...</option>
+                                    <option value="manuel">-- Listede Yok (Elle Yaz) --</option>
+                                </select>
+                                <input type="text" id="uretim-aciklama" placeholder="Ürün Adı Giriniz" style="display:none; margin-top:5px;">
+                            </div>
 
-        <div class="input-group">
-            <label for="uretim-kdv-orani" style="color: #8e44ad; font-weight:bold;">KDV Oranı (%)</label>
-            <input type="number" step="1" id="uretim-kdv-orani" placeholder="%10, %20" style="border: 2px solid #8e44ad;">
-        </div>
+                            <div class="input-group">
+                                <label for="uretim-adet">Adet</label>
+                                <input type="number" id="uretim-adet" placeholder="0" required style="font-weight:bold;">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="uretim-birim-maliyet" style="color: #e67e22; font-weight:bold;">Birim Maliyet</label>
+                                <input type="number" step="0.01" id="uretim-birim-maliyet" placeholder="Otomatik" style="border: 2px solid #e67e22;">
+                            </div>
 
-        <div class="input-group">
-            <label for="uretim-birim-fiyat" style="color: var(--success-color); font-weight:bold;">Satış Fiyatı</label>
-            <input type="number" step="0.01" id="uretim-birim-fiyat" placeholder="Toplam Fiyat" required style="border: 2px solid var(--success-color);">
-        </div>
-    </div>
-    
-    <div class="input-group full-width" style="margin-top: 10px;">
-        <label for="uretim-toplam-tutar">Toplam Satış Tutarı (Fabrika Borcu)</label>
-        <input type="text" id="uretim-toplam-tutar" disabled style="font-weight: bold; font-size: 16px;">
-    </div>
+                            <div class="input-group">
+                                <label for="uretim-kdv-orani" style="color: #8e44ad; font-weight:bold;">KDV (%)</label>
+                                <input type="number" step="1" id="uretim-kdv-orani" placeholder="%10" style="border: 2px solid #8e44ad;">
+                            </div>
 
-    <div class="full-width" style="text-align: right; margin-top: 15px;">
-        <button type="submit" id="listeye-ekle-btn" class="btn btn-primary">Listeye Ekle</button>
-    </div>
-</form>
+                            <div class="input-group">
+                                <label for="uretim-birim-fiyat" style="color: var(--success-color); font-weight:bold;">Satış Fiyatı</label>
+                                <input type="number" step="0.01" id="uretim-birim-fiyat" placeholder="Toplam Fiyat" required style="border: 2px solid var(--success-color);">
+                            </div>
+                        </div>
+                        
+                        <div class="input-group full-width" style="margin-top: 10px;">
+                            <label for="uretim-toplam-tutar">Toplam Satış Tutarı (Fabrika Borcu)</label>
+                            <input type="text" id="uretim-toplam-tutar" disabled style="font-weight: bold; font-size: 16px;">
+                        </div>
+
+                        <div class="full-width" style="text-align: right; margin-top: 15px;">
+                            <button type="button" id="listeye-ekle-btn" class="btn btn-primary">Listeye Ekle</button>
+                        </div>
+                    </form>
                 </div>
+
                 <div class="content-box">
                     <h2>Kaydedilecek Üretimler Listesi</h2>
                     <div id="kayit-listesi-container"></div>
                     <div id="kayit-listesi-genel-toplam">Genel Toplam: 0,00 ₺</div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 20px;"><button id="listeyi-temizle-btn" class="btn btn-danger">Listeyi Temizle</button><button id="tumunu-kaydet-btn" class="btn btn-success">Listeyi Onayla ve Tümünü Kaydet</button></div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                        <button type="button" id="listeyi-temizle-btn" class="btn btn-danger">Listeyi Temizle</button>
+                        <button type="button" id="tumunu-kaydet-btn" class="btn btn-success">Listeyi Onayla ve Tümünü Kaydet</button>
+                    </div>
                 </div>
+                
                 <div class="content-box">
                     <h2>Son Kayıtlar</h2>
                     <div id="son-uretimler-container"></div>
                 </div>
             </div>
-            
+          
             <div id="giderler" class="page">
                 <div class="content-box">
                     <h2>Yeni Gider Ekle</h2>
@@ -793,7 +803,7 @@
                 </div>
             </div>
 
-           <div id="stok-yonetimi" class="page">
+            <div id="stok-yonetimi" class="page">
     
     <div class="card-container">
         <div class="card">
@@ -3500,25 +3510,12 @@ if (!app.data.stoklar) app.data.stoklar = [];
 if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
 
 // 2. Renderer (Görünüm) Fonksiyonları
-renderer.switchStokTab = function(tab) {
-    const tabListe = document.getElementById('tab-stok-liste');
-    const tabGecmis = document.getElementById('tab-stok-gecmis');
-    const btnListe = document.getElementById('btn-tab-liste');
-    const btnGecmis = document.getElementById('btn-tab-gecmis');
-    
-    if (tabListe && tabGecmis) {
-        tabListe.style.display = tab === 'liste' ? 'block' : 'none';
-        tabGecmis.style.display = tab === 'gecmis' ? 'block' : 'none';
-        
-        btnListe.className = tab === 'liste' ? 'btn btn-primary' : 'btn btn-secondary';
-        btnGecmis.className = tab === 'gecmis' ? 'btn btn-primary' : 'btn btn-secondary';
-        
-        if (tab === 'liste') renderer.stokListesi();
-        if (tab === 'gecmis') renderer.stokGecmisiListesi();
-    }
-};
+// --- JAVASCRIPT: REÇETE VE OTOMATİK DÜŞÜM SİSTEMİ ---
 
-// renderer.stokListesi FONKSİYONUNU KOMPLE BUNUNLA DEĞİŞTİRİN:
+
+
+// 6. ÜRETİMİ KAYDETME FONKSİYONUNU GÜNCELLE
+// (Eski fonksiyonu ezip yenisini tanımlıyoruz)
 
 // renderer.stokListesi FONKSİYONUNU KOMPLE BUNUNLA DEĞİŞTİRİN:
 renderer.stokListesi = function() {
@@ -4548,34 +4545,36 @@ if (stokAra) stokAra.oninput = renderer.stokListesi;
 // --- JS KISMI: Reçete Yönetim Sistemi ---
 
 // 1. Veri Başlatma (App Loaded olduğunda çalışması için kontrol)
+
+// 1. Reçete Verisini Başlat
 if (!app.data.receteler) app.data.receteler = [];
 
-// 2. Sekme Geçişini Güncelle (renderer.switchStokTab fonksiyonunu bununla DEĞİŞTİRİN)
+// 2. Sekme Geçiş Fonksiyonunu Güncelle (Reçete sekmesini tanıması için)
 renderer.switchStokTab = function(tab) {
     const tabListe = document.getElementById('tab-stok-liste');
     const tabGecmis = document.getElementById('tab-stok-gecmis');
-    const tabRecete = document.getElementById('tab-stok-recete'); // YENİ
+    const tabRecete = document.getElementById('tab-stok-recete');
 
     const btnListe = document.getElementById('btn-tab-liste');
     const btnGecmis = document.getElementById('btn-tab-gecmis');
-    const btnRecete = document.getElementById('btn-tab-recete'); // YENİ
+    const btnRecete = document.getElementById('btn-tab-recete');
     
     if (tabListe && tabGecmis && tabRecete) {
         tabListe.style.display = tab === 'liste' ? 'block' : 'none';
         tabGecmis.style.display = tab === 'gecmis' ? 'block' : 'none';
-        tabRecete.style.display = tab === 'recete' ? 'block' : 'none'; // YENİ
+        tabRecete.style.display = tab === 'recete' ? 'block' : 'none';
         
         btnListe.className = tab === 'liste' ? 'btn btn-primary' : 'btn btn-secondary';
         btnGecmis.className = tab === 'gecmis' ? 'btn btn-primary' : 'btn btn-secondary';
-        btnRecete.className = tab === 'recete' ? 'btn btn-primary' : 'btn btn-secondary'; // YENİ
+        btnRecete.className = tab === 'recete' ? 'btn btn-primary' : 'btn btn-secondary';
         
         if (tab === 'liste') renderer.stokListesi();
         if (tab === 'gecmis') renderer.stokGecmisiListesi();
-        if (tab === 'recete') renderer.receteListesi(); // YENİ
+        if (tab === 'recete') renderer.receteListesi();
     }
 };
 
-// 3. Reçeteleri Ekrana Basma
+// 3. Reçete Listeleme Fonksiyonu
 renderer.receteListesi = function() {
     const container = document.getElementById('recete-listesi-container');
     if (!container) return;
@@ -4586,7 +4585,6 @@ renderer.receteListesi = function() {
     }
 
     let html = '<div class="card-container" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">';
-    
     app.data.receteler.forEach(recete => {
         let icerikHtml = '<ul style="font-size:13px; color:#555; padding-left:20px; margin-top:10px;">';
         recete.malzemeler.forEach(m => {
@@ -4606,14 +4604,12 @@ renderer.receteListesi = function() {
             </div>
         `;
     });
-
     html += '</div>';
     container.innerHTML = html;
 };
 
-// 4. Yeni Reçete Modalı Açma
+// 4. Yeni Reçete Oluşturma Modalı
 actions.yeniReceteModalAc = function() {
-    // Stok seçeneklerini hazırla
     let stokOptions = '<option value="" disabled selected>Hammadde Seçin...</option>';
     app.data.stoklar.sort((a,b) => a.ad.localeCompare(b.ad)).forEach(s => {
         stokOptions += `<option value="${s.id}">${s.ad} (${s.birim})</option>`;
@@ -4622,306 +4618,290 @@ actions.yeniReceteModalAc = function() {
     const html = `
         <div class="input-group">
             <label>Reçete Adı (Ürün Adı)</label>
-            <input type="text" id="recete-adi" placeholder="Örn: Tabldot Menü, Karışık Tost..." required style="font-weight:bold;">
+            <input type="text" id="recete-adi" placeholder="Örn: Tabldot Menü" required style="font-weight:bold;">
+            <small style="color:red;">ÖNEMLİ: Bu isim 'Üretim Ekle' sayfasındaki ürün adı ile aynı olmalıdır!</small>
         </div>
-        
         <hr>
-        <label>Malzemeler (İçerik)</label>
-        <div id="recete-malzemeler-container">
-            </div>
-        
+        <label>Malzemeler</label>
+        <div id="recete-malzemeler-container"></div>
         <button type="button" class="btn btn-sm-warning" onclick="actions.receteSatirEkle()" style="margin-bottom:15px;">+ Malzeme Ekle</button>
-
         <button type="button" class="btn btn-success btn-full" onclick="actions.receteKaydet()">Reçeteyi Kaydet</button>
     `;
 
-    // Global değişkene stok seçeneklerini atıyoruz ki satır eklerken kullanalım
     window.tempStokOptions = stokOptions;
-
     actions.openModal('Yeni Reçete Tanımla', html, true);
-    
-    // İlk satırı otomatik ekle
     setTimeout(actions.receteSatirEkle, 100);
 };
 
-// 5. Modala Malzeme Satırı Ekleme
 actions.receteSatirEkle = function() {
     const container = document.getElementById('recete-malzemeler-container');
     if(!container) return;
-
     const div = document.createElement('div');
     div.className = 'form-grid';
     div.style.gridTemplateColumns = '2fr 1fr 50px';
-    div.style.gap = '10px';
     div.style.marginBottom = '10px';
-    
-    div.innerHTML = `
-        <select class="recete-stok-select" style="padding:8px;">${window.tempStokOptions}</select>
-        <input type="number" class="recete-miktar" placeholder="Miktar" step="0.01" style="padding:8px;">
-        <button type="button" class="btn-sm-danger" onclick="this.parentElement.remove()">X</button>
-    `;
-    
+    div.innerHTML = `<select class="recete-stok-select" style="padding:8px;">${window.tempStokOptions}</select><input type="number" class="recete-miktar" placeholder="Miktar" step="0.001" style="padding:8px;"><button type="button" class="btn-sm-danger" onclick="this.parentElement.remove()">X</button>`;
     container.appendChild(div);
 };
 
-// 6. Reçeteyi Veritabanına Kaydetme
 actions.receteKaydet = function() {
     const ad = document.getElementById('recete-adi').value.trim();
-    if (!ad) { alert("Lütfen reçete adı girin."); return; }
-
-    const malzemeSatirlari = document.querySelectorAll('#recete-malzemeler-container .form-grid');
+    if (!ad) { alert("Reçete adı girin."); return; }
+    const satirlar = document.querySelectorAll('#recete-malzemeler-container .form-grid');
     const malzemeler = [];
-
-    malzemeSatirlari.forEach(row => {
-        const select = row.querySelector('.recete-stok-select');
-        const input = row.querySelector('.recete-miktar');
-        
-        if (select.value && input.value > 0) {
-            malzemeler.push({
-                stokId: parseInt(select.value),
-                miktar: parseFloat(input.value)
-            });
-        }
+    satirlar.forEach(row => {
+        const sid = row.querySelector('.recete-stok-select').value;
+        const mik = row.querySelector('.recete-miktar').value;
+        if (sid && mik > 0) malzemeler.push({ stokId: parseInt(sid), miktar: parseFloat(mik) });
     });
-
-    if (malzemeler.length === 0) { alert("En az bir malzeme eklemelisiniz."); return; }
-
-    const yeniRecete = {
-        id: Date.now(),
-        ad: ad,
-        malzemeler: malzemeler
-    };
-
-    if (!app.data.receteler) app.data.receteler = [];
-    app.data.receteler.push(yeniRecete);
-    
+    if (malzemeler.length === 0) { alert("En az bir malzeme ekleyin."); return; }
+    app.data.receteler.push({ id: Date.now(), ad: ad, malzemeler: malzemeler });
     dataManager.save();
     actions.closeModal();
     renderer.receteListesi();
-    alert("Reçete başarıyla oluşturuldu.");
+    alert("Reçete başarıyla kaydedildi.");
 };
 
-// 7. Reçete Silme
 actions.receteSil = function(id) {
-    if(confirm('Bu reçeteyi silmek istediğinize emin misiniz?')) {
+    if(confirm('Reçeteyi silmek istediğinize emin misiniz?')) {
         app.data.receteler = app.data.receteler.filter(r => r.id !== id);
         dataManager.save();
         renderer.receteListesi();
     }
 };
 
-// --- JS KISMI: Otomatik Stok Düşüm Motoru ---
+// --- JAVASCRIPT: REÇETE SİSTEMİ VE STOK DÜŞÜM MOTORU (DÜZELTİLMİŞ) ---
 
-// 1. YENİ YARDIMCI FONKSİYON: Tek bir üretim kalemi için stok düşer
+// 1. Veri Kontrolü
+if (!app.data.receteler) app.data.receteler = [];
 
-// --- DÜZELTME BAŞLANGIÇ: OTOMATİK STOK DÜŞÜM MOTORU ---
-
-// 1. Yardımcı Fonksiyon: Bir üretim kalemi için reçeteyi bulup stoktan düşer
-actions.otomatikStokDus = function(uretimItem) {
-    // Reçete verisi yoksa boş dizi ata
-    if (!app.data.receteler) app.data.receteler = [];
-
-    // Üretim ismini reçetelerde ara (Büyük/küçük harf duyarlılığı olmadan)
-    const recete = app.data.receteler.find(r => r.ad.trim().toLowerCase() === uretimItem.aciklama.trim().toLowerCase());
+// 2. Ürün Seçim Listesini Doldur
+renderer.uretimUrunListesiniDoldur = function() {
+    const select = document.getElementById('uretim-urun-secimi');
+    if (!select) return;
     
-    // Eğer bu isme ait bir reçete yoksa işlem yapmadan çık
+    // Listeyi oluştur
+    const receteler = app.data.receteler || [];
+    let options = `<option value="" disabled selected>Listeden Seçiniz...</option>`;
+    
+    receteler.forEach(r => {
+        options += `<option value="${r.ad}">${r.ad}</option>`;
+    });
+    
+    options += `<option value="manuel">-- Listede Yok (Elle Yaz) --</option>`;
+    select.innerHTML = options;
+};
+
+// 3. Ürün Seçilince Çalışan Fonksiyon
+actions.uretimUrunSecildi = function() {
+    const select = document.getElementById('uretim-urun-secimi');
+    const input = document.getElementById('uretim-aciklama');
+    
+    if (select.value === 'manuel') {
+        input.style.display = 'block';
+        input.value = '';
+        input.focus();
+    } else {
+        input.style.display = 'none';
+        input.value = select.value;
+    }
+};
+
+// 4. Listeye Ekleme (Hata Korumalı)
+actions.addUretimToList = function(e) { 
+    if(e && e.preventDefault) e.preventDefault(); 
+    const form = document.getElementById('uretim-ekle-form'); 
+    
+    let urunAdi = document.getElementById('uretim-aciklama').value.trim();
+    if (!urunAdi) { alert("Lütfen listeden bir ürün seçin."); return; }
+
+    const uretim = { 
+        fabrikaId: parseInt(form.querySelector('#uretim-fabrika').value), 
+        tarih: form.querySelector('#uretim-tarih').value, 
+        aciklama: urunAdi, 
+        adet: parseInt(form.querySelector('#uretim-adet').value), 
+        birimFiyat: parseFloat(form.querySelector('#uretim-birim-fiyat').value),
+        birimMaliyet: parseFloat(form.querySelector('#uretim-birim-maliyet').value) || 0,
+        kdvOrani: parseFloat(form.querySelector('#uretim-kdv-orani').value) || 0
+    }; 
+
+    if (!uretim.fabrikaId || !uretim.tarih || !uretim.adet || isNaN(uretim.birimFiyat)) { 
+        alert('Lütfen zorunlu alanları doldurun.'); return; 
+    } 
+
+    // LİSTE KONTROLÜ (ÇİFT EKLEMEYİ ENGELLER)
+    // Eğer kullanıcı yanlışlıkla çift tıkladıysa aynı milisaniyede eklemeyi önle
+    const sonEklenen = app.temp.uretimListesi[app.temp.uretimListesi.length - 1];
+    if (sonEklenen && sonEklenen.aciklama === uretim.aciklama && sonEklenen.adet === uretim.adet && sonEklenen.tarih === uretim.tarih) {
+         // Son 1 saniye içinde eklendiyse durdur
+         if(Date.now() - (sonEklenen._ts || 0) < 1000) return;
+    }
+    uretim._ts = Date.now(); // Zaman damgası ekle
+
+    app.temp.uretimListesi.push(uretim); 
+    renderer.uretimEkleListesi(); 
+
+    // Formu temizle
+    document.getElementById('uretim-urun-secimi').value = "";
+    document.getElementById('uretim-aciklama').value = "";
+    form.querySelector('#uretim-adet').value = ''; 
+    form.querySelector('#uretim-birim-fiyat').value = ''; 
+    form.querySelector('#uretim-birim-maliyet').value = ''; 
+    form.querySelector('#uretim-toplam-tutar').value = ''; 
+};
+
+// 5. Stok Düşüm Motoru (Tek Seferlik Garanti)
+actions.otomatikStokDus = function(uretimItem) {
+    const recete = (app.data.receteler || []).find(r => r.ad.trim() === uretimItem.aciklama.trim());
     if (!recete) return 0;
 
-    let islenenMalzemeSayisi = 0;
-
-    // Reçetedeki her malzemeyi döngüye al
+    let islenenMalzeme = 0;
     recete.malzemeler.forEach(malzeme => {
         const stokKart = app.data.stoklar.find(s => s.id === malzeme.stokId);
-        
         if (stokKart) {
-            // Depo yapısı yoksa oluştur (Eski verileri korumak için)
             if (!stokKart.depolar) stokKart.depolar = { "Ana Depo": parseFloat(stokKart.miktar) || 0 };
             if (stokKart.depolar["Ana Depo"] === undefined) stokKart.depolar["Ana Depo"] = 0;
 
-            // Düşülecek miktarı hesapla (Üretim Adedi * Reçetedeki Birim Miktar)
             const dusulecekMiktar = uretimItem.adet * malzeme.miktar;
             
-            // "Ana Depo"dan düş (Varsayılan olarak buradan düşüyoruz)
+            // Stoktan Düş
             stokKart.depolar["Ana Depo"] -= dusulecekMiktar;
             
-            // Toplam Ana Stoğu (stok.miktar) Güncelle
+            // Ana Miktarı Güncelle
             stokKart.miktar = Object.values(stokKart.depolar).reduce((a, b) => a + b, 0);
 
-            // Hareket Geçmişine Kaydet (Log)
+            // Hareket Kaydı
             if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
-            
             app.data.stokHareketleri.push({
-                id: Date.now() + Math.random(), // Çakışmayı önlemek için
+                id: Date.now() + Math.random(),
                 stokId: stokKart.id,
                 urunAdi: stokKart.ad,
                 birim: stokKart.birim,
                 tip: 'cikis',
-                altTip: 'Uretim', // Hareket tipi: Üretim
+                altTip: 'Uretim',
                 depo: 'Ana Depo',
                 miktar: dusulecekMiktar,
                 kalanStok: stokKart.miktar,
                 tarih: new Date().toISOString(),
-                aciklama: `[OTOMATİK] ${uretimItem.adet} adet "${uretimItem.aciklama}" üretimi için kullanıldı.`
+                aciklama: `[OTOMATİK] ${uretimItem.adet} adet "${uretimItem.aciklama}" üretimi.`
             });
+            islenenMalzeme++;
+        }
+    });
+    return islenenMalzeme;
+};
 
-            islenenMalzemeSayisi++;
+// 6. Kaydetme Fonksiyonu
+actions.saveUretimListesi = function() {
+    const list = app.temp.uretimListesi;
+    if (list.length === 0) { alert('Kaydedilecek kalem yok.'); return; }
+
+    // Çift tıklama koruması
+    const btn = document.getElementById('tumunu-kaydet-btn');
+    if(btn) btn.disabled = true;
+
+    if (confirm(`${list.length} kalem üretimi kaydetmek istiyor musunuz?`)) {
+        let toplamDusum = 0;
+        
+        list.forEach((item, index) => {
+            // Sadece ID ekleyip kaydediyoruz
+            app.data.uretimler.push({ ...item, id: Date.now() + index });
+            
+            // Stok düşümü
+            toplamDusum += actions.otomatikStokDus(item);
+            
+            // Maliyet Kaydı
+            if (item.birimMaliyet > 0) {
+                app.data.giderler.push({
+                    id: Date.now() + index + 5000,
+                    tip: 'diger',
+                    aciklama: `[MALİYET] ${item.aciklama}`,
+                    detay: `Üretim Maliyeti`,
+                    tutar: item.adet * item.birimMaliyet,
+                    tarih: item.tarih
+                });
+            }
+        });
+
+        dataManager.save();
+        app.temp.uretimListesi = []; // Listeyi boşalt
+        renderer.updateAll();
+        alert(`✅ Üretim Kaydedildi!\n📦 Stoktan düşülen kalem sayısı: ${toplamDusum}`);
+    }
+    
+    if(btn) btn.disabled = false;
+};
+
+// --- KRİTİK DÜZELTME: BUTONLARI FORMATLA VE YENİDEN BAĞLA ---
+// Bu fonksiyon eski takılı kalmış butonları siler ve tertemiz butonlar koyar.
+function butonlariTamirEt() {
+    const ids = ['listeye-ekle-btn', 'tumunu-kaydet-btn', 'listeyi-temizle-btn'];
+    
+    ids.forEach(id => {
+        const eskiBtn = document.getElementById(id);
+        if (eskiBtn) {
+            // Butonu kopyala (Clone), bu işlem üzerindeki tüm eski eventleri siler
+            const yeniBtn = eskiBtn.cloneNode(true);
+            eskiBtn.parentNode.replaceChild(yeniBtn, eskiBtn);
         }
     });
 
-    return islenenMalzemeSayisi;
+    // Eventleri tekrar ve tek seferlik ekle
+    const btnEkle = document.getElementById('listeye-ekle-btn');
+    if(btnEkle) btnEkle.onclick = actions.addUretimToList; // addEventListener yerine onclick daha güvenli
+
+    const btnKaydet = document.getElementById('tumunu-kaydet-btn');
+    if(btnKaydet) btnKaydet.onclick = actions.saveUretimListesi;
+
+    const btnTemizle = document.getElementById('listeyi-temizle-btn');
+    if(btnTemizle) btnTemizle.onclick = actions.clearUretimListesi;
+}
+
+// Tamiri hemen çalıştır
+butonlariTamirEt();
+
+// Sayfa geçişlerinde listeyi doldur
+const _oldNavigate = actions.navigate;
+actions.navigate = function(e, page) {
+    if(_oldNavigate) _oldNavigate(e, page);
+    const p = page || (e ? e.currentTarget.dataset.page : null);
+    if (p === 'uretim-ekle') {
+        renderer.uretimUrunListesiniDoldur();
+        butonlariTamirEt(); // Sayfa değişince de butonları sağlama al
+    }
 };
+
+// Reçete Sekme Geçişi
+renderer.switchStokTab = function(tab) {
+    document.getElementById('tab-stok-liste').style.display = tab === 'liste' ? 'block' : 'none';
+    document.getElementById('tab-stok-gecmis').style.display = tab === 'gecmis' ? 'block' : 'none';
+    document.getElementById('tab-stok-recete').style.display = tab === 'recete' ? 'block' : 'none';
+    
+    if (tab === 'liste') renderer.stokListesi();
+    if (tab === 'gecmis') renderer.stokGecmisiListesi();
+    if (tab === 'recete') renderer.receteListesi();
+};
+
+// 5. OTOMATİK STOK DÜŞÜM MOTORU (EKSİK OLAN PARÇA BU!)
+
+// 6. ÜRETİM KAYDETME FONKSİYONUNU GÜNCELLE (Düşüm motorunu tetikleyecek şekilde)
 
 // 2. Ana Fonksiyon: Üretim Listesini Kaydederken Düşümü Tetikler
-actions.saveUretimListesi = function() {
-    const list = app.temp.uretimListesi;
-    if (list.length === 0) {
-        alert('Kaydedilecek bir kalem bulunmuyor.');
-        return;
-    }
 
-    if (confirm(`${list.length} kalem üretimi kaydetmek istiyor musunuz?\n(Tanımlı reçeteler stoktan otomatik düşülecektir)`)) {
-        let toplamMaliyetGideri = 0;
-        let toplamKdvGideri = 0;
-        let toplamOtomatikDusum = 0; // Kaç kalem hammadde düştük?
-
-        list.forEach((item, index) => {
-            // A) ÜRETİMİ KAYDET
-            const uretimId = Date.now() + index;
-            app.data.uretimler.push({ ...item, id: uretimId });
-
-            // B) --- KRİTİK NOKTA: OTOMATİK STOK DÜŞÜMÜ ---
-            // Bu satır reçeteyi kontrol eder ve varsa stoktan düşer
-            const dusumSonuc = actions.otomatikStokDus(item);
-            toplamOtomatikDusum += dusumSonuc;
-            // ---------------------------------------------------
-
-            // Fabrika adını bul (Raporlama için)
-            const fabrika = app.data.fabrikalar.find(f => f.id === item.fabrikaId);
-            const fabrikaAdi = fabrika ? fabrika.ad : 'Bilinmeyen';
-            const toplamSatis = item.adet * item.birimFiyat;
-
-            // C) MALİYET GİDERİ KAYDI (Manuel girilen maliyet varsa)
-            if (item.birimMaliyet && item.birimMaliyet > 0) {
-                const maliyetTutari = item.adet * item.birimMaliyet;
-                toplamMaliyetGideri += maliyetTutari;
-
-                app.data.giderler.push({
-                    id: Date.now() + index + 50000,
-                    tip: 'diger',
-                    aciklama: `[MALİYET] ${item.aciklama}`,
-                    detay: `Otomatik Kayıt: ${fabrikaAdi} - ${item.aciklama} üretimi için birim maliyet gideri.`,
-                    tutar: maliyetTutari,
-                    tarih: item.tarih
-                });
-            }
-
-            // D) KDV GİDERİ KAYDI
-            if (item.kdvOrani && item.kdvOrani > 0) {
-                const kdvTutari = toplamSatis * (item.kdvOrani / 100);
-                toplamKdvGideri += kdvTutari;
-
-                app.data.giderler.push({
-                    id: Date.now() + index + 90000,
-                    tip: 'diger',
-                    aciklama: `[KDV] %${item.kdvOrani} - ${item.aciklama}`,
-                    detay: `Otomatik Kayıt: ${fabrikaAdi} satışından doğan KDV yükümlülüğü.`,
-                    tutar: kdvTutari,
-                    tarih: item.tarih
-                });
-            }
-        });
-
-        // Verileri Kaydet ve Ekranı Yenile
-        dataManager.save();
-        app.temp.uretimListesi = [];
-        renderer.updateAll(); 
-        
-        // Kullanıcıya Bilgi Ver
-        let mesaj = `${list.length} adet üretim başarıyla kaydedildi.`;
-        if (toplamOtomatikDusum > 0) {
-            mesaj += `\n\n📦 SİSTEM NOTU: ${toplamOtomatikDusum} kalem hammadde, reçeteye göre stoktan otomatik düşüldü.`;
-        }
-        
-        alert(mesaj);
-    }
-};
-// --- DÜZELTME BİTİŞ ---
 
 // 2. MEVCUT FONKSİYONU GÜNCELLE: Üretim Listesini Kaydetme
 // (Eski actions.saveUretimListesi fonksiyonunu silip yerine bunu yapıştırın)
-actions.saveUretimListesi = function() {
-    const list = app.temp.uretimListesi;
-    if (list.length === 0) {
-        alert('Kaydedilecek bir kalem bulunmuyor.');
-        return;
-    }
+// --- YENİ SİSTEM: REÇETE BAZLI ÜRETİM VE STOK DÜŞÜM ---
 
-    if (confirm(`${list.length} kalem üretimi kaydetmek istiyor musunuz?\n(Tanımlı reçeteler stoktan otomatik düşülecektir)`)) {
-        let toplamMaliyetGideri = 0;
-        let toplamKdvGideri = 0;
-        let toplamOtomatikDusum = 0;
+// 1. Ürün Seçim Listesini Doldurma Fonksiyonu
 
-        list.forEach((item, index) => {
-            // A) ÜRETİMİ KAYDET
-            const uretimId = Date.now() + index;
-            app.data.uretimler.push({ ...item, id: uretimId });
+// --- KESİN ÇÖZÜM: REÇETE SİSTEMİ VE BUTON TEMİZLİĞİ ---
 
-            // B) --- YENİ EKLENEN KISIM: OTOMATİK STOK DÜŞÜMÜ ---
-            // Bu satır reçeteyi kontrol eder ve varsa stoktan düşer
-            const dusumSonuc = actions.otomatikStokDus(item);
-            toplamOtomatikDusum += dusumSonuc;
-            // ---------------------------------------------------
+// 1. Ürün Seçim Listesini Doldur
 
-            // Fabrika adını bul (Raporlama için)
-            const fabrika = app.data.fabrikalar.find(f => f.id === item.fabrikaId);
-            const fabrikaAdi = fabrika ? fabrika.ad : 'Bilinmeyen';
-            const toplamSatis = item.adet * item.birimFiyat;
 
-            // C) MALİYET GİDERİ KAYDI (Manuel girilen maliyet varsa)
-            if (item.birimMaliyet && item.birimMaliyet > 0) {
-                const maliyetTutari = item.adet * item.birimMaliyet;
-                toplamMaliyetGideri += maliyetTutari;
+// Sayfa Geçişlerinde Listeyi Doldurması İçin
 
-                app.data.giderler.push({
-                    id: Date.now() + index + 50000,
-                    tip: 'diger',
-                    aciklama: `[MALİYET] ${item.aciklama}`,
-                    detay: `Otomatik Kayıt: ${fabrikaAdi} - ${item.aciklama} üretimi için birim maliyet gideri.`,
-                    tutar: maliyetTutari,
-                    tarih: item.tarih
-                });
-            }
-
-            // D) KDV GİDERİ KAYDI
-            if (item.kdvOrani && item.kdvOrani > 0) {
-                const kdvTutari = toplamSatis * (item.kdvOrani / 100);
-                toplamKdvGideri += kdvTutari;
-
-                app.data.giderler.push({
-                    id: Date.now() + index + 90000,
-                    tip: 'diger',
-                    aciklama: `[KDV] %${item.kdvOrani} - ${item.aciklama}`,
-                    detay: `Otomatik Kayıt: ${fabrikaAdi} satışından doğan KDV yükümlülüğü.`,
-                    tutar: kdvTutari,
-                    tarih: item.tarih
-                });
-            }
-        });
-
-        // Verileri Kaydet ve Ekranı Yenile
-        dataManager.save();
-        app.temp.uretimListesi = [];
-        renderer.updateAll(); // Bu sayede stok listesindeki düşüşleri anında göreceksiniz
-        
-        // Kullanıcıya Bilgi Ver
-        let mesaj = `${list.length} adet üretim başarıyla kaydedildi.`;
-        if (toplamOtomatikDusum > 0) {
-            mesaj += `\n\n📦 SİSTEM NOTU: ${toplamOtomatikDusum} kalem hammadde, tanımlı reçetelere göre stoktan otomatik düşüldü.`;
-        }
-        
-        alert(mesaj);
-    }
-};
 
 // Sayfa yenilendiğinde listeyi yükle
 setTimeout(renderer.stokListesi, 1000);
