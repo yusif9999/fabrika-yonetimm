@@ -801,6 +801,16 @@
                     <p style="margin-bottom:20px;">Tüm üretim (gelir kalemi) ve gider kayıtlarınızı içeren detaylı bir CSV dosyası indirin. Rapor sonunda Net Kâr ve Kalan Alacak özetini göreceksiniz.</p>
                     <button id="genel-csv-indir" class="btn btn-primary">Genel CSV Raporu İndir</button>
                 </div>
+                <div class="content-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>🏭 Fabrika Bazlı Kârlılık ve Ciro Analizi</h2>
+        <button class="btn btn-info" onclick="renderer.fabrikaKarlilikRaporuIndir()">Excel (CSV) İndir</button>
+    </div>
+    <p style="color:#666; font-size:14px; margin-bottom:15px;">
+        Burada her fabrikanın toplam cirosunu, üretim maliyetini ve KDV düşüldükten sonra kalan <strong>NET KÂR</strong> durumunu görebilirsiniz.
+    </p>
+    <div id="fabrika-karlilik-container" style="overflow-x:auto;"></div>
+</div>
             </div>
 
             <div id="stok-yonetimi" class="page">
@@ -1409,6 +1419,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderer.dashboard();
             renderer.raporlarOzeti(); 
             renderer.uretimEkleListesi();
+            renderer.fabrikaKarlilikRaporu();
             renderer.sonUretimler();
             renderer.fabrikaSilSelect();
             renderer.pozisyonListesi();
@@ -1625,6 +1636,131 @@ renderer.stokGecmisi(); // <-- BU SATIRI EKLEYİN
         updateCardValues: (elements, durum) => { elements.gelir.textContent = app.helpers.formatCurrency(durum.toplamUretimDegeri); elements.gider.textContent = app.helpers.formatCurrency(durum.toplamGiderler); elements.alacak.textContent = app.helpers.formatCurrency(durum.kalanAlacak); elements.kar.textContent = app.helpers.formatCurrency(durum.netKar); elements.kar.className = 'value'; if (durum.netKar > 0) elements.kar.classList.add('profit'); if (durum.netKar < 0) elements.kar.classList.add('loss'); },
         dashboard: () => { const durum = calculator.genelDurum(); const elements = { gelir: document.getElementById('dashboard-gelir'), gider: document.getElementById('dashboard-gider'), kar: document.getElementById('dashboard-kar'), alacak: document.getElementById('dashboard-alacak') }; renderer.updateCardValues(elements, durum); renderer.nakitAkisChart(); },
         raporlarOzeti: () => { const durum = calculator.genelDurum(); const elements = { gelir: document.getElementById('rapor-gelir'), gider: document.getElementById('rapor-gider'), kar: document.getElementById('rapor-kar'), alacak: document.getElementById('rapor-alacak') }; renderer.updateCardValues(elements, durum); },
+        fabrikaKarlilikRaporu: () => {
+            const container = document.getElementById('fabrika-karlilik-container');
+            if (!container) return;
+
+            if (app.data.fabrikalar.length === 0) {
+                container.innerHTML = '<p class="no-data-message">Henüz kayıtlı fabrika yok.</p>';
+                return;
+            }
+
+            let html = `
+            <table class="table" style="font-size:14px;">
+                <thead>
+                    <tr style="background:#2c3e50; color:white;">
+                        <th>Fabrika Adı</th>
+                        <th style="text-align:center;">Top. Porsiyon</th>
+                        <th style="text-align:right;">Toplam Fatura (Ciro)</th>
+                        <th style="text-align:right; color:#d35400;">Toplam Maliyet</th>
+                        <th style="text-align:right; color:#2980b9;">Brüt Kâr</th>
+                        <th style="text-align:right; color:#8e44ad;">KDV Yükü</th>
+                        <th style="text-align:right; background:#e8f8f5; color:#27ae60; font-weight:bold;">NET KÂR</th>
+                        <th style="text-align:center;">Kâr Marjı</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            // Verileri Hesapla
+            let genelToplamCiro = 0;
+            let genelToplamNetKar = 0;
+
+            app.data.fabrikalar.forEach(fab => {
+                // Bu fabrikaya ait üretimleri bul
+                const uretimler = app.data.uretimler.filter(u => u.fabrikaId === fab.id);
+
+                let porsiyonSayisi = 0;
+                let ciro = 0;
+                let maliyet = 0;
+                let kdvTutari = 0;
+
+                uretimler.forEach(u => {
+                    const satisTutar = u.adet * u.birimFiyat;
+                    const maliyetTutar = u.adet * (u.birimMaliyet || 0);
+                    
+                    // KDV Hesabı: Satış Fiyatı üzerinden hesaplanan KDV tutarı
+                    const kdv = satisTutar * ((u.kdvOrani || 0) / 100);
+
+                    porsiyonSayisi += u.adet;
+                    ciro += satisTutar;
+                    maliyet += maliyetTutar;
+                    kdvTutari += kdv;
+                });
+
+                const brutKar = ciro - maliyet;
+                const netKar = brutKar - kdvTutari; // Net Kar = Brüt - KDV
+                
+                // Kar Marjı Hesabı (% olarak)
+                const karMarji = ciro > 0 ? ((netKar / ciro) * 100).toFixed(1) : '0.0';
+
+                // Genel Toplamlar için
+                genelToplamCiro += ciro;
+                genelToplamNetKar += netKar;
+
+                html += `
+                    <tr>
+                        <td style="font-weight:600;">${fab.ad}</td>
+                        <td style="text-align:center;">${porsiyonSayisi} ad.</td>
+                        <td style="text-align:right; font-weight:bold;">${app.helpers.formatCurrency(ciro)}</td>
+                        <td style="text-align:right; color:#c0392b;">-${app.helpers.formatCurrency(maliyet)}</td>
+                        <td style="text-align:right; color:#2980b9;">${app.helpers.formatCurrency(brutKar)}</td>
+                        <td style="text-align:right; color:#8e44ad; font-size:12px;">-${app.helpers.formatCurrency(kdvTutari)}</td>
+                        <td style="text-align:right; background:#f0fdf4; color:#16a085; font-weight:bold; font-size:15px;">
+                            ${app.helpers.formatCurrency(netKar)}
+                        </td>
+                        <td style="text-align:center;">
+                            <span class="status-badge ${parseFloat(karMarji) > 20 ? 'status-Active' : 'status-Pending'}">%${karMarji}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Alt Toplam Satırı
+            html += `
+                <tr style="background:#ecf0f1; font-weight:bold; border-top:2px solid #bdc3c7;">
+                    <td>GENEL TOPLAM</td>
+                    <td>-</td>
+                    <td style="text-align:right;">${app.helpers.formatCurrency(genelToplamCiro)}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td style="text-align:right; color:#27ae60; font-size:16px;">${app.helpers.formatCurrency(genelToplamNetKar)}</td>
+                    <td>-</td>
+                </tr>
+            </tbody></table>`;
+
+            container.innerHTML = html;
+        },
+
+        // CSV İndirme Fonksiyonu (Renderer içine ekleyin)
+        fabrikaKarlilikRaporuIndir: () => {
+            let csv = 'Fabrika Adi,Toplam Porsiyon,Ciro (TL),Maliyet (TL),Brut Kar (TL),KDV (TL),Net Kar (TL),Kar Marji (%)\n';
+            
+            app.data.fabrikalar.forEach(fab => {
+                const uretimler = app.data.uretimler.filter(u => u.fabrikaId === fab.id);
+                let porsiyon = 0, ciro = 0, maliyet = 0, kdv = 0;
+
+                uretimler.forEach(u => {
+                    const satis = u.adet * u.birimFiyat;
+                    porsiyon += u.adet;
+                    ciro += satis;
+                    maliyet += u.adet * (u.birimMaliyet || 0);
+                    kdv += satis * ((u.kdvOrani || 0) / 100);
+                });
+
+                const brut = ciro - maliyet;
+                const net = brut - kdv;
+                const marj = ciro > 0 ? ((net / ciro) * 100).toFixed(1) : 0;
+
+                csv += `"${fab.ad}",${porsiyon},${ciro.toFixed(2)},${maliyet.toFixed(2)},${brut.toFixed(2)},${kdv.toFixed(2)},${net.toFixed(2)},%${marj}\n`;
+            });
+
+            const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `fabrika_karlilik_raporu_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        },
         nakitAkisChart: () => { const ctx = document.getElementById('nakitAkisChart').getContext('2d'); const etiketler = [], tahsilatlar = [], giderler = [], simdi = new Date(); for (let i = 5; i >= 0; i--) { const tarih = new Date(simdi.getFullYear(), simdi.getMonth() - i, 1); etiketler.push(tarih.toLocaleString('tr-TR', { month: 'long' })); const ayFiltre = item => { const it = new Date(item.tarih); return it.getFullYear() === tarih.getFullYear() && it.getMonth() === tarih.getMonth(); }; tahsilatlar.push(app.data.odemeler.filter(ayFiltre).reduce((sum, o) => sum + o.tutar, 0)); giderler.push(app.data.giderler.filter(ayFiltre).reduce((sum, g) => sum + g.tutar, 0)); } if (app.charts.nakitAkis) app.charts.nakitAkis.destroy(); app.charts.nakitAkis = new Chart(ctx, { type: 'bar', data: { labels: etiketler, datasets: [{ label: 'Tahsilatlar', data: tahsilatlar, backgroundColor: 'var(--success-color)' }, { label: 'Giderler', data: giderler, backgroundColor: 'var(--danger-color)' }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: value => app.helpers.formatCurrency(value) } } } } }); },
         // renderer nesnesinin içindeki uretimEkleListesi fonksiyonunu bununla değiştir:
 // renderer nesnesinin içine yapıştır (Eskisini sil)
@@ -4277,20 +4413,14 @@ actions.lotRaporuGetir = function() {
     const lotNo = lotNoInput.value.trim();
     const sonucAlani = document.getElementById('lot-sonuc-alani');
     
-    if (!lotNo) { 
-        alert("Lütfen bir Lot numarası yazın."); 
-        return; 
-    }
+    if (!lotNo) { alert("Lütfen bir Lot numarası yazın."); return; }
 
+    // 1. Hareketleri Bul
     const hareketler = app.data.stokHareketleri || [];
     const ilgiliKayitlar = hareketler.filter(h => h.lotNo && h.lotNo.toLowerCase() === lotNo.toLowerCase());
 
     if (ilgiliKayitlar.length === 0) {
-        sonucAlani.innerHTML = `
-            <div style="padding:30px; background:#f8f9fa; text-align:center; border-radius:10px; border:2px dashed #ddd;">
-                <h3 style="color:#7f8c8d;">❌ Kayıt Bulunamadı</h3>
-                <p>"<strong style="color:#d35400;">${lotNo}</strong>" numaralı bir parti girişi veya çıkışı sistemde yok.</p>
-            </div>`;
+        sonucAlani.innerHTML = `<div style="padding:20px; text-align:center; color:#999;">Kayıt bulunamadı: <strong>${lotNo}</strong></div>`;
         return;
     }
 
@@ -4299,92 +4429,63 @@ actions.lotRaporuGetir = function() {
     let toplamGiren = 0;
     let toplamCikan = 0;
     const urunAdi = ilgiliKayitlar[0].urunAdi; 
-    const birim = ilgiliKayitlar[0].birim || 'Birim';
+    const birim = ilgiliKayitlar[0].birim || '';
 
     let raporHtml = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">
-            <h3 style="margin:0; color:#2c3e50;">Parti Karnesi: <span style="color:#d35400; font-family:monospace; font-size:24px;">${lotNo.toUpperCase()}</span></h3>
-            <span style="background:#ecf0f1; padding:5px 10px; border-radius:4px; font-weight:bold;">Ürün: ${urunAdi}</span>
+        <div style="border-bottom:2px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0;">Parti: <span style="color:#d35400;">${lotNo.toUpperCase()}</span></h3>
+            <span style="background:#ecf0f1; padding:2px 8px; border-radius:4px; font-size:12px;">Ürün: ${urunAdi}</span>
         </div>
-        <div style="display:flex; flex-direction:column; gap:15px;">
-    `;
+        <div style="display:flex; flex-direction:column; gap:10px;">`;
 
     ilgiliKayitlar.forEach(k => {
         const tarih = new Date(k.tarih).toLocaleString('tr-TR');
-        const isGiris = k.tip === 'giris';
         const miktar = parseFloat(k.miktar);
+        
+        // HESAPLAMA MANTIĞI: 'giris' veya 'sayim' (artı) ise Giren, diğerleri Çıkan
+        const isGiris = (k.tip === 'giris' || k.tip === 'sayim' || k.tip === 'iade');
         
         if(isGiris) toplamGiren += miktar;
         else toplamCikan += miktar;
 
         const renk = isGiris ? '#e8f8f5' : '#fdedec'; 
         const border = isGiris ? '#27ae60' : '#c0392b'; 
-        const ikon = isGiris ? '⬇️ GİRİŞ (Tedarik)' : '⬆️ ÇIKIŞ (Kullanım/Satış)';
-        const baslikRengi = isGiris ? '#16a085' : '#c0392b';
-        
-        let detay = k.aciklama;
-        if (!isGiris && detay.includes('->')) {
-             const parts = detay.split('->');
-             if(parts.length > 1) {
-                 detay = `${parts[0]} &rarr; <strong style="color:#c0392b; background:#fff; padding:2px 5px; border-radius:3px;">${parts[1]}</strong>`;
-             }
-        }
-
-        // --- TARİHLERİ GÖSTEREN KUTUCUK (YENİ EKLENTİ) ---
-        let tarihRozetleri = '';
-        if (k.uretimTarihi) {
-            tarihRozetleri += `<span style="font-size:11px; background:#e0f7fa; color:#006064; padding:2px 5px; border:1px solid #b2ebf2; border-radius:3px; margin-right:5px;">📅 ÜRT: ${new Date(k.uretimTarihi).toLocaleDateString('tr-TR')}</span>`;
-        }
-        if (k.skt) {
-            tarihRozetleri += `<span style="font-size:11px; background:#ffebee; color:#c62828; padding:2px 5px; border:1px solid #ffcdd2; border-radius:3px;">⏳ SKT: ${new Date(k.skt).toLocaleDateString('tr-TR')}</span>`;
-        }
+        const ikon = isGiris ? '⬇️ GİRİŞ' : '⬆️ ÇIKIŞ';
 
         raporHtml += `
-            <div style="background:${renk}; border-left:5px solid ${border}; padding:15px; border-radius:4px; box-shadow:0 2px 5px rgba(0,0,0,0.05); position:relative;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <strong style="color:${baslikRengi};">${ikon}</strong>
-                    <span style="font-size:12px; color:#7f8c8d;">${tarih}</span>
+            <div style="background:${renk}; border-left:4px solid ${border}; padding:10px; border-radius:4px;">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong style="color:${isGiris ? '#16a085' : '#c0392b'};">${ikon}</strong>
+                    <span style="font-size:11px; color:#7f8c8d;">${tarih}</span>
                 </div>
-                <div style="font-size:20px; font-weight:bold; margin-bottom:5px;">
+                <div style="font-size:16px; font-weight:bold; margin-top:5px;">
                     ${isGiris ? '+' : '-'}${miktar} ${birim}
                 </div>
-                <div style="color:#555; font-size:14px;">
-                    ${detay}
-                </div>
-                ${tarihRozetleri ? `<div style="margin-top:8px;">${tarihRozetleri}</div>` : ''}
-            </div>
-        `;
+                <div style="font-size:13px; color:#555;">${k.aciklama}</div>
+            </div>`;
     });
 
     raporHtml += `</div>`;
 
+    // KALAN HESABI
     const kalan = toplamGiren - toplamCikan;
+
     raporHtml += `
-        <div style="margin-top:30px; background:#34495e; color:white; padding:20px; border-radius:8px; display:flex; justify-content:space-around; align-items:center; text-align:center;">
-            <div>
-                <div style="font-size:12px; opacity:0.8;">TOPLAM GİREN</div>
-                <div style="font-size:22px; font-weight:bold; color:#2ecc71;">${toplamGiren} ${birim}</div>
+        <div style="margin-top:20px; background:#34495e; color:white; padding:15px; border-radius:8px; display:flex; justify-content:space-around; text-align:center;">
+            <div><small>GİREN</small><div style="font-size:18px; color:#2ecc71;">${toplamGiren}</div></div>
+            <div><small>ÇIKAN</small><div style="font-size:18px; color:#e74c3c;">${toplamCikan}</div></div>
+            <div style="border-left:1px solid #555; padding-left:15px;">
+                <small>KALAN</small>
+                <div style="font-size:24px; font-weight:bold; color:#f1c40f;">${kalan} ${birim}</div>
             </div>
-            <div style="font-size:30px; opacity:0.3;">&rarr;</div>
-            <div>
-                <div style="font-size:12px; opacity:0.8;">TOPLAM KULLANILAN</div>
-                <div style="font-size:22px; font-weight:bold; color:#e74c3c;">${toplamCikan} ${birim}</div>
-            </div>
-            <div style="border-left:1px solid rgba(255,255,255,0.3); padding-left:20px;">
-                <div style="font-size:12px; opacity:0.8;">BU PARTİDEN KALAN</div>
-                <div style="font-size:28px; font-weight:bold; color:${kalan > 0 ? '#f1c40f' : '#ecf0f1'};">
-                    ${kalan} ${birim}
-                </div>
-            </div>
-        </div>
-    `;
+        </div>`;
 
     sonucAlani.innerHTML = raporHtml;
 };
 
 
-
 // actions.stokHareketKaydet FONKSİYONUNU KOMPLE BUNUNLA DEĞİŞTİRİN:
+
 actions.stokHareketKaydet = function() {
     const idEl = document.getElementById('modal-stok-id');
     const tipEl = document.getElementById('modal-islem-tip');
@@ -4399,14 +4500,8 @@ actions.stokHareketKaydet = function() {
 
     if (!stok) { alert("Stok kartı bulunamadı!"); return; }
 
-    // Depo migrasyonu (eski veriler için)
-    if (!stok.depolar) {
-        stok.depolar = {};
-        stok.depolar["Ana Depo"] = parseFloat(stok.miktar) || 0;
-    }
-    if (stok.depolar[secilenDepo] === undefined) {
-        stok.depolar[secilenDepo] = 0;
-    }
+    if (!stok.depolar) { stok.depolar = {}; stok.depolar["Ana Depo"] = parseFloat(stok.miktar) || 0; }
+    if (stok.depolar[secilenDepo] === undefined) stok.depolar[secilenDepo] = 0;
 
     let miktar = 0;
     let aciklama = '';
@@ -4414,91 +4509,63 @@ actions.stokHareketKaydet = function() {
     let lotNo = ''; 
     let uretimTarihi = ''; 
     let skt = '';
-    let fireTuru = 'Normal'; // Varsayılan
+    let fireTuru = 'Normal';
 
     if (tip === 'giris') {
-        // --- GİRİŞ İŞLEMİ (Değişiklik Yok) ---
-        const tedarikciEl = document.getElementById('mk-tedarikci');
-        const faturaEl = document.getElementById('mk-fatura');
-        const miktarEl = document.getElementById('mk-miktar');
-        const lotEl = document.getElementById('mk-lot'); 
-        const uretimTarihiEl = document.getElementById('mk-uretim-tarihi');
-        const sktEl = document.getElementById('mk-skt'); 
-        
-        if (!tedarikciEl || !faturaEl || !miktarEl) { alert("Form alanları yüklenemedi."); return; }
-
-        const tedarikci = tedarikciEl.value.trim();
-        const fatura = faturaEl.value.trim();
-        miktar = parseFloat(miktarEl.value);
+        const tedarikci = document.getElementById('mk-tedarikci').value.trim();
+        const fatura = document.getElementById('mk-fatura').value.trim();
+        miktar = parseFloat(document.getElementById('mk-miktar').value);
         yeniFiyat = parseFloat(document.getElementById('mk-fiyat').value);
-        
-        lotNo = lotEl ? lotEl.value.trim() : '';
-        uretimTarihi = uretimTarihiEl ? uretimTarihiEl.value : '';
-        skt = sktEl ? sktEl.value : '';
-
-        if (lotNo) {
-            const lotVarMi = app.data.stokHareketleri.some(h => 
-                h.lotNo && h.lotNo.toLowerCase() === lotNo.toLowerCase()
-            );
-            if (lotVarMi) {
-                alert(`⛔ HATA: "${lotNo}" numaralı Lot zaten kayıtlı!\n\nLütfen farklı bir Lot numarası girin.`);
-                return; 
-            }
-        }
+        lotNo = document.getElementById('mk-lot') ? document.getElementById('mk-lot').value.trim() : '';
+        uretimTarihi = document.getElementById('mk-uretim-tarihi') ? document.getElementById('mk-uretim-tarihi').value : '';
+        skt = document.getElementById('mk-skt') ? document.getElementById('mk-skt').value : '';
 
         if (isNaN(miktar) || miktar <= 0) { alert("Geçerli bir miktar girin."); return; }
-        if (!tedarikci) { alert("Tedarikçi adı zorunludur."); return; }
-        if (!fatura) { alert("Fatura No zorunludur."); return; }
+        if (!tedarikci || !fatura) { alert("Tedarikçi ve Fatura zorunludur."); return; }
 
         stok.depolar[secilenDepo] += miktar;
         stok.miktar = Object.values(stok.depolar).reduce((a, b) => a + b, 0);
-
         if (!isNaN(yeniFiyat) && yeniFiyat > 0) stok.alisFiyati = yeniFiyat;
         
         aciklama = `[MAL KABUL -> ${secilenDepo}] ${tedarikci} | Belge: ${fatura}`;
         if(lotNo) aciklama += ` | Lot: ${lotNo}`;
 
-    } else {
-        // --- ÇIKIŞ İŞLEMİ (GÜNCELLENDİ: FİRE TÜRÜ İLE) ---
-        const miktarEl = document.getElementById('cikis-miktar');
-        const aciklamaEl = document.getElementById('cikis-aciklama');
-        const lotEl = document.getElementById('cikis-lot');     
-        const hedefEl = document.getElementById('cikis-hedef');
-        const turEl = document.getElementById('cikis-turu'); // YENİ
-        
-        if (!miktarEl || !aciklamaEl || !turEl) { alert("Form hatalı."); return; }
+        // --- YENİ: GİRİŞ YAPILINCA LOT KARTI OLUŞTUR (VEYA GÜNCELLE) ---
+        if (lotNo) {
+            if (!app.data.lotlar) app.data.lotlar = [];
+            // Bu isimde ve Lot No'da kayıt var mı?
+            let mevcutLot = app.data.lotlar.find(l => l.lotNo === lotNo && l.urunAdi === stok.ad);
+            
+            if (mevcutLot) {
+                mevcutLot.miktar += miktar; // Varsa üzerine ekle
+            } else {
+                // Yoksa yeni oluştur
+                app.data.lotlar.push({
+                    id: Date.now(),
+                    lotNo: lotNo,
+                    urunAdi: stok.ad,
+                    miktar: miktar,
+                    uretimTarihi: uretimTarihi,
+                    sonKullanmaTarihi: skt,
+                    durum: 'Aktif'
+                });
+            }
+        }
 
-        miktar = parseFloat(miktarEl.value);
-        let detay = aciklamaEl.value.trim();
-        lotNo = lotEl ? lotEl.value.trim() : '';
-        const hedef = hedefEl ? hedefEl.value.trim() : '';
-        fireTuru = turEl.value; // "Normal" veya "Kesim Firesi"
+    } else {
+        miktar = parseFloat(document.getElementById('cikis-miktar').value);
+        let detay = document.getElementById('cikis-aciklama').value.trim();
+        fireTuru = document.getElementById('cikis-turu').value;
 
         if (isNaN(miktar) || miktar <= 0) { alert("Geçerli bir miktar girin."); return; }
-        
-        if (miktar > stok.depolar[secilenDepo]) { 
-            alert(`Yetersiz Stok!\n${secilenDepo} stoğu: ${stok.depolar[secilenDepo]} ${stok.birim}\nİstenen: ${miktar} ${stok.birim}`); 
-            return; 
-        }
-        if (!detay) { alert("Açıklama yazmanız zorunludur."); return; }
+        if (miktar > stok.depolar[secilenDepo]) { alert(`Yetersiz Stok!`); return; }
 
-        // Miktarları Güncelle
         stok.depolar[secilenDepo] -= miktar;
         stok.miktar = Object.values(stok.depolar).reduce((a, b) => a + b, 0);
-
-        // --- AÇIKLAMA FORMATI ---
-        if (fireTuru === 'Normal') {
-            aciklama = `[ÇIKIŞ -> ${secilenDepo}] ${detay}`;
-        } else {
-            // Eğer Fire ise özel etiket ekle
-            aciklama = `[🔥 ${fireTuru.toUpperCase()} -> ${secilenDepo}] ${detay}`;
-        }
-
-        if (hedef) aciklama += ` -> ${hedef}`;
-        if (lotNo) aciklama += ` (Lot: ${lotNo})`;
+        
+        aciklama = `[${fireTuru.toUpperCase()} -> ${secilenDepo}] ${detay}`;
     }
 
-    // --- KAYIT ---
     if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
     app.data.stokHareketleri.push({
         id: Date.now(),
@@ -4506,7 +4573,7 @@ actions.stokHareketKaydet = function() {
         urunAdi: stok.ad,
         birim: stok.birim,
         tip: tip,
-        altTip: fireTuru, // YENİ: Veritabanına "altTip" olarak kaydediyoruz.
+        altTip: fireTuru,
         depo: secilenDepo,
         miktar: miktar,
         kalanStok: stok.miktar,
@@ -4520,11 +4587,7 @@ actions.stokHareketKaydet = function() {
     dataManager.save();
     actions.closeModal();
     renderer.stokListesi();
-    
-    if (typeof renderer.stokGecmisiListesi === 'function') {
-        renderer.stokGecmisiListesi();
-    }
-
+    if (typeof renderer.stokGecmisiListesi === 'function') renderer.stokGecmisiListesi();
     alert("İşlem başarıyla kaydedildi.");
 };
 
@@ -4757,81 +4820,83 @@ actions.addUretimToList = function(e) {
 // --- KESİN ÇÖZÜM: STOK VE LOT DÜŞÜM MOTORU (AKILLI EŞLEŞTİRME) ---
 
 // --- KESİN VE NET ÇÖZÜM: REÇETE İÇİNDEKİ HAMMADDENİN LOTUNU DÜŞÜRME ---
+
+// --- GÜNCELLENMİŞ STOK VE LOT DÜŞÜM MOTORU (FIFO) ---
+
+// --- GÜNCELLENMİŞ STOK VE LOT DÜŞÜM MOTORU (FIFO) ---
 actions.otomatikStokDus = function(uretimItem) {
-    // 1. Üretilen Ürünün Reçetesini Bul (Örn: Tabldot Menü)
+    // 1. Üretilen Ürünün Reçetesini Bul
     const recete = app.data.receteler.find(r => r.ad.trim() === uretimItem.aciklama.trim());
-    
-    // Reçete yoksa işlem yapma
     if (!recete) return 0;
 
     let islenenMalzemeSayisi = 0;
 
-    // 2. Reçetenin içindeki malzemeleri tek tek gez (Örn: Rus Salatası, Tavuk, Pilav)
+    // 2. Reçetedeki her bir malzemeyi gez (Örn: Rus Salatası)
     recete.malzemeler.forEach(malzeme => {
-        // Bu malzemenin stok kartını bul
         const stokKart = app.data.stoklar.find(s => s.id === malzeme.stokId);
-
+        
         if (stokKart) {
-            // --- A) ÖNCE GENEL DEPO STOĞUNU DÜŞ ---
-            if (!stokKart.depolar) stokKart.depolar = { "Ana Depo": parseFloat(stokKart.miktar) || 0 };
-            
-            // Düşülecek Miktar Hesabı (Üretim Adedi x Reçetedeki Miktar)
-            // Örn: 1 Tabldot x 1 Rus Salatası = 1 Adet Düşecek
-            const dusulecekMiktar = uretimItem.adet * malzeme.miktar;
+            // Düşülecek Toplam Miktar Hesabı
+            const toplamDusulecek = uretimItem.adet * malzeme.miktar;
+            let kalanDusulecek = toplamDusulecek;
 
-            // Depodan düş
-            stokKart.depolar["Ana Depo"] -= dusulecekMiktar;
+            // A) ANA STOK KARTINDAN DÜŞ (Genel Stok)
+            if (!stokKart.depolar) stokKart.depolar = { "Ana Depo": parseFloat(stokKart.miktar) || 0 };
+            stokKart.depolar["Ana Depo"] -= toplamDusulecek;
             stokKart.miktar = Object.values(stokKart.depolar).reduce((a, b) => a + b, 0);
 
-            // --- B) ŞİMDİ BU HAMMADDENİN LOTLARINI BUL VE DÜŞ ---
+            // B) LOTLARDAN DÜŞ VE HAREKET KAYDET (Detaylı Lot Takibi İçin)
             if (app.data.lotlar && app.data.lotlar.length > 0) {
-                
-                // ADIM 1: "Rus Salatası" adına sahip olan Lotları getir.
-                // Stok kartındaki isim ile Lot'taki ürün adı BİREBİR AYNI olmalı.
+                // 1. Bu ürünün (Rus Salatası) eldeki lotlarını bul (İsim Eşleşmesi Önemli!)
                 let hammaddeLotlari = app.data.lotlar.filter(lot => 
-                    lot.urunAdi.trim() === stokKart.ad.trim() && lot.miktar > 0
+                    lot.urunAdi.trim().toLowerCase() === stokKart.ad.trim().toLowerCase() && lot.miktar > 0
                 );
-
-                // ADIM 2: Eskiden yeniye sırala (FIFO) - İlk giren ilk çıkar
+                
+                // 2. FIFO: En eski üretim tarihli olandan başla
                 hammaddeLotlari.sort((a, b) => (a.uretimTarihi > b.uretimTarihi ? 1 : -1));
 
-                let kalanDusulecek = dusulecekMiktar;
-
-                // ADIM 3: Sırayla Lotlardan düş
+                // 3. Sırayla Lotlardan düş
                 for (let lot of hammaddeLotlari) {
                     if (kalanDusulecek <= 0) break; // Düşülecek miktar bittiyse dur
 
+                    let buLottanDusulen = 0;
+
                     if (lot.miktar >= kalanDusulecek) {
-                        // Bu lotun miktarı yetiyor (Örn: Lotta 20 var, lazım olan 1)
-                        lot.miktar -= kalanDusulecek; // 20 - 1 = 19
+                        // Bu lotun miktarı yetiyor
+                        buLottanDusulen = kalanDusulecek;
+                        lot.miktar -= kalanDusulecek; // <--- LOT MİKTARI GÜNCELLENİYOR
                         kalanDusulecek = 0;
                     } else {
-                        // Bu lot yetmiyor (Örn: Lotta 0.5 var, lazım olan 1)
+                        // Bu lot yetmiyor, tamamını kullan ve sonrakine geç
+                        buLottanDusulen = lot.miktar;
                         kalanDusulecek -= lot.miktar;
-                        lot.miktar = 0; // Bu lot bitti
+                        lot.miktar = 0; // <--- LOT SIFIRLANIYOR
                     }
-                    
-                    // Matematiksel küsurat hatasını temizle
+
+                    // Küsurat hatasını temizle
                     lot.miktar = Math.round(lot.miktar * 1000) / 1000;
+
+                    // *** KRİTİK NOKTA ***
+                    // Lot Takibi ekranında görünmesi için "Bu Lottan Çıkış Yapıldı" kaydı atıyoruz.
+                    if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
+                    app.data.stokHareketleri.push({
+                        id: Date.now() + Math.random(),
+                        stokId: stokKart.id,
+                        urunAdi: stokKart.ad,
+                        birim: stokKart.birim,
+                        tip: 'cikis',
+                        altTip: 'Uretim',
+                        depo: 'Ana Depo',
+                        miktar: buLottanDusulen,
+                        kalanStok: stokKart.miktar, 
+                        tarih: new Date().toISOString(),
+                        aciklama: `[OTOMATİK] ${uretimItem.adet} ad. ${uretimItem.aciklama} üretimi.`,
+                        lotNo: lot.lotNo, // <-- İŞTE BU SAYEDE LOT RAPORUNDA GÖRÜNECEK
+                        uretimTarihi: lot.uretimTarihi,
+                        skt: lot.sonKullanmaTarihi
+                    });
                 }
             }
-            // -----------------------------------------------------
-
-            // C) HAREKET KAYDI (Log)
-            if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
-            app.data.stokHareketleri.push({
-                id: Date.now() + Math.random(),
-                stokId: stokKart.id,
-                urunAdi: stokKart.ad,
-                birim: stokKart.birim,
-                tip: 'cikis',
-                altTip: 'Uretim',
-                depo: 'Ana Depo',
-                miktar: dusulecekMiktar,
-                kalanStok: stokKart.miktar,
-                tarih: new Date().toISOString(),
-                aciklama: `[OTOMATİK] ${uretimItem.adet} adet "${uretimItem.aciklama}" üretimi için kullanıldı.`
-            });
             
             islenenMalzemeSayisi++;
         }
@@ -4975,25 +5040,134 @@ renderer.switchStokTab = function(tab) {
     if (tab === 'recete') renderer.receteListesi();
 };
 
-// 5. OTOMATİK STOK DÜŞÜM MOTORU (EKSİK OLAN PARÇA BU!)
+// --- ÜRETİM KAYDETME VE LOT DÜŞME (ZORLA ÇALIŞTIRMA MODU) ---
+actions.saveUretimListesi = function() {
+    const list = app.temp.uretimListesi;
+    if (list.length === 0) { alert('Listede kaydedilecek üretim yok.'); return; }
 
-// 6. ÜRETİM KAYDETME FONKSİYONUNU GÜNCELLE (Düşüm motorunu tetikleyecek şekilde)
+    if (!confirm(`${list.length} kalem üretimi onaylıyor musunuz? (Stok ve Lotlar düşülecek)`)) return;
 
-// 2. Ana Fonksiyon: Üretim Listesini Kaydederken Düşümü Tetikler
+    const btn = document.getElementById('tumunu-kaydet-btn');
+    if(btn) btn.disabled = true;
 
+    let toplamDusulenLotMiktari = 0;
+    let islemMesaji = "";
 
-// 2. MEVCUT FONKSİYONU GÜNCELLE: Üretim Listesini Kaydetme
-// (Eski actions.saveUretimListesi fonksiyonunu silip yerine bunu yapıştırın)
-// --- YENİ SİSTEM: REÇETE BAZLI ÜRETİM VE STOK DÜŞÜM ---
+    try {
+        list.forEach((item, index) => {
+            // 1. Üretim Kaydını Ekle
+            const yeniUretim = { ...item, id: Date.now() + index };
+            // Üretilen ürüne de bir Lot numarası verelim
+            yeniUretim.lotNo = `URT-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(Math.random()*1000)}`;
+            app.data.uretimler.push(yeniUretim);
 
-// 1. Ürün Seçim Listesini Doldurma Fonksiyonu
+            // 2. Reçeteyi Bul (İsim eşleşmesi boşluklardan temizlenerek yapılır)
+            const recete = app.data.receteler.find(r => r.ad.trim().toLowerCase() === item.aciklama.trim().toLowerCase());
 
-// --- KESİN ÇÖZÜM: REÇETE SİSTEMİ VE BUTON TEMİZLİĞİ ---
+            if (recete) {
+                // Reçetedeki her malzemeyi gez (Örn: Rus Salatası)
+                recete.malzemeler.forEach(malzeme => {
+                    const stokKart = app.data.stoklar.find(s => s.id === malzeme.stokId);
+                    
+                    if (stokKart) {
+                        // A) Ana Stoktan Düş
+                        const dusulecekMiktar = item.adet * malzeme.miktar;
+                        if (!stokKart.depolar) stokKart.depolar = { "Ana Depo": parseFloat(stokKart.miktar) || 0 };
+                        stokKart.depolar["Ana Depo"] -= dusulecekMiktar;
+                        stokKart.miktar = Object.values(stokKart.depolar).reduce((a, b) => a + b, 0);
 
-// 1. Ürün Seçim Listesini Doldur
+                        // B) LOTLARDAN DÜŞ (Sorunun olduğu yer burasıydı, şimdi manuel zorluyoruz)
+                        if (app.data.lotlar && app.data.lotlar.length > 0) {
+                            // İlgili hammaddenin lotlarını bul
+                            let lotlar = app.data.lotlar.filter(l => 
+                                l.urunAdi.trim().toLowerCase() === stokKart.ad.trim().toLowerCase() && 
+                                l.miktar > 0
+                            );
 
+                            // Tarihe göre sırala (Eskiler önce bitsin)
+                            lotlar.sort((a, b) => (a.uretimTarihi > b.uretimTarihi ? 1 : -1));
 
-// Sayfa Geçişlerinde Listeyi Doldurması İçin
+                            let kalan = dusulecekMiktar;
+                            
+                            for (let lot of lotlar) {
+                                if (kalan <= 0) break;
+
+                                let dusum = 0;
+                                if (lot.miktar >= kalan) {
+                                    dusum = kalan;
+                                    lot.miktar -= kalan; // Lot kartındaki rakamı güncelle
+                                    kalan = 0;
+                                } else {
+                                    dusum = lot.miktar;
+                                    kalan -= lot.miktar;
+                                    lot.miktar = 0;
+                                }
+
+                                // Hareket Kaydını Zorla Ekle (Raporun okuduğu yer burası!)
+                                if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
+                                app.data.stokHareketleri.push({
+                                    id: Date.now() + Math.random(),
+                                    stokId: stokKart.id,
+                                    urunAdi: stokKart.ad,
+                                    birim: stokKart.birim,
+                                    tip: 'cikis',          // Rapor bunu "ÇIKAN" olarak görür
+                                    altTip: 'Uretim',
+                                    depo: 'Ana Depo',
+                                    miktar: dusum,
+                                    kalanStok: stokKart.miktar,
+                                    tarih: new Date().toISOString(),
+                                    aciklama: `Üretim: ${item.adet} ${item.aciklama}`,
+                                    lotNo: lot.lotNo,      // Raporun aradığı Lot Numarası
+                                    uretimTarihi: lot.uretimTarihi,
+                                    skt: lot.sonKullanmaTarihi
+                                });
+
+                                toplamDusulenLotMiktari += dusum;
+                            }
+                        }
+                    }
+                });
+                islemMesaji += `\n✅ ${item.aciklama} üretildi, hammaddeler stoktan ve lotlardan düşüldü.`;
+            } else {
+                islemMesaji += `\n⚠️ ${item.aciklama} için reçete bulunamadı! Stok düşülemedi.`;
+            }
+
+            // Maliyet kaydı
+            if (item.birimMaliyet > 0) {
+                app.data.giderler.push({
+                    id: Date.now() + index + 5000,
+                    tip: 'diger',
+                    aciklama: `[MALİYET] ${item.aciklama}`,
+                    detay: `Üretim: ${item.adet} adet`,
+                    tutar: item.adet * item.birimMaliyet,
+                    tarih: item.tarih
+                });
+            }
+        });
+
+        // Veriyi Kaydet
+        dataManager.save();
+        app.temp.uretimListesi = [];
+        renderer.updateAll();
+        
+        alert(`İşlem Tamamlandı!\n${islemMesaji}\n\nToplam Lot Düşümü: ${toplamDusulenLotMiktari} birim.`);
+    } catch (err) {
+        console.error(err);
+        alert("Bir hata oluştu: " + err.message);
+    }
+
+    if(btn) btn.disabled = false;
+};
+
+// Butonu yeni fonksiyona bağla
+const btnKaydet = document.getElementById('tumunu-kaydet-btn');
+if(btnKaydet) {
+    // Eski olayları temizlemek için klonluyoruz
+    const newBtn = btnKaydet.cloneNode(true);
+    btnKaydet.parentNode.replaceChild(newBtn, btnKaydet);
+    newBtn.onclick = actions.saveUretimListesi;
+    newBtn.innerText = "💾 LİSTEYİ ONAYLA (Lot Düşümlü)";
+}
 
 
 // Sayfa yenilendiğinde listeyi yükle
