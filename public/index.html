@@ -521,6 +521,14 @@
             <nav>
                 <ul>
     <li data-role="admin operasyon"><a href="#" class="nav-link" data-page="dashboard"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Ana Panel</a></li>
+    <li data-role="admin isci stok_personeli">
+    <a href="#" class="nav-link" data-page="fabrika-notlari">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/>
+        </svg>
+        Sipariş / Not Defteri
+    </a>
+</li>
 <li data-role="admin isci stok_personeli"><a href="#" class="nav-link" data-page="vardiya-yonetimi"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.25 14.16L11 13.32V7h1.5v5.5l4.5 2.66-.75 1.3z"/></svg>Vardiya Yönetimi</a></li>
 <li data-role="admin operasyon stok_personeli"><a href="#" class="nav-link" data-page="uretim-ekle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>Üretim Ekle</a></li>
 <li data-role="admin"><a href="#" class="nav-link" data-page="personel-yonetimi"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V18h14v-1.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V18h6v-1.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Personel Yönetimi</a></li>
@@ -558,6 +566,35 @@
                 </div>
                 <div class="content-box"><h2>Son 6 Aylık Nakit Akışı</h2><canvas id="nakitAkisChart" height="120"></canvas></div>
             </div>
+
+            <div id="fabrika-notlari" class="page">
+    <div class="content-box">
+        <h2>Fabrika Not Defteri (Siparişler & Bilgi)</h2>
+        <p style="color:#666; margin-bottom:15px;">Bu alandan ilgili fabrikayı seçerek siparişleri veya diğer personellerin görmesi gereken notları yazabilirsiniz.</p>
+        
+        <div class="form-grid" style="grid-template-columns: 1fr 2fr;">
+            <div class="input-group">
+                <label>Hangi Fabrika / Müşteri?</label>
+                <select id="not-fabrika-select" onchange="renderer.notListesi()" style="border: 2px solid var(--primary-color); font-weight:bold;"></select>
+            </div>
+        </div>
+        
+        <div id="not-ekleme-alani" style="display:none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+            <form id="not-ekle-form">
+                <div class="input-group">
+                    <label>Yeni Sipariş veya Not Ekle</label>
+                    <textarea id="not-icerik" rows="4" placeholder="Sipariş detaylarını, adetleri veya hatırlatmaları buraya yazın..." required style="resize: vertical;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Notu Kaydet ve Paylaş</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="content-box" id="notlar-gosterim-kutusu" style="display:none;">
+        <h3>📌 Kaydedilen Notlar</h3>
+        <div id="not-listesi-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;"></div>
+    </div>
+</div>
 
             <div id="vardiya-yonetimi" class="page">
                 <div id="aktif-vardiya-container" class="content-box" style="display: none;">
@@ -1414,6 +1451,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderer = {
         updateAll: () => {
             renderer.fabrikaSelect(); 
+            renderer.notFabrikaSelect();
             renderer.giderTablosu();
             renderer.fabrikaHesapOzetleri();
             renderer.dashboard();
@@ -1474,6 +1512,8 @@ renderer.stokGecmisi(); // <-- BU SATIRI EKLEYİN
             else if (role === 'stok_personeli') { actions.navigate(null, 'stok-yonetimi'); } 
             else { actions.navigate(null, 'dashboard'); }
         },
+
+        
 
         updateVardiyaDurumu: () => {
             const activeShift = app.data.vardiyalar.find(v => v.durum === 'Aktif');
@@ -1638,6 +1678,59 @@ renderer.stokGecmisi(); // <-- BU SATIRI EKLEYİN
             }
         },
         fabrikaSelect: () => { const selectUretim = app.dom.uretimFabrikaSelect; selectUretim.innerHTML = '<option value="" disabled selected>Bir fabrika seçin...</option>'; app.data.fabrikalar.forEach(f => selectUretim.add(new Option(f.ad, f.id))); },
+        notFabrikaSelect : function() {
+            const select = document.getElementById('not-fabrika-select');
+            if(!select) return;
+            select.innerHTML = '<option value="" disabled selected>Notlarını görmek için fabrika seçin...</option>';
+            if(app.data.fabrikalar) {
+                app.data.fabrikalar.forEach(f => select.add(new Option(f.ad, f.id)));
+            }
+        },
+
+        notListesi : function() {
+            const select = document.getElementById('not-fabrika-select');
+            const eklemeAlani = document.getElementById('not-ekleme-alani');
+            const gosterimKutusu = document.getElementById('notlar-gosterim-kutusu');
+            const container = document.getElementById('not-listesi-container');
+            
+            if(!select || !select.value) {
+                if(eklemeAlani) eklemeAlani.style.display = 'none';
+                if(gosterimKutusu) gosterimKutusu.style.display = 'none';
+                return;
+            }
+            
+            eklemeAlani.style.display = 'block';
+            gosterimKutusu.style.display = 'block';
+            container.innerHTML = '';
+            
+            if (!app.data.notlar) app.data.notlar = [];
+            
+            const fabrikaId = parseInt(select.value);
+            const buFabrikaNotlari = app.data.notlar.filter(n => n.fabrikaId === fabrikaId).sort((a,b) => b.id - a.id); // En yeni en üstte
+            
+            if (buFabrikaNotlari.length === 0) {
+                container.innerHTML = '<p class="no-data-message" style="padding:10px;">Bu fabrika için henüz sipariş veya not girilmemiş.</p>';
+                return;
+            }
+            
+            buFabrikaNotlari.forEach(not => {
+                const tarihStr = app.helpers.formatDateTime(not.tarih);
+                // Silme yetkisi: Sadece notu yazan kişi veya 'admin' silebilir
+                const isOwnerOrAdmin = (app.currentUser && (app.currentUser.ad === not.ekleyen || app.currentUser.role === 'admin'));
+                const silBtnHtml = isOwnerOrAdmin ? `<button class="btn-sm-danger" style="float:right;" onclick="actions.notSil(${not.id})">Sil</button>` : '';
+                
+                const notDiv = document.createElement('div');
+                notDiv.style = "background: #fdfefe; border: 1px solid #e1e8ed; border-left: 5px solid #f39c12; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+                notDiv.innerHTML = `
+                    ${silBtnHtml}
+                    <div style="font-size: 13px; color: #7f8c8d; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 5px;">
+                        <strong style="color: #2c3e50;">👤 ${not.ekleyen}</strong> | 🕒 ${tarihStr}
+                    </div>
+                    <div style="font-size: 15px; white-space: pre-wrap; color: #2c3e50; line-height: 1.5;">${not.icerik}</div>
+                `;
+                container.appendChild(notDiv);
+            });
+        },
         fabrikaSilSelect: () => { const selectSil = app.dom.fabrikaSilSelect; selectSil.innerHTML = '<option value="" disabled selected>...Bir fabrika seçin...</option>'; app.data.fabrikalar.forEach(f => selectSil.add(new Option(f.ad, f.id))); },
         giderTablosu: () => {
             app.dom.giderTabloContainer.innerHTML = '';
@@ -2074,6 +2167,7 @@ stokOzet: () => {
     if (elKritik) elKritik.innerText = kritikSayi;
     if (elDeger) elDeger.innerText = app.helpers.formatCurrency(toplamDeger);
 }
+
     };
 
     // renderer objesinin içine ekleyin:
@@ -2254,6 +2348,12 @@ stokOzet: () => {
                 
                 // --- YENİ EKLENEN KISIM: Pozisyon kontrolü ---
                 const pozisyon = app.data.pozisyonlar.find(pos => pos.id === personel.pozisyonId);
+                // BURASI EKLENDİ: Yönetici personel kapısından giremesin
+                const isAdminPos = pozisyon && pozisyon.ad && pozisyon.ad.toLowerCase() === 'yönetici';
+                if (isAdminPos) {
+                    loginError.textContent = 'Bu hesap bir yöneticiye ait. Lütfen Yönetici Girişi ekranını kullanın.';
+                    return;
+                }
                 let userRole = 'isci'; // Varsayılan sadece vardiya görebilen normal işçi
                 
                 // Eğer pozisyon adında stok veya üretim geçiyorsa rolü yükseltiyoruz
@@ -3184,6 +3284,39 @@ saveAttendanceManual: (e) => {
             }
         },
         addFactory: (e) => { e.preventDefault(); const name = app.dom.fabrikaForm.querySelector('#fabrika-adi').value.trim(); if (name) { app.data.fabrikalar.push({ id: Date.now(), ad: name }); dataManager.save(); app.dom.fabrikaForm.reset(); renderer.updateAll(); } },
+
+        notEkle: (e) => {
+            e.preventDefault();
+            const fabrikaId = parseInt(document.getElementById('not-fabrika-select').value);
+            const icerik = document.getElementById('not-icerik').value.trim();
+            
+            if (isNaN(fabrikaId) || !icerik) return;
+            if (!app.data.notlar) app.data.notlar = [];
+            
+            const yeniNot = {
+                id: Date.now(),
+                fabrikaId: fabrikaId,
+                icerik: icerik,
+                ekleyen: app.currentUser ? app.currentUser.ad : 'Sistem',
+                tarih: new Date().toISOString()
+            };
+            
+            app.data.notlar.push(yeniNot);
+            dataManager.save();
+            
+            document.getElementById('not-icerik').value = ''; 
+            renderer.notListesi(); 
+        },
+
+        notSil: (notId) => {
+            if(confirm("Bu notu tamamen silmek istediğinize emin misiniz?")) {
+                app.data.notlar = app.data.notlar.filter(n => n.id !== notId);
+                dataManager.save();
+                renderer.notListesi();
+            }
+        },
+
+        
         updateUretimToplam: () => { const adet = parseFloat(app.dom.uretimAdetInput.value) || 0; const birimFiyat = parseFloat(app.dom.uretimBirimFiyatInput.value) || 0; app.dom.uretimToplamTutarInput.value = app.helpers.formatCurrency(adet * birimFiyat); },
         // actions nesnesinin içindeki addUretimToList fonksiyonunu bununla değiştir:
 // actions nesnesinin içine yapıştırın (Eskisini silin)
@@ -3545,6 +3678,8 @@ stokSil: (stokId) => {
         app.dom.logoutBtn.addEventListener('click', actions.logout);
         app.dom.navLinks.forEach(link => link.addEventListener('click', actions.navigate));
         app.dom.fabrikaForm.addEventListener('submit', actions.addFactory);
+        const notForm = document.getElementById('not-ekle-form');
+        if (notForm) notForm.addEventListener('submit', actions.notEkle);
         app.dom.listeyeEkleBtn.addEventListener('click', actions.addUretimToList);
         app.dom.giderForm.addEventListener('submit', actions.addExpense);
         app.dom.modalCloseBtn.addEventListener('click', actions.closeModal);
@@ -4704,6 +4839,8 @@ renderer.switchStokTab = function(tab) {
 };
 
 // 3. Reçete Listeleme Fonksiyonu
+
+// 3. Reçete Listeleme Fonksiyonu
 renderer.receteListesi = function() {
     const container = document.getElementById('recete-listesi-container');
     if (!container) return;
@@ -4716,11 +4853,18 @@ renderer.receteListesi = function() {
     let html = '<div class="card-container" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">';
     app.data.receteler.forEach(recete => {
         let icerikHtml = '<ul style="font-size:13px; color:#555; padding-left:20px; margin-top:10px;">';
+        let toplamMaliyet = 0; // REÇETE TOPLAM MALİYETİ
+        
         recete.malzemeler.forEach(m => {
             const stokKart = app.data.stoklar.find(s => s.id == m.stokId);
             const stokAdi = stokKart ? stokKart.ad : 'Silinmiş Stok';
             const birim = stokKart ? stokKart.birim : '';
-            icerikHtml += `<li>${stokAdi}: <strong>${m.miktar} ${birim}</strong></li>`;
+            const alisFiyati = stokKart ? (parseFloat(stokKart.alisFiyati) || 0) : 0;
+            const malzemeMaliyeti = alisFiyati * m.miktar;
+            
+            toplamMaliyet += malzemeMaliyeti; // Toplama ekle
+            
+            icerikHtml += `<li>${stokAdi}: <strong>${m.miktar} ${birim}</strong> <span style="color:#8e44ad; font-size:11px;">(${app.helpers.formatCurrency(malzemeMaliyeti)})</span></li>`;
         });
         icerikHtml += '</ul>';
 
@@ -4730,6 +4874,9 @@ renderer.receteListesi = function() {
                 <h3 style="color:#2c3e50; margin:0;">${recete.ad}</h3>
                 <small style="color:#7f8c8d;">1 Adet Üretim İçin Gerekli:</small>
                 ${icerikHtml}
+                <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; font-weight: bold; color: #e67e22;">
+                    Reçete Maliyeti: ${app.helpers.formatCurrency(toplamMaliyet)}
+                </div>
             </div>
         `;
     });
@@ -4822,20 +4969,53 @@ renderer.uretimUrunListesiniDoldur = function() {
 };
 
 // 3. Ürün Seçilince Çalışan Fonksiyon
+
+// 3. Ürün Seçilince Çalışan Fonksiyon
 actions.uretimUrunSecildi = function() {
     const select = document.getElementById('uretim-urun-secimi');
     const input = document.getElementById('uretim-aciklama');
+    const maliyetInput = document.getElementById('uretim-birim-maliyet');
+    const fiyatInput = document.getElementById('uretim-birim-fiyat');
     
     if (select.value === 'manuel') {
         input.style.display = 'block';
         input.value = '';
         input.focus();
+        if(maliyetInput) maliyetInput.value = '';
+        if(fiyatInput && app.currentUser && app.currentUser.role === 'stok_personeli') fiyatInput.value = '';
     } else {
         input.style.display = 'none';
         input.value = select.value;
+        
+        // Reçete Maliyetini (Fiyatını) Hesapla
+        const recete = app.data.receteler.find(r => r.ad === select.value);
+        if (recete) {
+            let toplamMaliyet = 0;
+            recete.malzemeler.forEach(m => {
+                const stokKart = app.data.stoklar.find(s => s.id == m.stokId);
+                if (stokKart) {
+                    const alisFiyati = parseFloat(stokKart.alisFiyati) || 0;
+                    toplamMaliyet += alisFiyati * m.miktar;
+                }
+            });
+            
+            // Birim Maliyeti otomatik doldur
+            if(maliyetInput) maliyetInput.value = toplamMaliyet.toFixed(2);
+            
+            // Stok Personelinin fiyatları gizli olduğu için onlarda da otomatik olarak "Satış Fiyatı" kısmına yansıtıyoruz (0 TL gözükmesin diye)
+            if(fiyatInput && (fiyatInput.value === '' || (app.currentUser && app.currentUser.role === 'stok_personeli'))) {
+                fiyatInput.value = toplamMaliyet.toFixed(2);
+            }
+            
+            // Eğer miktar daha önceden yazılmışsa, genel toplam kutusunu da anında güncelle
+            if (typeof actions.updateUretimToplam === 'function') {
+                actions.updateUretimToplam();
+            }
+        }
     }
 };
 
+// 4. Listeye Ekleme (Hata Korumalı)
 // 4. Listeye Ekleme (Hata Korumalı)
 actions.addUretimToList = function(e) { 
     if(e && e.preventDefault) e.preventDefault(); 
@@ -4844,28 +5024,35 @@ actions.addUretimToList = function(e) {
     let urunAdi = document.getElementById('uretim-aciklama').value.trim();
     if (!urunAdi) { alert("Lütfen listeden bir ürün seçin."); return; }
 
+    const isStokPersoneli = app.currentUser && app.currentUser.role === 'stok_personeli';
+    let fiyat = parseFloat(form.querySelector('#uretim-birim-fiyat').value);
+    
+    // Stok personeli için finansal alanlar gizlidir, bu yüzden hata vermemesi için fiyatı 0 varsayıyoruz
+    if (isStokPersoneli && isNaN(fiyat)) {
+        fiyat = 0;
+    }
+
     const uretim = { 
         fabrikaId: parseInt(form.querySelector('#uretim-fabrika').value), 
         tarih: form.querySelector('#uretim-tarih').value, 
         aciklama: urunAdi, 
         adet: parseInt(form.querySelector('#uretim-adet').value), 
-        birimFiyat: parseFloat(form.querySelector('#uretim-birim-fiyat').value),
+        birimFiyat: fiyat,
         birimMaliyet: parseFloat(form.querySelector('#uretim-birim-maliyet').value) || 0,
         kdvOrani: parseFloat(form.querySelector('#uretim-kdv-orani').value) || 0
     }; 
 
-    if (!uretim.fabrikaId || !uretim.tarih || !uretim.adet || isNaN(uretim.birimFiyat)) { 
+    // Stok personeli değilse fiyat kontrolü yap, stok personeliyse sadece fabrika, tarih ve adeti kontrol et
+    if (!uretim.fabrikaId || !uretim.tarih || isNaN(uretim.adet) || uretim.adet <= 0 || (!isStokPersoneli && (isNaN(uretim.birimFiyat) || uretim.birimFiyat <= 0))) { 
         alert('Lütfen zorunlu alanları doldurun.'); return; 
     } 
 
     // LİSTE KONTROLÜ (ÇİFT EKLEMEYİ ENGELLER)
-    // Eğer kullanıcı yanlışlıkla çift tıkladıysa aynı milisaniyede eklemeyi önle
     const sonEklenen = app.temp.uretimListesi[app.temp.uretimListesi.length - 1];
     if (sonEklenen && sonEklenen.aciklama === uretim.aciklama && sonEklenen.adet === uretim.adet && sonEklenen.tarih === uretim.tarih) {
-         // Son 1 saniye içinde eklendiyse durdur
          if(Date.now() - (sonEklenen._ts || 0) < 1000) return;
     }
-    uretim._ts = Date.now(); // Zaman damgası ekle
+    uretim._ts = Date.now(); 
 
     app.temp.uretimListesi.push(uretim); 
     renderer.uretimEkleListesi(); 
@@ -4876,9 +5063,9 @@ actions.addUretimToList = function(e) {
     form.querySelector('#uretim-adet').value = ''; 
     form.querySelector('#uretim-birim-fiyat').value = ''; 
     form.querySelector('#uretim-birim-maliyet').value = ''; 
+    form.querySelector('#uretim-kdv-orani').value = ''; 
     form.querySelector('#uretim-toplam-tutar').value = ''; 
 };
-
 // 5. Stok Düşüm Motoru (Tek Seferlik Garanti)
 
 // --- GÜNCELLENMİŞ STOK DÜŞÜM MOTORU (HAMMADDE LOTLARINI DA GÜNCELLER) ---
