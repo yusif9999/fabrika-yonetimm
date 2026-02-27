@@ -101,7 +101,7 @@
         #kayit-listesi-genel-toplam { font-size: 18px; font-weight: 700; text-align: right; margin-top: 20px; color: var(--dark-color); }
         #modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s; }
         #modal-container.show { display: flex; }
-        .modal-content { background-color: var(--surface-color); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 90%; max-width: 500px; animation: slideIn 0.4s ease-out; }
+        .modal-content { background-color: var(--surface-color); padding: 30px; border-radius: var(--border-radius); box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 90%; max-width: 500px; animation: slideIn 0.4s ease-out; max-height: 90vh; overflow-y: auto; }
         .modal-content.modal-lg { max-width: 800px; }
         @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -3426,7 +3426,102 @@ saveUretimListesi: () => {
         renderer.updateAll();
     }
 },
-        deleteProduction: (uretimId) => { uretimId = parseInt(uretimId); const uretim = app.data.uretimler.find(u => u.id === uretimId); if (!uretim) return; const fabrikaAdi = app.data.fabrikalar.find(f => f.id === uretim.fabrikaId)?.ad || 'Bilinmeyen Fabrika'; const onay = confirm(`Aşağıdaki üretim kaydını kalıcı olarak silmek istediğinizden emin misiniz?\n\nFabrika: ${fabrikaAdi}\nTarih: ${uretim.tarih}\nAçıklama: ${uretim.aciklama}\nTutar: ${app.helpers.formatCurrency(uretim.adet * uretim.birimFiyat)}`); if (onay) { app.data.uretimler = app.data.uretimler.filter(u => u.id !== uretimId); dataManager.save(); renderer.updateAll(); alert('Üretim kaydı silindi.'); } },
+        deleteProduction: (uretimId) => { 
+    uretimId = parseInt(uretimId); 
+    const uretim = app.data.uretimler.find(u => u.id === uretimId); 
+    if (!uretim) return; 
+    
+    const fabrikaAdi = app.data.fabrikalar.find(f => f.id === uretim.fabrikaId)?.ad || 'Bilinmeyen Fabrika'; 
+    const onay = confirm(`Aşağıdaki üretim kaydını kalıcı olarak silmek istediğinizden emin misiniz?\n\nFabrika: ${fabrikaAdi}\nTarih: ${uretim.tarih}\nAçıklama: ${uretim.aciklama}\nTutar: ${app.helpers.formatCurrency(uretim.adet * uretim.birimFiyat)}\n\n(Bu işlem, üretimde kullanılan hammaddeleri stoklara geri iade edecektir.)`); 
+    
+    if (onay) { 
+        // 1. Kullanılan Hammaddeleri Reçeteden Bulup İade Et
+        if (app.data.receteler) {
+            const recete = app.data.receteler.find(r => r.ad.trim().toLowerCase() === uretim.aciklama.trim().toLowerCase());
+            if (recete) {
+                recete.malzemeler.forEach(malzeme => {
+                    const stokKart = app.data.stoklar.find(s => s.id === malzeme.stokId);
+                    if (stokKart) {
+                        const iadeMiktar = uretim.adet * malzeme.miktar;
+                        
+                        // Ana Depoya Geri Ekle
+                        if (!stokKart.depolar) stokKart.depolar = { "Ana Depo": parseFloat(stokKart.miktar) || 0 };
+                        if (stokKart.depolar["Ana Depo"] === undefined) stokKart.depolar["Ana Depo"] = 0;
+                        
+                        stokKart.depolar["Ana Depo"] += iadeMiktar;
+                        stokKart.miktar = Object.values(stokKart.depolar).reduce((a, b) => a + b, 0);
+
+                        // Lot İadesi (Varsa en son lotu bul ve ona ekle)
+                        let hedefLotNo = '';
+                        if (app.data.lotlar) {
+                            let lotlar = app.data.lotlar.filter(l => l.urunAdi.trim().toLowerCase() === stokKart.ad.trim().toLowerCase());
+                            if (lotlar.length > 0) {
+                                // En yeni lotu bulmak için tarihe göre azalan sırala
+                                lotlar.sort((a, b) => (new Date(b.uretimTarihi) < new Date(a.uretimTarihi) ? 1 : -1));
+                                lotlar[0].miktar += iadeMiktar;
+                                hedefLotNo = lotlar[0].lotNo;
+                            } else {
+                                // Lot kalmadıysa iade lotu aç
+                                hedefLotNo = `İADE-${new Date().toISOString().slice(0,10).replace(/-/g,'')}`;
+                                app.data.lotlar.push({
+                                    id: Date.now() + Math.random(),
+                                    lotNo: hedefLotNo,
+                                    urunAdi: stokKart.ad,
+                                    miktar: iadeMiktar,
+                                    uretimTarihi: new Date().toISOString(),
+                                    sonKullanmaTarihi: "",
+                                    durum: 'Aktif',
+                                    notlar: `Üretim İptali İadesi`
+                                });
+                            }
+                        }
+
+                        // Stok Hareketlerine (Geçmişe) Ekle
+                        if (!app.data.stokHareketleri) app.data.stokHareketleri = [];
+                        app.data.stokHareketleri.push({
+                            id: Date.now() + Math.random(),
+                            stokId: stokKart.id,
+                            urunAdi: stokKart.ad,
+                            birim: stokKart.birim,
+                            tip: 'giris', // İade bir giriştir
+                            altTip: 'Uretim Iptali',
+                            depo: 'Ana Depo',
+                            miktar: iadeMiktar,
+                            kalanStok: stokKart.miktar,
+                            tarih: new Date().toISOString(),
+                            aciklama: `[İPTAL İADESİ] ${uretim.adet} ad. ${uretim.aciklama} üretimi silindi.`,
+                            lotNo: hedefLotNo,
+                            uretimTarihi: new Date().toISOString()
+                        });
+                    }
+                });
+            }
+        }
+
+        // 2. Üretilen Ürünün Oluşturulan Lot Kartını Sil
+        if (uretim.lotNo && app.data.lotlar) {
+            app.data.lotlar = app.data.lotlar.filter(l => l.lotNo !== uretim.lotNo);
+        }
+
+        // 3. Üretime Ait Gider (Maliyet) Kayıtlarını Temizle
+        if (app.data.giderler) {
+            // Açıklamasında ilgili üretim kaydının olduğu gideri bulup çıkartırız
+            app.data.giderler = app.data.giderler.filter(g => {
+                // Eğer gider kaydı bu üretimin maliyetiyse listeden çıkartır
+                const isUretimMaliyeti = g.aciklama.includes('[MALİYET]') && g.aciklama.includes(uretim.aciklama) && (g.detay.includes(`Üretim: ${uretim.adet}`) || g.detay.includes(`Lot: ${uretim.lotNo}`));
+                return !isUretimMaliyeti; 
+            });
+        }
+
+        // 4. Üretim Kaydını Sil
+        app.data.uretimler = app.data.uretimler.filter(u => u.id !== uretimId);
+        
+        // 5. Kaydet ve Sayfayı Yenile
+        dataManager.save();
+        renderer.updateAll();
+        alert('Üretim kaydı başarıyla silindi, hammadde stokları iade edildi ve ilgili maliyet giderleri temizlendi.');
+    } 
+},
         addExpense: (e) => { e.preventDefault(); const form = app.dom.giderForm; const gider = { id: Date.now(), tip: form.querySelector('#gider-tip').value, aciklama: form.querySelector('#gider-aciklama').value.trim(), detay: form.querySelector('#gider-detay').value.trim(), tutar: parseFloat(form.querySelector('#gider-tutar').value), tarih: form.querySelector('#gider-tarih').value }; if (!gider.tip || !gider.aciklama || isNaN(gider.tutar) || !gider.tarih) { alert('Lütfen Tip, Başlık, Tutar ve Tarih alanlarını doğru doldurun.'); return; } app.data.giderler.push(gider); dataManager.save(); form.reset(); form.querySelector('#gider-tarih').value = app.helpers.getTodayISO(); alert('Gider kaydedildi!'); renderer.updateAll(); },
         addPayment: (e) => { e.preventDefault(); const form = e.target; const odeme = { id: Date.now(), fabrikaId: parseInt(form.querySelector('#odeme-fabrika-id').value), tutar: parseFloat(form.querySelector('#odeme-tutari').value), tarih: form.querySelector('#odeme-tarihi').value }; if (isNaN(odeme.tutar) || !odeme.tarih) { alert('Lütfen tüm alanları doğru doldurun.'); return; } app.data.odemeler.push(odeme); dataManager.save(); actions.closeModal(); alert('Ödeme kaydedildi!'); renderer.updateAll(); },
         handleFabrikaSilSubmit: (e) => { e.preventDefault(); const fabrikaId = parseInt(app.dom.fabrikaSilSelect.value); if (isNaN(fabrikaId)) { alert('Lütfen silmek için bir fabrika seçin.'); return; } const fabrika = app.data.fabrikalar.find(f => f.id === fabrikaId); if (!fabrika) return; const onayMetni = prompt(`'${fabrika.ad}' fabrikasını kalıcı olarak silmek üzeresiniz. Bu işlem geri alınamaz ve tüm kayıtları yok edecektir.\n\nOnaylamak için fabrikanın adını ('${fabrika.ad}') aşağıdaki kutuya tam olarak yazın.`); if (onayMetni === fabrika.ad) { actions.deleteFactory(fabrikaId, fabrika.ad); } else if (onayMetni !== null) { alert('Onay metni eşleşmedi. Silme işlemi iptal edildi.'); } else { alert('Silme işlemi iptal edildi.'); } },
@@ -4462,20 +4557,7 @@ actions.stokIslemModalAc = function(id, tip) {
                     <input type="text" id="mk-fatura" placeholder="Belge No" required>
                 </div>
             </div>
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                <div class="input-group">
-                    <label>Miktar (${stok.birim})</label>
-                    <input type="number" id="mk-miktar" step="0.01" placeholder="0" required oninput="actions.malKabulHesapla()">
-                </div>
-                <div class="input-group">
-                    <label>Birim Fiyat (₺)</label>
-                    <input type="number" id="mk-fiyat" step="0.01" value="${stok.alisFiyati || 0}" required oninput="actions.malKabulHesapla()">
-                </div>
-                <div class="input-group">
-                    <label>Toplam</label>
-                    <input type="text" id="mk-toplam" disabled style="background:#eee; font-weight:bold;" value="0.00 ₺">
-                </div>
-            </div>
+            
             <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
                 <div class="input-group">
                     <label>Tarih & Saat</label>
@@ -4484,6 +4566,21 @@ actions.stokIslemModalAc = function(id, tip) {
                 <div class="input-group">
                     <label>Kabul Eden</label>
                     <input type="text" id="mk-kabul-eden" value="${aktifKullanici}" required>
+                </div>
+            </div>
+            
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:10px; background:#fff1f0; padding:10px; border:1px solid #ffa39e; border-radius:5px; margin-top:10px;">
+                <div class="input-group" style="margin-bottom:0;">
+                    <label style="color:#cf1322; font-weight:bold;">Lot No</label>
+                    <input type="text" id="mk-lot" placeholder="Varsa Lot No" style="border:1px solid #ffa39e; font-weight:bold;">
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>Üretim Tarihi</label>
+                    <input type="date" id="mk-uretim-tarihi" style="border:1px solid #ddd;">
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                    <label style="color:#d35400; font-weight:bold;">SKT</label>
+                    <input type="date" id="mk-skt" style="border:1px solid #d35400;">
                 </div>
             </div>`;
     } else {
@@ -4724,6 +4821,17 @@ actions.stokHareketKaydet = function() {
         if (isNaN(miktar) || miktar <= 0) { alert("Geçerli bir miktar girin."); return; }
         if (!tedarikci || !fatura) { alert("Tedarikçi ve Fatura zorunludur."); return; }
 
+        // --- YENİ EKLENEN KISIM: LOT ÇAKIŞMA KONTROLÜ ---
+        // Eğer girilen Lot numarası başka bir üründe kullanılmışsa işlemi durdur
+        if (lotNo && app.data.lotlar) {
+            let cakisanLot = app.data.lotlar.find(l => l.lotNo.toLowerCase() === lotNo.toLowerCase() && l.urunAdi !== stok.ad);
+            if (cakisanLot) {
+                alert(`HATA: '${lotNo}' numaralı lot zaten '${cakisanLot.urunAdi}' ürünü için kullanılmış! Her farklı ürün için benzersiz bir Lot numarası girmelisiniz.`);
+                return; // Kaydetmeyi iptal et ve ekranda kal
+            }
+        }
+        // ------------------------------------------------
+
         stok.depolar[secilenDepo] += miktar;
         stok.miktar = Object.values(stok.depolar).reduce((a, b) => a + b, 0);
         if (!isNaN(yeniFiyat) && yeniFiyat > 0) stok.alisFiyati = yeniFiyat;
@@ -4731,16 +4839,14 @@ actions.stokHareketKaydet = function() {
         aciklama = `[MAL KABUL -> ${secilenDepo}] ${tedarikci} | Belge: ${fatura}`;
         if(lotNo) aciklama += ` | Lot: ${lotNo}`;
 
-        // --- YENİ: GİRİŞ YAPILINCA LOT KARTI OLUŞTUR (VEYA GÜNCELLE) ---
+        // --- GİRİŞ YAPILINCA LOT KARTI OLUŞTUR (VEYA GÜNCELLE) ---
         if (lotNo) {
             if (!app.data.lotlar) app.data.lotlar = [];
-            // Bu isimde ve Lot No'da kayıt var mı?
-            let mevcutLot = app.data.lotlar.find(l => l.lotNo === lotNo && l.urunAdi === stok.ad);
+            let mevcutLot = app.data.lotlar.find(l => l.lotNo.toLowerCase() === lotNo.toLowerCase() && l.urunAdi === stok.ad);
             
             if (mevcutLot) {
-                mevcutLot.miktar += miktar; // Varsa üzerine ekle
+                mevcutLot.miktar += miktar; 
             } else {
-                // Yoksa yeni oluştur
                 app.data.lotlar.push({
                     id: Date.now(),
                     lotNo: lotNo,
@@ -4751,6 +4857,24 @@ actions.stokHareketKaydet = function() {
                     durum: 'Aktif'
                 });
             }
+        }
+
+        // --- GİDERLERE OTOMATİK EKLEME KISMI ---
+        if (!isNaN(yeniFiyat) && miktar > 0) {
+            const toplamMaliyet = miktar * yeniFiyat;
+            const islemTarihiInput = document.getElementById('mk-tarih');
+            const islemTarihi = islemTarihiInput && islemTarihiInput.value ? islemTarihiInput.value.split('T')[0] : new Date().toISOString().split('T')[0];
+            
+            if (!app.data.giderler) app.data.giderler = [];
+            
+            app.data.giderler.push({
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                tip: 'fabrika',
+                aciklama: `📦 Mal Kabul: ${stok.ad}`,
+                detay: `Depo: ${secilenDepo} | Tedarikçi: ${tedarikci} | Fatura: ${fatura} | Miktar: ${miktar} ${stok.birim} | B. Fiyat: ${app.helpers.formatCurrency(yeniFiyat)}${lotNo ? ' | Lot: ' + lotNo : ''}`,
+                tutar: toplamMaliyet,
+                tarih: islemTarihi
+            });
         }
 
     } else {
@@ -4787,8 +4911,15 @@ actions.stokHareketKaydet = function() {
 
     dataManager.save();
     actions.closeModal();
-    renderer.stokListesi();
-    if (typeof renderer.stokGecmisiListesi === 'function') renderer.stokGecmisiListesi();
+    
+    // Tüm ekranları anında güncelle
+    if (typeof renderer.updateAll === 'function') {
+        renderer.updateAll();
+    } else {
+        renderer.stokListesi();
+        if (typeof renderer.stokGecmisiListesi === 'function') renderer.stokGecmisiListesi();
+    }
+    
     alert("İşlem başarıyla kaydedildi.");
 };
 
