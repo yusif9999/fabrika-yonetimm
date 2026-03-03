@@ -357,6 +357,19 @@
         </form>
     </div>
 
+    <div id="saas-admin-verify-2fa" class="auth-container" style="display:none;">
+        <h1>Güvenlik Doğrulaması</h1>
+        <p>Yönetici e-postanıza gönderilen 6 haneli giriş kodunu giriniz.</p>
+        <form onsubmit="saas.verifyAdminLogin(event)">
+            <div class="input-group">
+                <label>6 Haneli Doğrulama Kodu</label>
+                <input type="text" id="admin-2fa-code" required maxlength="6" style="text-align:center; letter-spacing: 5px; font-size:24px;">
+            </div>
+            <button type="submit" class="btn btn-success btn-full">Kodu Doğrula ve Panele Gir</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showAdminLogin()">İptal ve Geri Dön</button>
+        </form>
+    </div>
+
     <div id="saas-forgot-pw" class="auth-container">
         <h1>Şifre Kurtarma</h1>
         <p>Yönetici kullanıcı adınızı girin. Kayıtlı e-posta adresinize bir kod göndereceğiz.</p>
@@ -1179,12 +1192,13 @@ const main = {};
         currentCompanyId: null,
         
         hideAll: () => {
-    ['saas-landing', 'saas-register', 'saas-login', 'saas-admin-login', 'saas-admin-panel', 'saas-forgot-pw', 'saas-reset-pw'].forEach(id => {
+    ['saas-landing', 'saas-register', 'saas-login', 'saas-admin-login', 'saas-admin-panel', 'saas-forgot-pw', 'saas-reset-pw','saas-admin-verify-2fa'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
     if (typeof main !== 'undefined' && main.hideAllAuth) main.hideAllAuth(); 
 },
+        showAdminVerify: () => { saas.hideAll(); document.getElementById('saas-admin-verify-2fa').style.display = 'block'; },
         showLanding: () => { saas.hideAll(); document.getElementById('saas-landing').style.display = 'block'; },
         showRegister: () => { saas.hideAll(); document.getElementById('saas-register').style.display = 'block'; },
         showLogin: () => { saas.hideAll(); document.getElementById('saas-login').style.display = 'block'; },
@@ -1414,54 +1428,24 @@ showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-p
         // Yardımcılar
         
         // GÜNCELLENMİŞ: Sil butonuna basıldığında kodu ister
-        deleteCompany: async (id) => {
-            if(!confirm('DİKKAT! Bu şirketi silmek istediğinize emin misiniz? Güvenlik amacıyla e-posta adresinize bir onay kodu gönderilecektir.')) return;
-            
-            try {
-                // Backend'den kod göndermesini talep et
-                const res = await fetch('/api/saas/admin/request-delete-company', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ companyId: id })
-                });
-                
-                const result = await res.json();
-                if(result.success) {
-                    // Modal'ı aç ve ID'yi sakla
-                    document.getElementById('delete-company-id').value = id;
-                    document.getElementById('delete-company-code').value = ''; // Kutuyu temizle
-                    document.getElementById('delete-company-modal').style.display = 'flex';
-                } else {
-                    alert('Hata: ' + result.error);
-                }
-            } catch (err) {
-                alert('Sunucu hatası: E-posta gönderilemedi.');
-            }
-        },
-
+        
         // YENİ: Kodu backend'e gönderip asıl silme işlemini yapar
         // GÜNCELLENMİŞ: Kodu backend'e gönderip asıl silme işlemini yapar
-        confirmDeleteCompany: async () => {
-            const id = document.getElementById('delete-company-id').value;
-            const code = document.getElementById('delete-company-code').value;
-
-            if(!code || code.length !== 6) {
-                alert("Lütfen e-postanıza gelen 6 haneli onay kodunu eksiksiz girin.");
-                return;
-            }
-
+        // Şirket Silme (Kodu devreden çıkardık, direkt uyarı ve silme)
+        deleteCompany: async (id) => {
+            if(!confirm('DİKKAT! Bu şirketi kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve tüm verileri silinir.')) return;
+            
             try {
-                // Silme isteğini kod ile beraber POST olarak gönderiyoruz
+                // Kodu beklemeden direkt silme endpointine ID gönderiyoruz
                 const res = await fetch('/api/saas/admin/delete', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: id, code: code }) 
+                    body: JSON.stringify({ id: id }) 
                 });
                 
                 const result = await res.json();
                 if(result.success) {
-                    alert("Şirket güvenli bir şekilde başarıyla silindi.");
-                    document.getElementById('delete-company-modal').style.display = 'none';
+                    alert("Şirket başarıyla silindi.");
                     saas.loadAdminPanel(); // Listeyi yenile
                 } else {
                     alert('Hata: ' + result.error);
@@ -2645,41 +2629,73 @@ stokOzet: () => {
             app.dom.appContainer.style.display = 'flex';
             main.runAfterLogin();
         },
-        adminLogin: async (e) => { 
+        
+        // Yönetici Giriş İsteği
+        adminLogin: async (e) => {
             e.preventDefault();
-            const username = app.dom.adminUsernameInput ? app.dom.adminUsernameInput.value.trim() : '';
-            const password = app.dom.adminPasswordInput ? app.dom.adminPasswordInput.value : '';
-            const loginError = app.dom.adminLoginError;
-            loginError.textContent = '';
-            // Kullanıcı adı ve şifre zorunlu
-            if (!username || !password) {
-                loginError.textContent = 'Lütfen kullanıcı adı ve şifrenizi girin.';
-                return;
-            }
-            const inputHash = await app.helpers.hash(password);
-            const personel = app.data.personel.find(p => p.kullaniciAdi && p.kullaniciAdi.toLowerCase() === username.toLowerCase());
-            if (personel && personel.sifre === inputHash) {
-                // Kullanıcının yönetici pozisyonunda olup olmadığını kontrol et
-                const pos = app.data.pozisyonlar.find(pos => pos.id === personel.pozisyonId);
-                const isAdminPos = pos && pos.ad && pos.ad.toLowerCase() === 'yönetici';
-                if (!isAdminPos) {
-                    loginError.textContent = 'Bu kullanıcı yönetici değildir.';
-                    return;
+            const data = { 
+                username: document.getElementById('admin-login-user').value, 
+                password: document.getElementById('admin-login-pass').value 
+            };
+            
+            try {
+                const res = await fetch('/api/saas/admin/login', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(data) 
+                });
+                const result = await res.json();
+                
+                if (!res.ok) { alert(result.error || "Hatalı yönetici bilgisi."); return; }
+                
+                // Eğer e-posta kayıtlıysa kod girme ekranını aç
+                if (result.requires2FA) {
+                    saas.hideAll(); 
+                    document.getElementById('saas-admin-verify-2fa').style.display = 'block';
+                } 
+                // E-posta henüz ayarlardan kaydedilmemişse uyarı ile direkt panele al
+                else if (result.success) {
+                    if(result.warning === 'no_email') {
+                        alert("DİKKAT: Sisteme bir e-posta kaydetmemişsiniz. Lütfen ayarlardan e-posta ekleyin ki sistem yöneticisi girişlerinde kod gönderebilelim.");
+                    }
+                    document.getElementById('admin-new-username').value = result.username;
+                    const emailInput = document.getElementById('admin-new-email');
+                    if (emailInput) { emailInput.value = result.email || ''; }
+                    saas.loadAdminPanel();
                 }
-                if (personel.durum !== 'Aktif') {
-                    loginError.textContent = 'Hesabınız aktif değil. Yönetici ile görüşün.';
-                    return;
-                }
-                // Başarılı yönetici girişi
-                app.currentUser = { id: personel.id, ad: personel.ad, role: 'admin' };
-                app.dom.adminLoginContainer.style.display = 'none';
-                app.dom.appContainer.style.display = 'flex';
-                main.runAfterLogin();
-                return;
-            }
-            loginError.textContent = 'Kullanıcı adı veya şifre hatalı!';
+            } catch (err) { alert('Bağlantı sorunu yaşandı.'); }
         },
 
+        // Yönetici Kodu Doğrulama ve Panele Girme
+        verifyAdminLogin: async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('admin-login-user').value;
+            const password = document.getElementById('admin-login-pass').value;
+            const code = document.getElementById('admin-2fa-code').value;
+
+            try {
+                const res = await fetch('/api/saas/admin/verify-login', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ username, password, code }) 
+                });
+                const result = await res.json();
+                
+                if (!res.ok) { alert(result.error || "Hatalı veya süresi dolmuş kod."); return; }
+                
+                if (result.success) {
+                    document.getElementById('admin-new-username').value = result.username;
+                    const emailInput = document.getElementById('admin-new-email');
+                    if (emailInput) { emailInput.value = result.email || ''; }
+                    
+                    document.getElementById('admin-2fa-code').value = ''; 
+                    saas.loadAdminPanel(); // İçeri al
+                }
+            } catch (err) { alert('Sunucu hatası.'); }
+        },
+        
+        // YENİ: Kod girildikten sonra tetiklenen fonksiyon
+       
         personelLogin: async (e) => {
             e.preventDefault(); 
             const username = app.dom.personelLoginForm.querySelector('#personel-username').value.trim();
