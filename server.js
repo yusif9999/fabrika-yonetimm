@@ -7,6 +7,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,8 +30,28 @@ app.use(express.static('public'));
 // --- MODELLER ---
 
 // 1. Sistem Yöneticisi (Super Admin)
-const AdminSchema = new mongoose.Schema({ username: String, password: String });
+const AdminSchema = new mongoose.Schema({ 
+    username: String, 
+    password: String,
+    email: { type: String, default: '' }, // Şifre sıfırlama için e-posta
+    resetCode: String,                    // Gönderilen 6 haneli kod
+    resetCodeExpire: Date                 // Kodun son kullanma tarihi
+});
 const AdminModel = mongoose.model('SystemAdmin', AdminSchema);
+
+// E-POSTA GÖNDERİCİ AYARLARI (Nodemailer)
+// Kendi Gmail adresinizi ve "Uygulama Şifrenizi" buraya girin.
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'fabrikayonetimpaneli@gmail.com', // Kendi e-postanız (veya process.env.EMAIL_USER)
+        pass: 'uunditkfkysnvske' // 16 haneli şifreniz (veya process.env.EMAIL_PASS)
+    },
+    // EKLENEN KISIM BURASI: Antivirüs/Ağ engellerini aşmak için
+    tls: {
+        rejectUnauthorized: false
+    }
+});
 
 // 2. Şirket Modeli
 const CompanySchema = new mongoose.Schema({
@@ -114,7 +135,9 @@ app.post('/api/saas/login', async (req, res) => {
 app.post('/api/saas/admin/login', async (req, res) => {
     const { username, password } = req.body;
     const admin = await AdminModel.findOne({ username, password: hashPassword(password) });
-    if (admin) res.json({ success: true, username: admin.username });
+    
+    // admin.email bilgisini de frontend'e gönderiyoruz
+    if (admin) res.json({ success: true, username: admin.username, email: admin.email || '' });
     else res.status(401).json({ error: "Hatalı yönetici bilgisi." });
 });
 
@@ -179,12 +202,14 @@ app.post('/api/saas/admin/update', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Hata" }); }
 });
 
+// Admin: Bilgileri Güncelleme (GÜNCELLENDİ: Daha güvenli e-posta kaydı)
 app.post('/api/saas/admin/update-credentials', async (req, res) => {
     try {
-        const { newUsername, newPassword } = req.body;
+        const { newUsername, newPassword, newEmail } = req.body;
         const admin = await AdminModel.findOne();
         if (newUsername) admin.username = newUsername;
         if (newPassword) admin.password = hashPassword(newPassword);
+        if (newEmail !== undefined) admin.email = newEmail; // E-posta veritabanına işleniyor
         await admin.save();
         res.json({ success: true });
     } catch (error) { res.status(500).json({ error: "Hata" }); }
@@ -204,6 +229,84 @@ app.post('/api/data', async (req, res) => {
     await CompanyModel.findByIdAndUpdate(companyId, { appData: req.body });
     res.json({ success: true });
 });
+
+// Admin: Şifremi Unuttum - Kod Gönder
+app.post('/api/saas/admin/forgot-password', async (req, res) => {
+    try {
+        const { username } = req.body;
+        const admin = await AdminModel.findOne({ username });
+        
+        if (!admin) return res.status(404).json({ error: "Bu kullanıcı adında bir yönetici bulunamadı." });
+        if (!admin.email) return res.status(400).json({ error: "Bu yönetici hesabına tanımlı bir kurtarma e-postası yok. Lütfen veritabanı yöneticinizle görüşün." });
+
+        // 6 haneli rastgele kod oluştur
+        const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Kodu ve 15 dakikalık geçerlilik süresini kaydet
+        admin.resetCode = resetCode;
+        admin.resetCodeExpire = Date.now() + 15 * 60 * 1000; 
+        await admin.save();
+
+        // E-postayı gönder
+        const mailOptions = {
+            from: 'sizin_eposta_adresiniz@gmail.com',
+            to: admin.email,
+            subject: 'Sistem Yöneticisi - Şifre Sıfırlama Kodu',
+            text: `Yönetici paneliniz için şifre sıfırlama kodu talep ettiniz.\n\nSıfırlama Kodunuz: ${resetCode}\n\nBu kod 15 dakika boyunca geçerlidir.`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                // --- HATAYI TERMİNALE YAZDIRMA KODU EKLENDİ ---
+                console.log("\n❌ MAİL GÖNDERME HATASI DETAYI ❌");
+                console.log(error);
+                console.log("====================================\n");
+                // ----------------------------------------------
+                return res.status(500).json({ error: "E-posta gönderilmedi. Sunucu ayarlarını kontrol edin." });
+            }
+            res.json({ success: true, message: "Sıfırlama kodu e-posta adresinize başarıyla gönderildi." });
+        });
+    } catch (error) { res.status(500).json({ error: "Bir hata oluştu." }); }
+});
+
+// Admin: Şifre Sıfırlama Kodu Doğrulama ve Şifre Değiştirme
+app.post('/api/saas/admin/reset-password', async (req, res) => {
+    try {
+        const { username, code, newPassword } = req.body;
+        
+        // Kullanıcıyı, doğru kodu ve süresi dolmamış kodu kontrol et
+        const admin = await AdminModel.findOne({ 
+            username, 
+            resetCode: code, 
+            resetCodeExpire: { $gt: Date.now() } // Şu anki zamandan büyük mü?
+        });
+
+        if (!admin) return res.status(400).json({ error: "Geçersiz veya süresi dolmuş kod girdiniz." });
+
+        // Şifreyi güncelle ve kodları temizle
+        admin.password = hashPassword(newPassword);
+        admin.resetCode = undefined;
+        admin.resetCodeExpire = undefined;
+        await admin.save();
+
+        res.json({ success: true, message: "Şifreniz başarıyla değiştirildi. Şimdi giriş yapabilirsiniz." });
+    } catch (error) { res.status(500).json({ error: "Bir hata oluştu." }); }
+});
+
+// Admin: Bilgileri Güncelleme (GÜNCELLENDİ: Artık Email'i de kaydediyor)
+app.post('/api/saas/admin/update-credentials', async (req, res) => {
+    try {
+        const { newUsername, newPassword, newEmail } = req.body;
+        const admin = await AdminModel.findOne();
+        if (newUsername) admin.username = newUsername;
+        if (newPassword) admin.password = hashPassword(newPassword);
+        if (newEmail) admin.email = newEmail; // E-posta kaydetme özelliği eklendi
+        await admin.save();
+        res.json({ success: true });
+    } catch (error) { res.status(500).json({ error: "Hata" }); }
+});
+
+// --- GEÇİCİ ŞİFRE SIFIRLAMA KODU (İşlem bitince bu kısmı silin) ---
 
 // --- GEÇİCİ ŞİFRE SIFIRLAMA KODU (İşlem bitince bu kısmı silin) ---
 setTimeout(async () => {

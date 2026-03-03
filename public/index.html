@@ -350,7 +350,31 @@
             <div class="input-group"><label>Kullanıcı Adı</label><input type="text" id="admin-login-user" required></div>
             <div class="input-group"><label>Şifre</label><input type="password" id="admin-login-pass" required></div>
             <button type="submit" class="btn btn-danger btn-full">Panele Gir</button>
-            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showLanding()">Geri Dön</button>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="button" class="btn btn-warning" style="flex:1;" onclick="saas.showForgotPassword()">Şifremi Unuttum</button>
+                <button type="button" class="btn btn-secondary" style="flex:1;" onclick="saas.showLanding()">Geri Dön</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="saas-forgot-pw" class="auth-container">
+        <h1>Şifre Kurtarma</h1>
+        <p>Yönetici kullanıcı adınızı girin. Kayıtlı e-posta adresinize bir kod göndereceğiz.</p>
+        <form onsubmit="saas.requestResetCode(event)">
+            <div class="input-group"><label>Yönetici Kullanıcı Adı</label><input type="text" id="forgot-pw-user" required></div>
+            <button type="submit" class="btn btn-info btn-full">Kodu Gönder</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showAdminLogin()">İptal</button>
+        </form>
+    </div>
+
+    <div id="saas-reset-pw" class="auth-container">
+        <h1>Şifreyi Yenile</h1>
+        <p>E-postanıza gelen 6 haneli kodu ve yeni şifrenizi girin.</p>
+        <form onsubmit="saas.resetPassword(event)">
+            <div class="input-group"><label>6 Haneli Kod</label><input type="text" id="reset-pw-code" required maxlength="6"></div>
+            <div class="input-group"><label>Yeni Şifre</label><input type="password" id="reset-pw-new" required minlength="4"></div>
+            <button type="submit" class="btn btn-success btn-full">Şifreyi Değiştir</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showAdminLogin()">İptal</button>
         </form>
     </div>
 
@@ -404,6 +428,7 @@
             <div id="admin-view-settings" style="display: none; max-width: 400px; margin: 0 auto;">
                 <h3>Giriş Bilgilerini Güncelle</h3>
                 <div class="input-group"><label>Yeni Kullanıcı Adı</label><input type="text" id="admin-new-username"></div>
+                <div class="input-group"><label>Kurtarma E-Postası (Şifremi Unuttum İçin)</label><input type="email" id="admin-new-email" placeholder="ornek@mail.com"></div>
                 <div class="input-group"><label>Yeni Şifre</label><input type="password" id="admin-new-password"></div>
                 <button class="btn btn-success btn-full" onclick="saas.saveAdminSettings()">Güncelle</button>
             </div>
@@ -1109,16 +1134,18 @@ const main = {};
         currentCompanyId: null,
         
         hideAll: () => {
-            ['saas-landing', 'saas-register', 'saas-login', 'saas-admin-login', 'saas-admin-panel'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-            if (typeof main !== 'undefined' && main.hideAllAuth) main.hideAllAuth(); 
-        },
+    ['saas-landing', 'saas-register', 'saas-login', 'saas-admin-login', 'saas-admin-panel', 'saas-forgot-pw', 'saas-reset-pw'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    if (typeof main !== 'undefined' && main.hideAllAuth) main.hideAllAuth(); 
+},
         showLanding: () => { saas.hideAll(); document.getElementById('saas-landing').style.display = 'block'; },
         showRegister: () => { saas.hideAll(); document.getElementById('saas-register').style.display = 'block'; },
         showLogin: () => { saas.hideAll(); document.getElementById('saas-login').style.display = 'block'; },
         showAdminLogin: () => { saas.hideAll(); document.getElementById('saas-admin-login').style.display = 'block'; },
+        showForgotPassword: () => { saas.hideAll(); document.getElementById('saas-forgot-pw').style.display = 'block'; },
+showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-pw').style.display = 'block'; },
         
         // --- İŞLEMLER ---
         register: async (e) => {
@@ -1161,11 +1188,20 @@ const main = {};
             try {
                 const res = await fetch('/api/saas/admin/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
                 if (!res.ok) throw new Error();
-                document.getElementById('admin-new-username').value = data.username;
+                
+                const result = await res.json(); // Sunucudan gelen veriyi al
+                
+                document.getElementById('admin-new-username').value = result.username;
+                
+                // YENİ: Eğer veritabanında e-posta varsa, ayarlar kutusuna otomatik yazdır
+                const emailInput = document.getElementById('admin-new-email');
+                if (emailInput) {
+                    emailInput.value = result.email || '';
+                }
+                
                 saas.loadAdminPanel();
             } catch (err) { alert('Hatalı giriş.'); }
         },
-
         // --- YÖNETİCİ PANELİ ÖZELLİKLERİ ---
         switchAdminTab: (tabName) => {
             ['companies', 'payments', 'settings'].forEach(t => {
@@ -1296,7 +1332,62 @@ const main = {};
             const newPassword = document.getElementById('admin-new-password').value;
             await fetch('/api/saas/admin/update-credentials', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ newUsername, newPassword }) });
             alert("Güncellendi.");
+        },
+        requestResetCode: async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('forgot-pw-user').value;
+    try {
+        const res = await fetch('/api/saas/admin/forgot-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username })
+        });
+        const result = await res.json();
+        if(result.success) {
+            alert(result.message);
+            saas.showResetPassword(); // Kod girme ekranına geç
+        } else {
+            alert(result.error);
         }
+    } catch(err) { alert("Sunucu hatası."); }
+},
+
+// 2. Kodu Doğrulayıp Şifreyi Yenileme Fonksiyonu
+resetPassword: async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('forgot-pw-user').value; // İlk ekrandan alınan kullanıcı adı
+    const code = document.getElementById('reset-pw-code').value;
+    const newPassword = document.getElementById('reset-pw-new').value;
+
+    try {
+        const res = await fetch('/api/saas/admin/reset-password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username, code, newPassword })
+        });
+        const result = await res.json();
+        if(result.success) {
+            alert(result.message);
+            saas.showAdminLogin(); // Başarılı olunca giriş ekranına at
+        } else {
+            alert(result.error);
+        }
+    } catch(err) { alert("Sunucu hatası."); }
+},
+
+// Ayarları Kaydetme Fonksiyonunu Güncelleyin (E-postayı da alsın)
+saveAdminSettings: async () => {
+    const newUsername = document.getElementById('admin-new-username').value;
+    const newPassword = document.getElementById('admin-new-password').value;
+    const newEmail = document.getElementById('admin-new-email').value; // Yeni e-posta
+    await fetch('/api/saas/admin/update-credentials', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({ newUsername, newPassword, newEmail }) 
+    });
+    alert("Ayarlar başarıyla güncellendi.");
+}
+
     };
 document.addEventListener('DOMContentLoaded', () => {
 
