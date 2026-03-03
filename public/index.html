@@ -2630,45 +2630,36 @@ stokOzet: () => {
             main.runAfterLogin();
         },
         
-        // Yönetici Giriş İsteği
+
         adminLogin: async (e) => {
             e.preventDefault();
-            const data = { 
-                username: document.getElementById('admin-login-user').value, 
-                password: document.getElementById('admin-login-pass').value 
-            };
-            
+            const data = { username: document.getElementById('admin-login-user').value, password: document.getElementById('admin-login-pass').value };
             try {
-                const res = await fetch('/api/saas/admin/login', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(data) 
-                });
+                const res = await fetch('/api/saas/admin/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
                 const result = await res.json();
                 
                 if (!res.ok) { alert(result.error || "Hatalı yönetici bilgisi."); return; }
                 
-                // Eğer e-posta kayıtlıysa kod girme ekranını aç
                 if (result.requires2FA) {
-                    saas.hideAll(); 
-                    document.getElementById('saas-admin-verify-2fa').style.display = 'block';
-                } 
-                // E-posta henüz ayarlardan kaydedilmemişse uyarı ile direkt panele al
-                else if (result.success) {
+                    // Şifre doğru, E-posta kayıtlı -> 2FA ekranını aç
+                    saas.showAdminVerify();
+                } else if (result.success) {
+                    // E-posta kayıtlı değil (İlk kurulum aşaması) -> Direkt içeri al
                     if(result.warning === 'no_email') {
-                        alert("DİKKAT: Sisteme bir e-posta kaydetmemişsiniz. Lütfen ayarlardan e-posta ekleyin ki sistem yöneticisi girişlerinde kod gönderebilelim.");
+                        alert("DİKKAT: Sisteme bir yönetici e-postası kaydetmemişsiniz. Güvenliğiniz ve 2 Aşamalı Doğrulama için Ayarlar'dan e-posta eklemeniz şiddetle önerilir.");
                     }
                     document.getElementById('admin-new-username').value = result.username;
                     const emailInput = document.getElementById('admin-new-email');
                     if (emailInput) { emailInput.value = result.email || ''; }
                     saas.loadAdminPanel();
                 }
-            } catch (err) { alert('Bağlantı sorunu yaşandı.'); }
+            } catch (err) { alert('Hatalı giriş veya sunucu bağlantı sorunu.'); }
         },
 
-        // Yönetici Kodu Doğrulama ve Panele Girme
+        // YENİ: Kod girildikten sonra tetiklenen fonksiyon
         verifyAdminLogin: async (e) => {
             e.preventDefault();
+            // Önceki formda kalan kullanıcı adı ve şifreyi kod ile beraber gönderiyoruz
             const username = document.getElementById('admin-login-user').value;
             const password = document.getElementById('admin-login-pass').value;
             const code = document.getElementById('admin-2fa-code').value;
@@ -2687,15 +2678,12 @@ stokOzet: () => {
                     document.getElementById('admin-new-username').value = result.username;
                     const emailInput = document.getElementById('admin-new-email');
                     if (emailInput) { emailInput.value = result.email || ''; }
-                    
-                    document.getElementById('admin-2fa-code').value = ''; 
+                    document.getElementById('admin-2fa-code').value = ''; // Giriş başarılı, kod kutusunu temizle
                     saas.loadAdminPanel(); // İçeri al
                 }
             } catch (err) { alert('Sunucu hatası.'); }
         },
-        
-        // YENİ: Kod girildikten sonra tetiklenen fonksiyon
-       
+
         personelLogin: async (e) => {
             e.preventDefault(); 
             const username = app.dom.personelLoginForm.querySelector('#personel-username').value.trim();
