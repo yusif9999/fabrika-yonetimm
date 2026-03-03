@@ -184,16 +184,120 @@ app.get('/api/saas/admin/payments', async (req, res) => {
     res.json(payments);
 });
 
+// YENİ: Admin: Ödemeyi Sil
+app.delete('/api/saas/admin/payments/:id', async (req, res) => {
+    try {
+        await PaymentModel.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Ödeme başarıyla silindi." });
+    } catch (error) { 
+        res.status(500).json({ error: "Ödeme silinirken hata oluştu." }); 
+    }
+});
+
+// YENİ: Admin: Ödemeyi Güncelle
+app.put('/api/saas/admin/payments/:id', async (req, res) => {
+    try {
+        const { amount, period } = req.body;
+        await PaymentModel.findByIdAndUpdate(req.params.id, { amount, period });
+        res.json({ success: true, message: "Ödeme başarıyla güncellendi." });
+    } catch (error) { 
+        res.status(500).json({ error: "Ödeme güncellenirken hata oluştu." }); 
+    }
+});
+
 // 7. Admin: Silme / Güncelleme
+// GÜNCELLENMİŞ: Şirketi Silme (Kod Doğrulamalı)
+// 7. Admin: Silme / Güncelleme
+
+// YENİ: Şirket silme güvenlik kodlarını tutacağımız geçici hafıza
+
+// 7. Admin: Silme / Güncelleme
+
+// YENİ: Şirket silme güvenlik kodlarını tutacağımız geçici hafıza
+const deleteCompanyCodes = new Map(); 
+
+// YENİ: Şirket Silme Onay Kodu Gönderme API'si
+app.post('/api/saas/admin/request-delete-company', async (req, res) => {
+    try {
+        const { companyId } = req.body;
+        
+        // Yöneticiyi bul ve e-postasını kontrol et
+        const admin = await AdminModel.findOne();
+        if (!admin || !admin.email) {
+            return res.status(400).json({ error: "Sistem yöneticisine ait e-posta bulunamadı. Lütfen ayarlardan e-posta adresinizi kaydedin." });
+        }
+
+        // 6 haneli rastgele kod üret
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Kodu 5 dakika (300.000 ms) geçerli olacak şekilde kaydet
+        deleteCompanyCodes.set(companyId, { code, expires: Date.now() + 300000 });
+
+        const mailOptions = {
+            from: 'fabrikayonetimpaneli@gmail.com',
+            to: admin.email,
+            subject: '🚨 GÜVENLİK UYARISI: Şirket Silme Onay Kodu',
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #d9534f;">Şirket Silme Talebi</h2>
+                    <p>Sisteminizden bir şirketi kalıcı olarak silmek için talepte bulunuldu.</p>
+                    <p>Güvenlik Kodunuz:</p>
+                    <div style="background-color: #f8f9fa; padding: 15px; text-align: center; border-radius: 5px; font-size: 24px; letter-spacing: 5px;">
+                        <b>${code}</b>
+                    </div>
+                    <p style="color: #666; font-size: 12px; margin-top: 15px;">Bu kod 5 dakika boyunca geçerlidir.</p>
+                </div>
+            `
+        };
+
+        // E-postayı gönder
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log("\n❌ ŞİRKET SİLME MAİLİ GÖNDERME HATASI ❌");
+                console.log(error);
+                return res.status(500).json({ error: "E-posta gönderilemedi. Lütfen sunucu loglarını kontrol edin." });
+            }
+            res.json({ success: true, message: "Kod gönderildi." });
+        });
+
+    } catch (error) {
+        console.error("Kod gönderme hatası:", error);
+        res.status(500).json({ error: "Sunucuda beklenmeyen bir hata oluştu." });
+    }
+});
+
+// GÜNCELLENMİŞ: Şirketi Silme (Kod Doğrulamalı)
 app.post('/api/saas/admin/delete', async (req, res) => {
     try {
-        const { id } = req.body;
+        const { id, code } = req.body;
+        
+        // 1. Güvenlik Kodunu Kontrol Et
+        const verification = deleteCompanyCodes.get(id);
+        
+        if (!verification) return res.status(400).json({ error: "Geçerli bir onay kodu bulunamadı." });
+        if (Date.now() > verification.expires) {
+            deleteCompanyCodes.delete(id);
+            return res.status(400).json({ error: "Onay kodunun 5 dakikalık süresi dolmuş." });
+        }
+        if (verification.code !== code) return res.status(400).json({ error: "Hatalı onay kodu girdiniz." });
+
+        // 2. Şirket Durumunu Kontrol Et
         const company = await CompanyModel.findById(id);
-        if (company.status !== 'Suspended' && company.status !== 'Pending') return res.status(400).json({ error: "Sadece askıdaki şirketler silinebilir." });
+        if (!company) return res.status(404).json({ error: "Şirket bulunamadı." });
+        if (company.status !== 'Suspended' && company.status !== 'Pending') {
+            return res.status(400).json({ error: "Sadece askıdaki veya onay bekleyen şirketler silinebilir." });
+        }
+
+        // 3. Şirketi Sil ve Kodu Hafızadan Temizle
         await CompanyModel.findByIdAndDelete(id);
+        deleteCompanyCodes.delete(id);
+        
         res.json({ success: true });
-    } catch (error) { res.status(500).json({ error: "Silme hatası." }); }
+    } catch (error) { 
+        res.status(500).json({ error: "Silme hatası." }); 
+    }
 });
+
 
 app.post('/api/saas/admin/update', async (req, res) => {
     try {
@@ -306,32 +410,55 @@ app.post('/api/saas/admin/update-credentials', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Hata" }); }
 });
 
-// --- GEÇİCİ ŞİFRE SIFIRLAMA KODU (İşlem bitince bu kısmı silin) ---
-
-// --- GEÇİCİ ŞİFRE SIFIRLAMA KODU (İşlem bitince bu kısmı silin) ---
-setTimeout(async () => {
+// YENİ: Şirket Silme Onay Kodu Gönderme
+app.post('/api/saas/admin/request-delete-company', async (req, res) => {
     try {
-        console.log("⏳ Yönetici şifresi sıfırlanıyor...");
+        const { companyId } = req.body;
         
-        // Şifreyi şifrele (Hash)
-        const newPasswordHash = crypto.createHash('sha256').update("master123").digest('hex');
-        
-        // Veritabanındaki ilk yöneticiyi bul ve güncelle
-        // Eğer yönetici yoksa (upsert: true) yeni bir tane oluşturur.
-        await AdminModel.findOneAndUpdate(
-            {}, // İlk bulduğunu al
-            { username: "master", password: newPasswordHash },
-            { upsert: true, new: true }
-        );
+        // Yöneticiyi bul ve e-postasını al
+        const admin = await AdminModel.findOne();
+        if (!admin || !admin.email) {
+            return res.status(400).json({ error: "Yönetici e-posta adresi bulunamadı. Lütfen ayarlardan e-posta ekleyin." });
+        }
 
-        console.log("✅ BAŞARILI! Şifreniz sıfırlandı.");
-        console.log("👉 Kullanıcı Adı: master");
-        console.log("👉 Şifre: master123");
-        console.log("⚠️ LÜTFEN ŞİMDİ BU EKLEDİĞİNİZ KODU SİLİN VE SUNUCUYU TEKRAR BAŞLATIN.");
+        // 6 haneli rastgele güvenlik kodu üret
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Kodu 5 dakika (300.000 ms) geçerli olacak şekilde hafızaya kaydet
+        deleteCompanyCodes.set(companyId, { code, expires: Date.now() + 300000 });
+
+        // Onay mailini gönder (Nodemailer transporter'ınızın tanımlı olduğunu varsayıyoruz)
+        const mailOptions = {
+            from: process.env.EMAIL_USER || 'sistem@sirketiniz.com', // Sistem mailiniz
+            to: admin.email,
+            subject: '🚨 GÜVENLİK UYARISI: Şirket Silme Onay Kodu',
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #d9534f;">Şirket Silme Talebi</h2>
+                    <p>Sisteminizden bir şirketi kalıcı olarak silmek için talepte bulunuldu.</p>
+                    <p>Eğer bu işlemi siz yapıyorsanız, aşağıdaki güvenlik kodunu sisteme girerek işlemi tamamlayabilirsiniz:</p>
+                    <div style="background-color: #f8f9fa; padding: 15px; text-align: center; border-radius: 5px;">
+                        <h1 style="color: #333; letter-spacing: 5px; margin: 0;">${code}</h1>
+                    </div>
+                    <p style="color: #666; font-size: 12px; margin-top: 15px;">Bu kod 5 dakika boyunca geçerlidir.</p>
+                    <p style="color: red; font-weight: bold;">Eğer bu işlemi siz başlatmadıysanız, sisteminize acilen müdahale edin ve şifrenizi değiştirin!</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true, message: "Güvenlik kodu e-posta adresinize gönderildi." });
+
     } catch (error) {
-        console.error("Şifre sıfırlama hatası:", error);
+        console.error("Kod gönderme hatası:", error);
+        res.status(500).json({ error: "E-posta gönderilirken bir hata oluştu." });
     }
-}, 3000); // Sunucu açıldıktan 3 saniye sonra çalışır
+});
+
+// --- GEÇİCİ ŞİFRE SIFIRLAMA KODU (İşlem bitince bu kısmı silin) ---
+
+// --- GEÇİCİ ŞİFRE SIFIRLAMA KODU (İşlem bitince bu kısmı silin) ---
+
 
 app.listen(PORT, () => {
     console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);

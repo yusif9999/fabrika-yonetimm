@@ -418,6 +418,7 @@
                                 <th>Tutar</th>
                                 <th>Süre</th>
                                 <th>İşlem Tarihi</th>
+                                <th>İşlemler</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -469,8 +470,52 @@
             </div>
         </div>
     </div>
+    
+    <div id="edit-payment-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:30px; border-radius:10px; width:400px; max-width:90%; position:relative;">
+            <h2 style="margin-top:0;">Ödeme Düzenle</h2>
+            
+            <input type="hidden" id="edit-payment-id">
 
+            <div class="input-group">
+                <label>Ödenen Tutar (TL)</label>
+                <input type="number" id="edit-payment-amount" style="width:100%; padding:10px;">
+            </div>
 
+            <div class="input-group">
+                <label>Süre Seçimi</label>
+                <select id="edit-payment-period" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+                    <option value="1 Ay">1 Ay</option>
+                    <option value="3 Ay">3 Ay</option>
+                    <option value="6 Ay">6 Ay</option>
+                    <option value="12 Ay">1 Yıl (12 Ay)</option>
+                    <option value="24 Ay">2 Yıl (24 Ay)</option>
+                </select>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn btn-success" style="flex:1;" onclick="saas.updatePayment()">Kaydet</button>
+                <button class="btn btn-danger" style="flex:1;" onclick="document.getElementById('edit-payment-modal').style.display='none'">İptal</button>
+            </div>
+        </div>
+    </div>
+    <div id="delete-company-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:30px; border-radius:10px; width:400px; max-width:90%; position:relative; text-align:center;">
+            <h2 style="margin-top:0; color:#d9534f;">Güvenlik Doğrulaması</h2>
+            <p style="color:#555; font-size:14px;">Yönetici e-posta adresinize bir onay kodu gönderdik. Şirketi kalıcı olarak silmek için lütfen kodu girin.</p>
+            
+            <input type="hidden" id="delete-company-id">
+
+            <div class="input-group" style="margin: 20px 0;">
+                <input type="text" id="delete-company-code" style="width:100%; padding:15px; font-size:24px; text-align:center; letter-spacing: 8px; border:2px solid #ddd; border-radius:5px;" placeholder="000000" maxlength="6">
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-danger" style="flex:1; padding:10px; font-weight:bold;" onclick="saas.confirmDeleteCompany()">Kodu Onayla ve Sil</button>
+                <button class="btn btn-secondary" style="flex:1; padding:10px;" onclick="document.getElementById('delete-company-modal').style.display='none'">İptal Et</button>
+            </div>
+        </div>
+    </div>
     <div id="setup-container" class="auth-container">
         <h1>Yönetim Paneline Hoş Geldiniz</h1>
         <p>İlk kez kullanıyorsanız, lütfen bir yönetici kullanıcı adı ve şifresi oluşturun.</p>
@@ -1242,7 +1287,7 @@ showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-p
 
                     tbody.innerHTML += `
                         <tr>
-                            <td><b>${comp.companyName}</b><br><small>${comp.email}</small></td>
+                            <td><b>${comp.companyName}</b><br><small>${comp.email} (${comp.username})</small></td>
                             <td><span class="status-badge status-${comp.status}">${comp.status}</span></td>
                             <td>Başlangıç: ${startD}<br>Bitiş: ${endD}</td>
                             <td>${actions}</td>
@@ -1293,14 +1338,16 @@ showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-p
         },
 
         // YENİ: Ödeme Geçmişini Yükle
+        
+        // GÜNCELLENMİŞ: Ödeme Geçmişini Yükle ve Butonları Göster
         loadPayments: async () => {
             const tbody = document.querySelector('#saas-payments-table tbody');
-            tbody.innerHTML = '<tr><td colspan="4">Yükleniyor...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">Yükleniyor...</td></tr>';
             try {
                 const res = await fetch('/api/saas/admin/payments');
                 const payments = await res.json();
                 tbody.innerHTML = '';
-                if(payments.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Henüz ödeme yok.</td></tr>'; return; }
+                if(payments.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Henüz ödeme yok.</td></tr>'; return; }
                 
                 payments.forEach(p => {
                     const date = new Date(p.paymentDate).toLocaleDateString('tr-TR') + ' ' + new Date(p.paymentDate).toLocaleTimeString('tr-TR');
@@ -1310,17 +1357,118 @@ showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-p
                             <td style="color:green; font-weight:bold;">${p.amount} TL</td>
                             <td>${p.period}</td>
                             <td>${date}</td>
+                            <td>
+                                <button class="btn-sm-warning" onclick="saas.openEditPaymentModal('${p._id}', ${p.amount}, '${p.period}')">Düzenle</button>
+                                <button class="btn-sm-danger" onclick="saas.deletePayment('${p._id}')">Sil</button>
+                            </td>
                         </tr>
                     `;
                 });
-            } catch (err) { tbody.innerHTML = '<tr><td colspan="4">Hata.</td></tr>'; }
+            } catch (err) { tbody.innerHTML = '<tr><td colspan="5">Hata.</td></tr>'; }
+        },
+
+        // YENİ: Ödeme Silme
+        deletePayment: async (id) => {
+            if(!confirm('Bu ödeme kaydını tamamen silmek istediğinize emin misiniz?')) return;
+            try {
+                const res = await fetch('/api/saas/admin/payments/' + id, { method: 'DELETE' });
+                const result = await res.json();
+                if(result.success) {
+                    saas.loadPayments(); // Listeyi yenile
+                } else {
+                    alert('Hata: ' + result.error);
+                }
+            } catch (err) { alert('Sunucu hatası.'); }
+        },
+
+        // YENİ: Ödeme Düzenleme Modalını Aç
+        openEditPaymentModal: (id, amount, period) => {
+            document.getElementById('edit-payment-id').value = id;
+            document.getElementById('edit-payment-amount').value = amount;
+            document.getElementById('edit-payment-period').value = period;
+            document.getElementById('edit-payment-modal').style.display = 'flex';
+        },
+
+        // YENİ: Ödeme Güncellemeyi Kaydet
+        updatePayment: async () => {
+            const id = document.getElementById('edit-payment-id').value;
+            const amount = document.getElementById('edit-payment-amount').value;
+            const period = document.getElementById('edit-payment-period').value;
+
+            try {
+                const res = await fetch('/api/saas/admin/payments/' + id, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ amount, period })
+                });
+                const result = await res.json();
+                if(result.success) {
+                    document.getElementById('edit-payment-modal').style.display = 'none';
+                    saas.loadPayments(); // Listeyi yenile
+                } else {
+                    alert('Hata: ' + result.error);
+                }
+            } catch (err) { alert('Sunucu hatası.'); }
         },
 
         // Yardımcılar
+        
+        // GÜNCELLENMİŞ: Sil butonuna basıldığında kodu ister
         deleteCompany: async (id) => {
-            if(!confirm('Bu şirketi KALICI olarak silmek istiyor musunuz?')) return;
-            await fetch('/api/saas/admin/delete', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id }) });
-            saas.loadAdminPanel();
+            if(!confirm('DİKKAT! Bu şirketi silmek istediğinize emin misiniz? Güvenlik amacıyla e-posta adresinize bir onay kodu gönderilecektir.')) return;
+            
+            try {
+                // Backend'den kod göndermesini talep et
+                const res = await fetch('/api/saas/admin/request-delete-company', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ companyId: id })
+                });
+                
+                const result = await res.json();
+                if(result.success) {
+                    // Modal'ı aç ve ID'yi sakla
+                    document.getElementById('delete-company-id').value = id;
+                    document.getElementById('delete-company-code').value = ''; // Kutuyu temizle
+                    document.getElementById('delete-company-modal').style.display = 'flex';
+                } else {
+                    alert('Hata: ' + result.error);
+                }
+            } catch (err) {
+                alert('Sunucu hatası: E-posta gönderilemedi.');
+            }
+        },
+
+        // YENİ: Kodu backend'e gönderip asıl silme işlemini yapar
+        // GÜNCELLENMİŞ: Kodu backend'e gönderip asıl silme işlemini yapar
+        confirmDeleteCompany: async () => {
+            const id = document.getElementById('delete-company-id').value;
+            const code = document.getElementById('delete-company-code').value;
+
+            if(!code || code.length !== 6) {
+                alert("Lütfen e-postanıza gelen 6 haneli onay kodunu eksiksiz girin.");
+                return;
+            }
+
+            try {
+                // Silme isteğini kod ile beraber POST olarak gönderiyoruz
+                const res = await fetch('/api/saas/admin/delete', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id: id, code: code }) 
+                });
+                
+                const result = await res.json();
+                if(result.success) {
+                    alert("Şirket güvenli bir şekilde başarıyla silindi.");
+                    document.getElementById('delete-company-modal').style.display = 'none';
+                    saas.loadAdminPanel(); // Listeyi yenile
+                } else {
+                    alert('Hata: ' + result.error);
+                }
+            } catch (err) {
+                alert('Sunucu bağlantı hatası: Şirket silinemedi.');
+            }
         },
         suspendCompany: async (id) => { // Askıya alma butonu için kısa yol
              // Askıya alırken "Status: Suspended" gönderiyoruz, gün eklemiyoruz (subscriptionDays: 0)
@@ -1380,12 +1528,29 @@ saveAdminSettings: async () => {
     const newUsername = document.getElementById('admin-new-username').value;
     const newPassword = document.getElementById('admin-new-password').value;
     const newEmail = document.getElementById('admin-new-email').value; // Yeni e-posta
-    await fetch('/api/saas/admin/update-credentials', { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({ newUsername, newPassword, newEmail }) 
-    });
-    alert("Ayarlar başarıyla güncellendi.");
+    if (!newUsername) {
+        alert("Kullanıcı adı boş bırakılamaz!");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/saas/admin/update-credentials', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({ newUsername, newPassword, newEmail }) 
+        });
+        
+        const result = await res.json();
+        if (result.success) {
+            alert("Ayarlar başarıyla güncellendi.");
+            // Güncelleme sonrası şifre kutusunu temizleyelim:
+            document.getElementById('admin-new-password').value = ''; 
+        } else {
+            alert("Hata oluştu: " + result.error);
+        }
+    } catch (error) {
+        alert("Sunucu bağlantı hatası oluştu.");
+    }
 }
 
     };
