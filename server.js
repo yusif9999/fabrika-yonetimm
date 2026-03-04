@@ -8,8 +8,6 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-// Yönetici giriş kodlarını tutacağımız geçici hafıza
-
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -134,65 +132,13 @@ app.post('/api/saas/login', async (req, res) => {
 });
 
 // 3. Admin Girişi
-// 3. Admin Girişi (1. Aşama: Şifre Kontrolü ve E-Posta Gönderimi)
-const adminLoginCodes = new Map();
-
-// 2. Admin Girişi (SADECE GİRİŞTE KOD GÖNDERİR)
 app.post('/api/saas/admin/login', async (req, res) => {
     const { username, password } = req.body;
     const admin = await AdminModel.findOne({ username, password: hashPassword(password) });
     
-    if (!admin) return res.status(401).json({ error: "Hatalı yönetici bilgisi." });
-
-    // Yöneticinin e-postası kayıtlıysa güvenli giriş için 2FA kodunu gönder
-    if (admin.email) {
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        // Kodu 5 dakika geçerli olacak şekilde kaydet
-        adminLoginCodes.set(username, { code, expires: Date.now() + 5 * 60 * 1000 });
-
-        const mailOptions = {
-            from: 'fabrikayonetimpaneli@gmail.com',
-            to: admin.email,
-            subject: '🔒 Sistem Yöneticisi Giriş Kodu',
-            html: `
-                <div style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h2 style="color: #2c3e50;">Yönetici Paneli Giriş İsteği</h2>
-                    <p>Yönetici paneline giriş yapmak için şifreniz doğru girildi. Lütfen aşağıdaki doğrulama kodunu kullanarak girişinizi tamamlayın:</p>
-                    <div style="background-color: #f8f9fa; padding: 15px; text-align: center; border-radius: 5px; font-size: 24px; letter-spacing: 5px;">
-                        <b>${code}</b>
-                    </div>
-                    <p style="color: #666; font-size: 12px; margin-top: 15px;">Bu kod 5 dakika boyunca geçerlidir.</p>
-                </div>
-            `
-        };
-
-        transporter.sendMail(mailOptions, (error) => {
-            if(error) console.log("Giriş Mail Hatası:", error);
-        });
-
-        return res.json({ requires2FA: true, message: "E-posta adresinize 6 haneli giriş kodu gönderildi." });
-    } else {
-        // Sistemde e-posta kayıtlı değilse (ilk kurulum anı), sistemi kilitlememek için uyarı ile içeri al
-        return res.json({ success: true, username: admin.username, email: '', warning: 'no_email' });
-    }
-});
-// YENİ: Admin Girişi (2. Aşama: Kod Doğrulama)
-app.post('/api/saas/admin/verify-login', async (req, res) => {
-    const { username, password, code } = req.body;
-    
-    const verification = adminLoginCodes.get(username);
-    if (!verification) return res.status(400).json({ error: "Geçerli bir giriş kodu bulunamadı." });
-    if (Date.now() > verification.expires) {
-        adminLoginCodes.delete(username);
-        return res.status(400).json({ error: "Kodun 5 dakikalık süresi dolmuş." });
-    }
-    if (verification.code !== code) return res.status(400).json({ error: "Hatalı kod girdiniz." });
-
-    const admin = await AdminModel.findOne({ username, password: hashPassword(password) });
-    if (!admin) return res.status(401).json({ error: "Oturum doğrulanamadı." });
-
-    adminLoginCodes.delete(username); // Başarılı giriş sonrası hafızadan sil
-    res.json({ success: true, username: admin.username, email: admin.email || '' });
+    // admin.email bilgisini de frontend'e gönderiyoruz
+    if (admin) res.json({ success: true, username: admin.username, email: admin.email || '' });
+    else res.status(401).json({ error: "Hatalı yönetici bilgisi." });
 });
 
 // 4. Admin: Şirket Listesi
@@ -238,52 +184,15 @@ app.get('/api/saas/admin/payments', async (req, res) => {
     res.json(payments);
 });
 
-// YENİ: Admin: Ödemeyi Sil
-app.delete('/api/saas/admin/payments/:id', async (req, res) => {
-    try {
-        await PaymentModel.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: "Ödeme başarıyla silindi." });
-    } catch (error) { 
-        res.status(500).json({ error: "Ödeme silinirken hata oluştu." }); 
-    }
-});
-
-// YENİ: Admin: Ödemeyi Güncelle
-app.put('/api/saas/admin/payments/:id', async (req, res) => {
-    try {
-        const { amount, period } = req.body;
-        await PaymentModel.findByIdAndUpdate(req.params.id, { amount, period });
-        res.json({ success: true, message: "Ödeme başarıyla güncellendi." });
-    } catch (error) { 
-        res.status(500).json({ error: "Ödeme güncellenirken hata oluştu." }); 
-    }
-});
-
 // 7. Admin: Silme / Güncelleme
-
-
-
-// GÜNCELLENMİŞ: Şirketi Silme (Kod Doğrulamalı)
-// Şirketi Silme (E-posta kodu iptal edildi, direkt siler)
 app.post('/api/saas/admin/delete', async (req, res) => {
     try {
         const { id } = req.body;
-        
-        // Şirket Durumunu Kontrol Et
         const company = await CompanyModel.findById(id);
-        if (!company) return res.status(404).json({ error: "Şirket bulunamadı." });
-        
-        if (company.status !== 'Suspended' && company.status !== 'Pending') {
-            return res.status(400).json({ error: "Sadece askıdaki veya onay bekleyen şirketler silinebilir." });
-        }
-
-        // Şirketi direkt sil
+        if (company.status !== 'Suspended' && company.status !== 'Pending') return res.status(400).json({ error: "Sadece askıdaki şirketler silinebilir." });
         await CompanyModel.findByIdAndDelete(id);
-        
         res.json({ success: true });
-    } catch (error) { 
-        res.status(500).json({ error: "Silme hatası." }); 
-    }
+    } catch (error) { res.status(500).json({ error: "Silme hatası." }); }
 });
 
 app.post('/api/saas/admin/update', async (req, res) => {
@@ -298,11 +207,9 @@ app.post('/api/saas/admin/update-credentials', async (req, res) => {
     try {
         const { newUsername, newPassword, newEmail } = req.body;
         const admin = await AdminModel.findOne();
-        
         if (newUsername) admin.username = newUsername;
         if (newPassword) admin.password = hashPassword(newPassword);
         if (newEmail !== undefined) admin.email = newEmail; // E-posta veritabanına işleniyor
-        
         await admin.save();
         res.json({ success: true });
     } catch (error) { res.status(500).json({ error: "Hata" }); }
@@ -329,24 +236,37 @@ app.post('/api/saas/admin/forgot-password', async (req, res) => {
         const { username } = req.body;
         const admin = await AdminModel.findOne({ username });
         
-        if (!admin) return res.status(404).json({ error: "Kullanıcı bulunamadı." });
-        if (!admin.email) return res.status(400).json({ error: "Bu hesaba kayıtlı bir kurtarma e-postası yok." });
+        if (!admin) return res.status(404).json({ error: "Bu kullanıcı adında bir yönetici bulunamadı." });
+        if (!admin.email) return res.status(400).json({ error: "Bu yönetici hesabına tanımlı bir kurtarma e-postası yok. Lütfen veritabanı yöneticinizle görüşün." });
 
+        // 6 haneli rastgele kod oluştur
         const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Kodu ve 15 dakikalık geçerlilik süresini kaydet
         admin.resetCode = resetCode;
         admin.resetCodeExpire = Date.now() + 15 * 60 * 1000; 
         await admin.save();
 
+        // E-postayı gönder
         const mailOptions = {
-            from: 'fabrikayonetimpaneli@gmail.com',
+            from: 'sizin_eposta_adresiniz@gmail.com',
             to: admin.email,
             subject: 'Sistem Yöneticisi - Şifre Sıfırlama Kodu',
             text: `Yönetici paneliniz için şifre sıfırlama kodu talep ettiniz.\n\nSıfırlama Kodunuz: ${resetCode}\n\nBu kod 15 dakika boyunca geçerlidir.`
         };
 
-        transporter.sendMail(mailOptions);
-        res.json({ success: true, message: "Sıfırlama kodu e-posta adresinize gönderildi." });
-    } catch (error) { res.status(500).json({ error: "Hata oluştu." }); }
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                // --- HATAYI TERMİNALE YAZDIRMA KODU EKLENDİ ---
+                console.log("\n❌ MAİL GÖNDERME HATASI DETAYI ❌");
+                console.log(error);
+                console.log("====================================\n");
+                // ----------------------------------------------
+                return res.status(500).json({ error: "E-posta gönderilmedi. Sunucu ayarlarını kontrol edin." });
+            }
+            res.json({ success: true, message: "Sıfırlama kodu e-posta adresinize başarıyla gönderildi." });
+        });
+    } catch (error) { res.status(500).json({ error: "Bir hata oluştu." }); }
 });
 
 // Admin: Şifre Sıfırlama Kodu Doğrulama ve Şifre Değiştirme
@@ -386,12 +306,32 @@ app.post('/api/saas/admin/update-credentials', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Hata" }); }
 });
 
-
-
 // --- GEÇİCİ ŞİFRE SIFIRLAMA KODU (İşlem bitince bu kısmı silin) ---
 
 // --- GEÇİCİ ŞİFRE SIFIRLAMA KODU (İşlem bitince bu kısmı silin) ---
+setTimeout(async () => {
+    try {
+        console.log("⏳ Yönetici şifresi sıfırlanıyor...");
+        
+        // Şifreyi şifrele (Hash)
+        const newPasswordHash = crypto.createHash('sha256').update("master123").digest('hex');
+        
+        // Veritabanındaki ilk yöneticiyi bul ve güncelle
+        // Eğer yönetici yoksa (upsert: true) yeni bir tane oluşturur.
+        await AdminModel.findOneAndUpdate(
+            {}, // İlk bulduğunu al
+            { username: "master", password: newPasswordHash },
+            { upsert: true, new: true }
+        );
 
+        console.log("✅ BAŞARILI! Şifreniz sıfırlandı.");
+        console.log("👉 Kullanıcı Adı: master");
+        console.log("👉 Şifre: master123");
+        console.log("⚠️ LÜTFEN ŞİMDİ BU EKLEDİĞİNİZ KODU SİLİN VE SUNUCUYU TEKRAR BAŞLATIN.");
+    } catch (error) {
+        console.error("Şifre sıfırlama hatası:", error);
+    }
+}, 3000); // Sunucu açıldıktan 3 saniye sonra çalışır
 
 app.listen(PORT, () => {
     console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
