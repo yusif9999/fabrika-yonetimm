@@ -665,6 +665,12 @@
         Kasa Yönetimi
     </a>
 </li>
+<li data-role="admin operasyon">
+    <a href="#" class="nav-link" data-page="ay-kapanisi">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+        Ay Kapanışı
+    </a>
+</li>
 </ul>
             </nav>
             <div id="sidebar-vardiya-durumu"></div>
@@ -1201,62 +1207,81 @@
             </div>
             <div id="kasa-yonetimi" class="page">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; color: var(--dark-color);">Kasa Yönetimi</h2>
-        <button class="btn btn-danger" onclick="actions.ayiKapat()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            Ayı Kapat (Kasayı Sıfırla)
-        </button>
-    </div>
-    <div class="card-container">
-        <div class="card">
-            <h3>Mevcut Kasa Bakiyesi</h3>
-            <div class="value" id="kasa-bakiye">0 ₺</div>
-        </div>
-        <div class="card">
-            <h3>Toplam Kasa Girişi</h3>
-            <div class="value profit" id="kasa-toplam-giris">0 ₺</div>
-        </div>
-        <div class="card">
-            <h3>Toplam Kasa Çıkışı</h3>
-            <div class="value loss" id="kasa-toplam-cikis">0 ₺</div>
-        </div>
-    </div>
+                    <h2 style="margin: 0; color: var(--dark-color);">Kasa Yönetimi</h2>
+                </div>
+                <div class="card-container">
+                    <div class="card" style="border-left: 4px solid #8e44ad;">
+                        <h3>Sistem Net Kârı</h3>
+                        <div class="value" id="kasa-sistem-net">0 ₺</div>
+                        <small style="color:#7f8c8d;">(Toplam Tahsilat - Toplam Gider)</small>
+                    </div>
+                    <div class="card" style="border-left: 4px solid #f39c12;">
+                        <h3>Mevcut Kasa Bakiyesi</h3>
+                        <div class="value" id="kasa-bakiye">0 ₺</div>
+                        <small style="color:#7f8c8d;">(Kasa Girişleri - Çıkışları)</small>
+                    </div>
+                    <div class="card" style="border-left: 4px solid #27ae60;">
+                        <h3>Genel Toplam</h3>
+                        <div class="value profit" id="kasa-genel-toplam">0 ₺</div>
+                        <small style="color:#7f8c8d;">(Sistem Net Kârı + Kasa Bakiyesi)</small>
+                    </div>
+                </div>
 
-    <div class="content-box">
-        <h2>Yeni Kasa İşlemi</h2>
-        <form id="kasa-islem-form">
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr 2fr 1fr auto; align-items: end;">
-                <div class="input-group">
-                    <label>İşlem Tipi</label>
-                    <select id="kasa-islem-tipi" required style="border: 2px solid #3498db; font-weight:bold;">
-                        <option value="giris">🟢 Kasaya Para Girişi</option>
-                        <option value="cikis">🔴 Kasadan Para Çıkışı</option>
-                    </select>
+                <div class="content-box">
+                    <h2>Yeni Kasa İşlemi</h2>
+                    <form id="kasa-islem-form">
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr 2fr 1fr auto; align-items: end;">
+                            <div class="input-group">
+                                <label>İşlem Tipi</label>
+                                <select id="kasa-islem-tipi" required style="border: 2px solid #3498db; font-weight:bold;">
+                                    <option value="giris">🟢 Kasaya Para Girişi</option>
+                                    <option value="cikis">🔴 Kasadan Para Çıkışı</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Tutar (₺)</label>
+                                <input type="number" id="kasa-islem-tutar" step="0.01" required placeholder="0.00" style="font-weight:bold;">
+                            </div>
+                            <div class="input-group">
+                                <label>Açıklama / Detay</label>
+                                <input type="text" id="kasa-islem-aciklama" required placeholder="Örn: Müşteri ödemesi, Elektrik faturası...">
+                            </div>
+                            <div class="input-group">
+                                <label>Tarih</label>
+                                <input type="date" id="kasa-islem-tarih" required>
+                            </div>
+                            <div class="input-group">
+                                <button type="submit" class="btn btn-success btn-full">İşlemi Kaydet</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="input-group">
-                    <label>Tutar (₺)</label>
-                    <input type="number" id="kasa-islem-tutar" step="0.01" required placeholder="0.00" style="font-weight:bold;">
-                </div>
-                <div class="input-group">
-                    <label>Açıklama / Detay</label>
-                    <input type="text" id="kasa-islem-aciklama" required placeholder="Örn: Müşteri ödemesi, Elektrik faturası...">
-                </div>
-                <div class="input-group">
-                    <label>Tarih</label>
-                    <input type="date" id="kasa-islem-tarih" required>
-                </div>
-                <div class="input-group">
-                    <button type="submit" class="btn btn-success btn-full">İşlemi Kaydet</button>
+
+                <div class="content-box">
+                    <h2>Kasa Hareket Geçmişi</h2>
+                    <div id="kasa-tablo-container" style="overflow-x:auto;"></div>
                 </div>
             </div>
-        </form>
-    </div>
 
-    <div class="content-box">
-        <h2>Kasa Hareket Geçmişi</h2>
-        <div id="kasa-tablo-container" style="overflow-x:auto;"></div>
-    </div>
-</div>
+            <div id="ay-kapanisi" class="page">
+                <div class="content-box danger-zone" style="border-left-color: var(--secondary-color);">
+                    <h2 style="color: var(--dark-color); border-bottom-color: var(--secondary-color);">Aylık Kapanış ve Raporlama</h2>
+                    <p style="font-size: 15px;">Bu ekrandan içinde bulunduğunuz ayın tüm gelir, gider, tahsilat ve kâr durumunu Excel (CSV) olarak bilgisayarınıza indirebilirsiniz.</p>
+                    <p style="font-size: 15px;"><strong>Ayı Kapat</strong> işlemine bastığınızda; sistemdeki tüm işlem geçmişi (gelirler, giderler, üretimler) sıfırlanır ve yeni aya temiz bir başlangıç yapılır. Fabrikaların mevcut borçları ve kasanızdaki para <strong>"Geçmiş Aydan Devreden"</strong> olarak yeni aya aktarılır (Kimsenin borcu silinmez).</p>
+                    
+                    <div class="card-container" style="margin-top: 25px;">
+                        <div class="card"><h3>Aylık Toplam Üretim (Ciro)</h3><div class="value" id="kapanis-ciro">0 ₺</div></div>
+                        <div class="card"><h3>Aylık Toplam Tahsilat</h3><div class="value" id="kapanis-tahsilat">0 ₺</div></div>
+                        <div class="card"><h3>Aylık Toplam Gider</h3><div class="value loss" id="kapanis-gider">0 ₺</div></div>
+                        <div class="card"><h3>Aylık Sistem Net Kârı</h3><div class="value profit" id="kapanis-netkar">0 ₺</div></div>
+                    </div>
+
+                    <div style="display: flex; gap: 20px; margin-top: 30px;">
+                        <button class="btn btn-info" style="flex: 1; padding: 18px; font-size: 16px; font-weight: bold;" onclick="csvManager.downloadAyKapanis()">📊 AY SONU RAPORUNU İNDİR (CSV)</button>
+                        <button class="btn btn-danger" style="flex: 1; padding: 18px; font-size: 16px; font-weight: bold;" onclick="actions.ayiKapatTam()">🛑 AYI KAPAT (Yeni Aya Geç)</button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -2053,7 +2078,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- BÖLÜM 3: HESAPLAMA MOTORU ---
     const calculator = {
         fabrikaBakiyesi: (fabrikaId) => { const toplamUretim = app.data.uretimler.filter(u => u.fabrikaId === fabrikaId).reduce((sum, u) => sum + (u.adet * u.birimFiyat), 0); const toplamOdenen = app.data.odemeler.filter(o => o.fabrikaId === fabrikaId).reduce((sum, o) => sum + o.tutar, 0); return { toplamUretim, toplamOdenen, kalanBorc: toplamUretim - toplamOdenen }; },
-        genelDurum: () => { const toplamUretimDegeri = app.data.uretimler.reduce((sum, u) => sum + (u.adet * u.birimFiyat), 0); const toplamGiderler = app.data.giderler.reduce((sum, g) => sum + g.tutar, 0); const toplamTahsilat = app.data.odemeler.reduce((sum, o) => sum + o.tutar, 0); const netKar = toplamTahsilat - toplamGiderler; const kalanAlacak = toplamUretimDegeri - toplamTahsilat; return { toplamUretimDegeri, toplamGiderler, toplamTahsilat, netKar, kalanAlacak }; }
+        genelDurum: () => { 
+            // Ciro hesaplanırken devreden bakiyeler hariç tutulur
+            const safUretimler = app.data.uretimler.filter(u => u.tip !== 'devir');
+            const toplamUretimDegeri = safUretimler.reduce((sum, u) => sum + (u.adet * u.birimFiyat), 0); 
+            
+            const toplamGiderler = app.data.giderler.reduce((sum, g) => sum + g.tutar, 0); 
+            
+            // Tahsilattan devreden kasa düşülmez, normal toplanır
+            const toplamTahsilat = app.data.odemeler.reduce((sum, o) => sum + o.tutar, 0); 
+            
+            const netKar = toplamTahsilat - toplamGiderler; 
+            
+            // Alacak hesaplanırken devreden bakiyeler (tüm üretimler) dahil edilir
+            const tumUretimDegeri = app.data.uretimler.reduce((sum, u) => sum + (u.adet * u.birimFiyat), 0);
+            const kalanAlacak = tumUretimDegeri - toplamTahsilat; 
+            
+            return { toplamUretimDegeri, toplamGiderler, toplamTahsilat, netKar, kalanAlacak }; 
+        }
     };
 
     // --- BÖLÜM 4: ARAYÜZ GÜNCELLEME (RENDER) ---
@@ -2083,6 +2125,7 @@ renderer.stokListesi();
 renderer.stokGecmisi(); // <-- BU SATIRI EKLEYİN
 renderer.kasaOzet();
             renderer.kasaListesi();
+            renderer.ayKapanisiOzeti();
         },
         updateForRole: () => {
             const role = app.currentUser.role;
@@ -2906,25 +2949,50 @@ stokGecmisi: () => {
         },
 kasaOzet: () => {
             if (!app.data.kasaHareketleri) app.data.kasaHareketleri = [];
-            let giris = 0;
-            let cikis = 0;
+            let giris = 0; let cikis = 0;
             
             app.data.kasaHareketleri.forEach(h => {
                 if (h.tip === 'giris') giris += h.tutar;
                 if (h.tip === 'cikis') cikis += h.tutar;
             });
             
-            const bakiye = giris - cikis;
+            const manuelBakiye = giris - cikis;
+            const durum = calculator.genelDurum();
+            const genelToplam = durum.netKar + manuelBakiye;
 
+            // Kart Güncellemeleri
             const bakiyeEl = document.getElementById('kasa-bakiye');
-            if (bakiyeEl) {
-                bakiyeEl.innerText = app.helpers.formatCurrency(bakiye);
-                bakiyeEl.className = 'value ' + (bakiye >= 0 ? 'profit' : 'loss');
-            }
-            if (document.getElementById('kasa-toplam-giris')) document.getElementById('kasa-toplam-giris').innerText = app.helpers.formatCurrency(giris);
-            if (document.getElementById('kasa-toplam-cikis')) document.getElementById('kasa-toplam-cikis').innerText = app.helpers.formatCurrency(cikis);
-        },
+            const sistemNetEl = document.getElementById('kasa-sistem-net');
+            const genelToplamEl = document.getElementById('kasa-genel-toplam');
 
+            if (bakiyeEl) {
+                bakiyeEl.innerText = app.helpers.formatCurrency(manuelBakiye);
+                bakiyeEl.className = 'value ' + (manuelBakiye >= 0 ? 'profit' : 'loss');
+            }
+            if (sistemNetEl) {
+                sistemNetEl.innerText = app.helpers.formatCurrency(durum.netKar);
+                sistemNetEl.className = 'value ' + (durum.netKar >= 0 ? 'profit' : 'loss');
+            }
+            if (genelToplamEl) {
+                genelToplamEl.innerText = app.helpers.formatCurrency(genelToplam);
+                genelToplamEl.className = 'value ' + (genelToplam >= 0 ? 'profit' : 'loss');
+            }
+        },
+        ayKapanisiOzeti: () => {
+            const durum = calculator.genelDurum();
+            const ciroEl = document.getElementById('kapanis-ciro');
+            const tahsilatEl = document.getElementById('kapanis-tahsilat');
+            const giderEl = document.getElementById('kapanis-gider');
+            const netkarEl = document.getElementById('kapanis-netkar');
+
+            if (ciroEl) ciroEl.innerText = app.helpers.formatCurrency(durum.toplamUretimDegeri);
+            if (tahsilatEl) tahsilatEl.innerText = app.helpers.formatCurrency(durum.toplamTahsilat);
+            if (giderEl) giderEl.innerText = app.helpers.formatCurrency(durum.toplamGiderler);
+            if (netkarEl) {
+                netkarEl.innerText = app.helpers.formatCurrency(durum.netKar);
+                netkarEl.className = 'value ' + (durum.netKar >= 0 ? 'profit' : 'loss');
+            }
+        },
         kasaListesi: () => {
             const container = document.getElementById('kasa-tablo-container');
             if (!container) return;
@@ -4552,26 +4620,72 @@ stokSil: (stokId) => {
                 renderer.updateAll();
             }
         },
-        ayiKapat: () => {
-            // Eğer kasa zaten boşsa uyarı verelim
-            if (!app.data.kasaHareketleri || app.data.kasaHareketleri.length === 0) {
-                alert("Kasa zaten boş. Sıfırlanacak herhangi bir kayıt bulunmuyor.");
-                return;
-            }
-
-            // Kullanıcıya "Emin misin?" diye soruyoruz
-            const onay = confirm("⚠️ DİKKAT: AYI KAPATMA İŞLEMİ!\n\nBu işlem kasadaki TÜM gelir ve gider geçmişini sıfırlayacaktır. Bakiye 0 ₺ olacak ve yeni aya sıfırdan başlayacaksınız.\n\nBu işlemi onaylıyor musunuz?");
+       ayiKapatTam: () => {
+            const onay = confirm("⚠️ DİKKAT: AYI KAPATMA İŞLEMİ!\n\nBu işlem, içinde bulunduğunuz aya ait TÜM gelir, gider, üretim ve kasa hareketlerini silecektir.\nLütfen devam etmeden önce raporunuzu (CSV) indirdiğinizden emin olun.\n\nMüşteri borçları ve kasanızdaki mevcut para sıfırlanmayacak, yeni aya 'Devreden Bakiye' olarak eklenecektir.\n\nBu işlemi onaylıyor musunuz?");
             
             if (onay) {
-                // Kasayı tamamen sıfırlıyoruz
-                app.data.kasaHareketleri = [];
+                let devredenUretimler = [];
+                let devredenOdemeler = [];
+
+                // 1. Fabrika Borçlarını Devret
+                app.data.fabrikalar.forEach(fab => {
+                    const bakiye = calculator.fabrikaBakiyesi(fab.id);
+                    if (bakiye.kalanBorc > 0) {
+                        devredenUretimler.push({
+                            id: Date.now() + Math.floor(Math.random()*10000),
+                            fabrikaId: fab.id,
+                            tarih: app.helpers.getTodayISO(),
+                            aciklama: "Geçmiş Aydan Devreden Bakiye",
+                            adet: 1,
+                            birimFiyat: bakiye.kalanBorc,
+                            birimMaliyet: 0,
+                            kdvOrani: 0,
+                            tip: 'devir' // Bu sayede ciroya yansımaz!
+                        });
+                    } else if (bakiye.kalanBorc < 0) {
+                        devredenOdemeler.push({
+                            id: Date.now() + Math.floor(Math.random()*10000),
+                            fabrikaId: fab.id,
+                            tutar: Math.abs(bakiye.kalanBorc),
+                            tarih: app.helpers.getTodayISO()
+                        });
+                    }
+                });
+
+                // 2. Kasa Bakiyesini Devret
+                let giris = 0; let cikis = 0;
+                if (app.data.kasaHareketleri) {
+                    app.data.kasaHareketleri.forEach(h => {
+                        if (h.tip === 'giris') giris += h.tutar;
+                        if (h.tip === 'cikis') cikis += h.tutar;
+                    });
+                }
+                const kasaBakiye = giris - cikis;
+                let yeniKasa = [];
+                if (kasaBakiye > 0) {
+                    yeniKasa.push({ id: Date.now(), tip: 'giris', tutar: kasaBakiye, aciklama: 'Geçmiş Aydan Devreden Kasa Bakiyesi', tarih: app.helpers.getTodayISO(), ekleyen: 'Sistem' });
+                } else if (kasaBakiye < 0) {
+                    yeniKasa.push({ id: Date.now(), tip: 'cikis', tutar: Math.abs(kasaBakiye), aciklama: 'Geçmiş Aydan Devreden Kasa Eksiği', tarih: app.helpers.getTodayISO(), ekleyen: 'Sistem' });
+                }
+
+                // 3. Verileri Sıfırla ve Devirleri Kaydet
+                app.data.uretimler = devredenUretimler;
+                app.data.odemeler = devredenOdemeler;
+                app.data.kasaHareketleri = yeniKasa;
+                app.data.giderler = [];
+                app.data.notlar = []; // Günlük akış sıfırlanır
+                
+                // Vardiyaları temizle (Sadece kapalı olanları sil)
+                if (app.data.vardiyalar) {
+                    app.data.vardiyalar = app.data.vardiyalar.filter(v => v.durum === 'Aktif');
+                }
+
                 dataManager.save();
                 renderer.updateAll();
                 
-                alert("✅ Ay başarıyla kapatıldı! Kasa bakiyesi ve hareketleri sıfırlandı. Yeni ay için kasaya giriş yapabilirsiniz.");
+                alert("✅ Ay başarıyla kapatıldı!\n\nKayıtlar temizlendi, müşteri borçları ve kasa bakiyesi yeni aya devredildi.");
             }
-        }
-
+        },
 
     };
 
@@ -4580,7 +4694,46 @@ stokSil: (stokId) => {
         download: (content, fileName) => { const blob = new Blob([`\uFEFF${content}`], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = fileName; link.click(); URL.revokeObjectURL(link.href); },
         downloadGenel: () => { let csv = 'Tip,Tarih,Açıklama/Fabrika,Tutar (₺)\n'; const tumIslemler = [ ...app.data.uretimler.map(u => ({ tarih: u.tarih, tip: 'Üretim (Alacak)', aciklama: `${app.data.fabrikalar.find(f => f.id === u.fabrikaId)?.ad || '?' } - ${u.aciklama} (${u.adet} adet)`, tutar: u.adet * u.birimFiyat })), ...app.data.odemeler.map(o => ({ tarih: o.tarih, tip: 'Tahsilat (Nakit Girişi)', aciklama: `${app.data.fabrikalar.find(f => f.id === o.fabrikaId)?.ad || '?' } Ödemesi`, tutar: o.tutar })), ...app.data.giderler.map(g => ({ tarih: g.tarih, tip: 'Gider (Nakit Çıkışı)', aciklama: `${g.aciklama}${g.detay ? ` (${g.detay})` : ''}`, tutar: -g.tutar })) ]; tumIslemler.sort((a, b) => new Date(a.tarih) - new Date(b.tarih)); tumIslemler.forEach(islem => { const tutarString = islem.tutar.toFixed(2); const cleanAciklama = `"${islem.aciklama.replace(/"/g, '""')}"`; csv += `${islem.tip},${islem.tarih},${cleanAciklama},${tutarString}\n`; }); const durum = calculator.genelDurum(); const toplamFinansalDeger = durum.netKar + durum.kalanAlacak; csv += '\n--- GENEL FİNANSAL ÖZET ---\n'; csv += 'Açıklama,,,Tutar (₺)\n'; csv += `1. Toplam Üretim Değeri (Genel Alacak),,,${durum.toplamUretimDegeri.toFixed(2)}\n `; csv += `2. Toplam Tahsilat (Nakit Girişi),,,${durum.toplamTahsilat.toFixed(2)}\n`; csv += `3. Toplam Giderler (Nakit Çıkışı),,,-${durum.toplamGiderler.toFixed(2)}\n`; csv += `NET KÂR (Nakit Bakiye: Tahsilat - Gider),,,${durum.netKar.toFixed(2)}\n`; csv += `KALAN TOPLAM ALACAK (Bakiye: Üretim - Tahsilat),,,${durum.kalanAlacak.toFixed(2)}\n`; csv += `BAKİYE : ${toplamFinansalDeger.toFixed(2)} ₺\n`; csv += `\n*** RAPOR SONU ***\n`; csvManager.download(csv, `genel_rapor_${app.helpers.getTodayISO()}.csv`); },
         downloadFabrika: (fabrikaId, fabrikaAdi) => { let csv = `Fabrika Hesap Dökümü: ${fabrikaAdi}\n`; const bakiye = calculator.fabrikaBakiyesi(fabrikaId); csv += '\n--- ÜRETİLER ---\n'; csv += 'Tarih,Açıklama,Adet,Birim Fiyat (₺),Toplam Tutar (₺)\n'; app.data.uretimler.filter(u => u.fabrikaId === fabrikaId).forEach(u => { const cleanAciklama = `"${u.aciklama.replace(/"/g, '""')}"`; csv += `${u.tarih},${cleanAciklama},${u.adet},${u.birimFiyat.toFixed(2)},${(u.adet * u.birimFiyat).toFixed(2)}\n`; }); csv += `\nToplam Üretim Değeri:,,,,"${app.helpers.formatCurrency(bakiye.toplamUretim)}"\n`; csv += '\n--- ÖDEMELER ---\n'; csv += 'Tarih,Ödenen Tutar (₺)\n'; app.data.odemeler.filter(o => o.fabrikaId === fabrikaId).forEach(o => { csv += `${o.tarih},${o.tutar.toFixed(2)}\n`; }); csv += `\nToplam Ödenen:,"${app.helpers.formatCurrency(bakiye.toplamOdenen)}"\n`; csv += `\n--- BAKİYE ---\n`; csv += `Kalan Borç (Tahsil Edilecek):,"${app.helpers.formatCurrency(bakiye.kalanBorc)}"\n`; csvManager.download(csv, `rapor_${fabrikaAdi.replace(/ /g, '_')}_${app.helpers.getTodayISO()}.csv`); },
-        downloadGiderler: () => { let csv = 'Tip,Tarih,Başlık,Açıklama,Tutar (₺)\n'; let toplamFabrika = 0; let toplamDiger = 0; const siraliGiderler = [...app.data.giderler].sort((a, b) => new Date(a.tarih) - new Date(b.tarih)); siraliGiderler.forEach(g => { const tip = g.tip === 'fabrika' ? 'Fabrika Gideri' : 'Diğer Gider'; const tutar = g.tutar; const baslik = `"${g.aciklama.replace(/"/g, '""')}"`; const detay = `"${(g.detay || '-').replace(/"/g, '""')}"`; csv += `${tip},${g.tarih},${baslik},${detay},${tutar.toFixed(2)}\n`; if (g.tip === 'fabrika') { toplamFabrika += tutar; } else { toplamDiger += tutar; } }); const toplamGider = toplamFabrika + toplamDiger; csv += '\n--- GİDER ÖZETİ ---\n'; csv += 'Açıklama,,,,Tutar (₺)\n'; csv += `Toplam Fabrika Giderleri,,,,${toplamFabrika.toFixed(2)}\n`; csv += `Toplam Diğer Giderler,,,,${toplamDiger.toFixed(2)}\n`; csv += `GENEL TOPLAM GİDER,,,,${toplamGider.toFixed(2)}\n`; csv += `\n*** RAPOR SONU ***\n`; csvManager.download(csv, `gider_raporu_${app.helpers.getTodayISO()}.csv`); }
+        downloadGiderler: () => { let csv = 'Tip,Tarih,Başlık,Açıklama,Tutar (₺)\n'; let toplamFabrika = 0; let toplamDiger = 0; const siraliGiderler = [...app.data.giderler].sort((a, b) => new Date(a.tarih) - new Date(b.tarih)); siraliGiderler.forEach(g => { const tip = g.tip === 'fabrika' ? 'Fabrika Gideri' : 'Diğer Gider'; const tutar = g.tutar; const baslik = `"${g.aciklama.replace(/"/g, '""')}"`; const detay = `"${(g.detay || '-').replace(/"/g, '""')}"`; csv += `${tip},${g.tarih},${baslik},${detay},${tutar.toFixed(2)}\n`; if (g.tip === 'fabrika') { toplamFabrika += tutar; } else { toplamDiger += tutar; } }); const toplamGider = toplamFabrika + toplamDiger; csv += '\n--- GİDER ÖZETİ ---\n'; csv += 'Açıklama,,,,Tutar (₺)\n'; csv += `Toplam Fabrika Giderleri,,,,${toplamFabrika.toFixed(2)}\n`; csv += `Toplam Diğer Giderler,,,,${toplamDiger.toFixed(2)}\n`; csv += `GENEL TOPLAM GİDER,,,,${toplamGider.toFixed(2)}\n`; csv += `\n*** RAPOR SONU ***\n`; csvManager.download(csv, `gider_raporu_${app.helpers.getTodayISO()}.csv`); },
+        downloadAyKapanis: () => {
+            let csv = 'AY SONU KAPANIS RAPORU\n\n';
+            
+            const durum = calculator.genelDurum();
+            csv += '--- GENEL OZET ---\n';
+            csv += `Toplam Uretim / Ciro (TL),${durum.toplamUretimDegeri.toFixed(2)}\n`;
+            csv += `Toplam Tahsilat (TL),${durum.toplamTahsilat.toFixed(2)}\n`;
+            csv += `Toplam Gider (TL),${durum.toplamGiderler.toFixed(2)}\n`;
+            csv += `Sistem Net Kar (TL),${durum.netKar.toFixed(2)}\n\n`;
+
+            let giris = 0; let cikis = 0;
+            if (app.data.kasaHareketleri) {
+                app.data.kasaHareketleri.forEach(h => {
+                    if (h.tip === 'giris') giris += h.tutar;
+                    if (h.tip === 'cikis') cikis += h.tutar;
+                });
+            }
+            csv += '--- KASA OZETI ---\n';
+            csv += `Kasa Girisleri (TL),${giris.toFixed(2)}\n`;
+            csv += `Kasa Cikislari (TL),${cikis.toFixed(2)}\n`;
+            csv += `Kasa Net Bakiye (TL),${(giris - cikis).toFixed(2)}\n\n`;
+
+            csv += '--- MUSTERI (FABRIKA) BORC DURUMLARI ---\n';
+            csv += 'Fabrika Adi,Toplam Satis (TL),Toplam Odenen (TL),Kalan Borc (TL)\n';
+            app.data.fabrikalar.forEach(fab => {
+                const bakiye = calculator.fabrikaBakiyesi(fab.id);
+                csv += `"${fab.ad}",${bakiye.toplamUretim.toFixed(2)},${bakiye.toplamOdenen.toFixed(2)},${bakiye.kalanBorc.toFixed(2)}\n`;
+            });
+
+            csv += '\n--- TUM GIDERLERIN DETAYI ---\n';
+            csv += 'Tarih,Tip,Baslik,Tutar (TL)\n';
+            const giderler = [...app.data.giderler].sort((a,b) => new Date(a.tarih) - new Date(b.tarih));
+            giderler.forEach(g => {
+                const tip = g.tip === 'fabrika' ? 'Fabrika' : 'Diger';
+                csv += `${g.tarih},${tip},"${g.aciklama.replace(/"/g, '""')}",${g.tutar.toFixed(2)}\n`;
+            });
+
+            csvManager.download(csv, `ay_sonu_kapanis_${app.helpers.getTodayISO()}.csv`);
+        },
     };
     
     // --- BÖLÜM 7: UYGULAMA BAŞLATMA ---
@@ -6999,6 +7152,7 @@ setTimeout(renderer.stokListesi, 1000);
 window.renderer = renderer;
 window.actions = actions;
 window.dataManager = dataManager;
+window.csvManager = csvManager;
 // ------------------------------------------------------------------
     
     // UYGULAMAYI BAŞLAT
