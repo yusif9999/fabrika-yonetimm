@@ -321,14 +321,25 @@
 
     <div id="saas-register" class="auth-container">
         <h1>İşletme Kaydı</h1>
-        <p>Bilgilerinizi girerek kayıt talebi oluşturun.</p>
+        <p id="reg-desc">Bilgilerinizi girerek kayıt talebi oluşturun.</p>
         <form id="saas-register-form">
-            <div class="input-group"><label>Şirket/Fabrika Adı</label><input type="text" id="reg-company-name" required></div>
-            <div class="input-group"><label>E-Posta Adresi</label><input type="email" id="reg-email" required></div>
-            <div class="input-group"><label>Kullanıcı Adı (Giriş İçin)</label><input type="text" id="reg-username" required></div>
-            <div class="input-group"><label>Şifre</label><input type="password" id="reg-password" required></div>
-            <button type="submit" class="btn btn-success btn-full">Kayıt Ol</button>
-            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showLanding()">Geri Dön</button>
+            <div id="reg-step-1">
+                <div class="input-group"><label>Şirket/Fabrika Adı</label><input type="text" id="reg-company-name" required></div>
+                <div class="input-group"><label>E-Posta Adresi</label><input type="email" id="reg-email" required></div>
+                <div class="input-group"><label>Kullanıcı Adı (Giriş İçin)</label><input type="text" id="reg-username" required></div>
+                <div class="input-group"><label>Şifre</label><input type="password" id="reg-password" required></div>
+                <button type="button" class="btn btn-info btn-full" id="btn-request-code" onclick="saas.requestRegisterCode()">Kodu Gönder</button>
+                <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showLanding()">Geri Dön</button>
+            </div>
+            
+            <div id="reg-step-2" style="display: none;">
+                <div class="alert alert-success" style="background:#e8f8f5; color:#0e6251; padding:10px; border-radius:5px; margin-bottom:15px; font-size:14px; text-align:left;">
+                    📧 E-posta adresinize 6 haneli bir onay kodu gönderdik. Lütfen kodu aşağıya giriniz.
+                </div>
+                <div class="input-group"><label>6 Haneli Onay Kodu</label><input type="text" id="reg-code" maxlength="6" placeholder="Örn: 123456"></div>
+                <button type="submit" class="btn btn-success btn-full">Kayıt Ol</button>
+                <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.cancelRegister()">İptal</button>
+            </div>
         </form>
     </div>
 
@@ -336,10 +347,34 @@
         <h1>Şirket Girişi</h1>
         <p>İşletme kullanıcı adı ve şifrenizle giriş yapın.</p>
         <form id="saas-login-form">
-            <div class="input-group"><label>Şirket Kullanıcı Adı</label><input type="text" id="login-username" required></div>
+            <div class="input-group"><label>Şirket Kullanıcı Adı veya E-Posta</label><input type="text" id="login-username" required></div>
             <div class="input-group"><label>Şifre</label><input type="password" id="login-password" required></div>
             <button type="submit" class="btn btn-primary btn-full">Giriş Yap</button>
-            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showLanding()">Geri Dön</button>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="button" class="btn btn-warning" style="flex:1;" onclick="saas.showCompanyForgotPassword()">Şifremi Unuttum</button>
+                <button type="button" class="btn btn-secondary" style="flex:1;" onclick="saas.showLanding()">Geri Dön</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="saas-company-forgot-pw" class="auth-container">
+        <h1>Şirket Şifre Kurtarma</h1>
+        <p>İşletme kullanıcı adınızı veya sisteme kayıtlı e-postanızı girin.</p>
+        <form onsubmit="saas.requestCompanyResetCode(event)">
+            <div class="input-group"><label>Kullanıcı Adı veya E-Posta</label><input type="text" id="company-forgot-pw-user" required></div>
+            <button type="submit" id="btn-company-req-code" class="btn btn-info btn-full">Kodu Gönder</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showLogin()">İptal</button>
+        </form>
+    </div>
+
+    <div id="saas-company-reset-pw" class="auth-container">
+        <h1>İşletme Şifresini Yenile</h1>
+        <p>E-postanıza gelen 6 haneli kodu ve yeni şifrenizi girin.</p>
+        <form onsubmit="saas.resetCompanyPassword(event)">
+            <div class="input-group"><label>6 Haneli Kod</label><input type="text" id="company-reset-pw-code" required maxlength="6"></div>
+            <div class="input-group"><label>Yeni Şifre</label><input type="password" id="company-reset-pw-new" required minlength="4"></div>
+            <button type="submit" id="btn-company-reset-pw" class="btn btn-success btn-full">Şifreyi Değiştir</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="saas.showLogin()">İptal</button>
         </form>
     </div>
 
@@ -409,7 +444,10 @@
             </div>
 
             <div id="admin-view-payments" style="display:none;">
-                <h3>Tahsilat Raporu</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>Tahsilat Raporu</h3>
+                    <button class="btn-sm-info" style="padding: 8px 15px; font-size: 13px;" onclick="saas.showPaymentLogs()">Geçmiş (Silinen/Düzenlenen)</button>
+                </div>
                 <div class="admin-table-container">
                     <table id="saas-payments-table">
                         <thead>
@@ -418,6 +456,7 @@
                                 <th>Tutar</th>
                                 <th>Süre</th>
                                 <th>İşlem Tarihi</th>
+                                <th>İşlemler</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -519,7 +558,32 @@
             </div>
             <div id="admin-login-error" class="auth-message"></div>
             <button type="submit" class="btn btn-primary btn-full">Giriş Yap</button>
-            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 15px;" onclick="main.showLoginChoice()">Geri</button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button type="button" class="btn btn-warning" style="flex:1;" onclick="main.showInternalAdminForgotPassword()">Şifremi Unuttum</button>
+                <button type="button" class="btn btn-secondary" style="flex:1;" onclick="main.showLoginChoice()">Geri Dön</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="internal-admin-forgot-pw" class="auth-container">
+        <h1>Yönetici Şifre Kurtarma</h1>
+        <p>İşletme kaydında kullandığınız e-posta adresine bir onay kodu gönderilecektir.</p>
+        <form onsubmit="main.requestInternalAdminResetCode(event)">
+            <div class="input-group"><label>Yönetici Kullanıcı Adınız</label><input type="text" id="int-forgot-user" required></div>
+            <button type="submit" id="btn-int-req-code" class="btn btn-info btn-full">Kodu Gönder</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="main.showAdminLogin()">İptal</button>
+        </form>
+    </div>
+
+    <div id="internal-admin-reset-pw" class="auth-container">
+        <h1>Yönetici Şifresini Yenile</h1>
+        <p>İşletmenizin e-posta adresine gelen 6 haneli kodu ve yeni şifrenizi girin.</p>
+        <form onsubmit="main.resetInternalAdminPassword(event)">
+            <input type="hidden" id="int-reset-user">
+            <div class="input-group"><label>6 Haneli Kod</label><input type="text" id="int-reset-code" required maxlength="6"></div>
+            <div class="input-group"><label>Yeni Şifre (En az 4 karakter)</label><input type="password" id="int-reset-new" required minlength="4"></div>
+            <button type="submit" id="btn-int-reset-pw" class="btn btn-success btn-full">Şifreyi Değiştir</button>
+            <button type="button" class="btn btn-secondary btn-full" style="margin-top: 10px;" onclick="main.showAdminLogin()">İptal</button>
         </form>
     </div>
 
@@ -1134,18 +1198,108 @@ const main = {};
         currentCompanyId: null,
         
         hideAll: () => {
-    ['saas-landing', 'saas-register', 'saas-login', 'saas-admin-login', 'saas-admin-panel', 'saas-forgot-pw', 'saas-reset-pw'].forEach(id => {
+    ['saas-landing', 'saas-register', 'saas-login', 'saas-admin-login', 'saas-admin-panel', 'saas-forgot-pw', 'saas-reset-pw','saas-company-forgot-pw', 'saas-company-reset-pw'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
     if (typeof main !== 'undefined' && main.hideAllAuth) main.hideAllAuth(); 
 },
         showLanding: () => { saas.hideAll(); document.getElementById('saas-landing').style.display = 'block'; },
-        showRegister: () => { saas.hideAll(); document.getElementById('saas-register').style.display = 'block'; },
+        showRegister: () => { 
+            saas.hideAll(); 
+            document.getElementById('saas-register').style.display = 'block'; 
+            document.getElementById('reg-step-1').style.display = 'block';
+            document.getElementById('reg-step-2').style.display = 'none';
+        },
+        cancelRegister: () => {
+            document.getElementById('reg-step-2').style.display = 'none';
+            document.getElementById('reg-step-1').style.display = 'block';
+            document.getElementById('reg-code').value = '';
+        },
+        requestRegisterCode: async () => {
+            const companyName = document.getElementById('reg-company-name').value;
+            const email = document.getElementById('reg-email').value;
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            const btn = document.getElementById('btn-request-code');
+
+            if(!companyName || !email || !username || !password) {
+                alert("Lütfen kodu istemeden önce tüm alanları doldurun."); return;
+            }
+
+            btn.innerText = "Gönderiliyor...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/saas/request-register-code', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ email }) 
+                });
+                const result = await res.json();
+                
+                if (!res.ok) { 
+                    alert("Hata: " + result.error); 
+                } else {
+                    // Başarılıysa 2. adımı (Kod girme ekranını) göster
+                    document.getElementById('reg-step-1').style.display = 'none';
+                    document.getElementById('reg-step-2').style.display = 'block';
+                }
+            } catch (err) { alert('Sunucu bağlantı hatası!'); }
+            
+            btn.innerText = "Kodu Gönder";
+            btn.disabled = false;
+        },
         showLogin: () => { saas.hideAll(); document.getElementById('saas-login').style.display = 'block'; },
         showAdminLogin: () => { saas.hideAll(); document.getElementById('saas-admin-login').style.display = 'block'; },
         showForgotPassword: () => { saas.hideAll(); document.getElementById('saas-forgot-pw').style.display = 'block'; },
 showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-pw').style.display = 'block'; },
+showCompanyForgotPassword: () => { saas.hideAll(); document.getElementById('saas-company-forgot-pw').style.display = 'block'; },
+        showCompanyResetPassword: () => { saas.hideAll(); document.getElementById('saas-company-reset-pw').style.display = 'block'; },
+
+        requestCompanyResetCode: async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('company-forgot-pw-user').value;
+            const btn = document.getElementById('btn-company-req-code');
+            btn.innerText = "Gönderiliyor..."; btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/saas/forgot-password', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username })
+                });
+                const result = await res.json();
+                if(result.success) {
+                    alert(result.message);
+                    saas.showCompanyResetPassword(); // Kod girme ekranına at
+                } else { alert(result.error); }
+            } catch(err) { alert("Sunucu hatası."); }
+            btn.innerText = "Kodu Gönder"; btn.disabled = false;
+        },
+
+        resetCompanyPassword: async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('company-forgot-pw-user').value; 
+            const code = document.getElementById('company-reset-pw-code').value;
+            const newPassword = document.getElementById('company-reset-pw-new').value;
+            const btn = document.getElementById('btn-company-reset-pw');
+            btn.innerText = "İşleniyor..."; btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/saas/reset-password', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username, code, newPassword })
+                });
+                const result = await res.json();
+                if(result.success) {
+                    alert(result.message);
+                    saas.showLogin(); // Başarılıysa normal girişe dön
+                } else { alert(result.error); }
+            } catch(err) { alert("Sunucu hatası."); }
+            btn.innerText = "Şifreyi Değiştir"; btn.disabled = false;
+        },
         
         // --- İŞLEMLER ---
         register: async (e) => {
@@ -1154,13 +1308,28 @@ showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-p
                 companyName: document.getElementById('reg-company-name').value,
                 email: document.getElementById('reg-email').value,
                 username: document.getElementById('reg-username').value,
-                password: document.getElementById('reg-password').value
+                password: document.getElementById('reg-password').value,
+                code: document.getElementById('reg-code').value // Kullanıcının girdiği kod
             };
+
+            if(!data.code) { alert("Lütfen e-postanıza gelen kodu girin."); return; }
+
             try {
-                const res = await fetch('/api/saas/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-                if (!res.ok) { alert("Kayıt Hatası: " + (await res.json()).error); return; }
-                alert("Kayıt Başarılı!"); saas.showLanding();
-            } catch (err) { alert('Hata!'); }
+                const res = await fetch('/api/saas/register', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(data) 
+                });
+                const result = await res.json();
+                
+                if (!res.ok) { 
+                    alert("Kayıt Hatası: " + result.error); return; 
+                }
+                
+                alert(result.message); // Kayıt başarılı mesajı
+                document.getElementById('saas-register-form').reset();
+                saas.showLanding(); // Ana ekrana döndür
+            } catch (err) { alert('Hata oluştu!'); }
         },
 
         login: async (e) => {
@@ -1242,7 +1411,7 @@ showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-p
 
                     tbody.innerHTML += `
                         <tr>
-                            <td><b>${comp.companyName}</b><br><small>${comp.email}</small></td>
+                            <td><b>${comp.companyName}</b><br><small>${comp.email} (${comp.username})</small></td>
                             <td><span class="status-badge status-${comp.status}">${comp.status}</span></td>
                             <td>Başlangıç: ${startD}<br>Bitiş: ${endD}</td>
                             <td>${actions}</td>
@@ -1293,14 +1462,16 @@ showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-p
         },
 
         // YENİ: Ödeme Geçmişini Yükle
+        
+        // YENİ: Ödeme Geçmişini Yükle (Düzenle ve Sil butonlu)
         loadPayments: async () => {
             const tbody = document.querySelector('#saas-payments-table tbody');
-            tbody.innerHTML = '<tr><td colspan="4">Yükleniyor...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">Yükleniyor...</td></tr>';
             try {
                 const res = await fetch('/api/saas/admin/payments');
                 const payments = await res.json();
                 tbody.innerHTML = '';
-                if(payments.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Henüz ödeme yok.</td></tr>'; return; }
+                if(payments.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Henüz ödeme yok.</td></tr>'; return; }
                 
                 payments.forEach(p => {
                     const date = new Date(p.paymentDate).toLocaleDateString('tr-TR') + ' ' + new Date(p.paymentDate).toLocaleTimeString('tr-TR');
@@ -1310,12 +1481,242 @@ showResetPassword: () => { saas.hideAll(); document.getElementById('saas-reset-p
                             <td style="color:green; font-weight:bold;">${p.amount} TL</td>
                             <td>${p.period}</td>
                             <td>${date}</td>
+                            <td>
+                                <button class="btn-sm-warning" onclick="saas.editPayment('${p._id}', '${p.amount}', '${p.period}')">Düzenle</button>
+                                <button class="btn-sm-danger" onclick="saas.deletePayment('${p._id}')">Sil</button>
+                            </td>
                         </tr>
                     `;
                 });
-            } catch (err) { tbody.innerHTML = '<tr><td colspan="4">Hata.</td></tr>'; }
+            } catch (err) { tbody.innerHTML = '<tr><td colspan="5">Hata.</td></tr>'; }
         },
 
+        // YENİ: Ödeme Silme
+        deletePayment: async (id) => {
+            if(!confirm('Bu ödeme kaydını tamamen silmek istediğinizden emin misiniz?')) return;
+            try {
+                const res = await fetch('/api/saas/admin/delete-payment', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ id }) 
+                });
+                const result = await res.json();
+                if(result.success) {
+                    saas.loadPayments(); // Listeyi yenile
+                } else { alert("Hata oluştu."); }
+            } catch(err) { alert("Sunucu hatası."); }
+        },
+
+        // YENİ: Ödeme Düzenleme
+        
+        // YENİ: Ödeme Düzenleme (Özel Modal ve Select Menüsü ile)
+        editPayment: (id, currentAmount, currentPeriod) => {
+            // Arka plan karartması ve özel modal kapsayıcısı oluştur
+            const modalOverlay = document.createElement('div');
+            modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.3s;';
+            
+            // Modalın HTML içeriği (Select menüsü dahil)
+            modalOverlay.innerHTML = `
+                <div style="background:white; padding:30px; border-radius:10px; width:400px; max-width:90%; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+                    <h2 style="margin-top:0; margin-bottom:20px; color:#2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px;">Ödeme Düzenle</h2>
+                    
+                    <div style="margin-bottom:15px; text-align:left;">
+                        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#34495e;">Tutar (TL)</label>
+                        <input type="number" id="edit-pay-amount" value="${currentAmount}" style="width:100%; padding:12px; border:1px solid #bdc3c7; border-radius:6px; font-size:16px;">
+                    </div>
+                    
+                    <div style="margin-bottom:25px; text-align:left;">
+                        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#34495e;">Süre Seçimi</label>
+                        <select id="edit-pay-period" style="width:100%; padding:12px; border:1px solid #bdc3c7; border-radius:6px; font-size:16px; background:white; cursor:pointer;">
+                            <option value="1 Ay" ${currentPeriod === '1 Ay' ? 'selected' : ''}>1 Ay</option>
+                            <option value="3 Ay" ${currentPeriod === '3 Ay' ? 'selected' : ''}>3 Ay</option>
+                            <option value="6 Ay" ${currentPeriod === '6 Ay' ? 'selected' : ''}>6 Ay</option>
+                            <option value="12 Ay" ${currentPeriod === '12 Ay' ? 'selected' : ''}>1 Yıl (12 Ay)</option>
+                            <option value="24 Ay" ${currentPeriod === '24 Ay' ? 'selected' : ''}>2 Yıl (24 Ay)</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px;">
+                        <button id="save-edit-pay" style="flex:1; background:#2ecc71; color:white; border:none; padding:12px; border-radius:6px; font-size:16px; font-weight:bold; cursor:pointer; transition: 0.2s;">Kaydet</button>
+                        <button id="cancel-edit-pay" style="flex:1; background:#e74c3c; color:white; border:none; padding:12px; border-radius:6px; font-size:16px; font-weight:bold; cursor:pointer; transition: 0.2s;">İptal</button>
+                    </div>
+                </div>
+            `;
+
+            // Modalı sayfaya ekle
+            document.body.appendChild(modalOverlay);
+
+            // İptal Butonu İşlevi
+            document.getElementById('cancel-edit-pay').onclick = () => {
+                document.body.removeChild(modalOverlay);
+            };
+
+            // Kaydet Butonu İşlevi
+            document.getElementById('save-edit-pay').onclick = async () => {
+                const newAmount = document.getElementById('edit-pay-amount').value;
+                const newPeriod = document.getElementById('edit-pay-period').value;
+                
+                if (!newAmount || newAmount <= 0) {
+                    alert("Lütfen geçerli bir tutar giriniz.");
+                    return;
+                }
+
+                try {
+                    // Kaydetme butonunu devre dışı bırakıp "Kaydediliyor..." yazalım ki iki kere tıklanmasın
+                    document.getElementById('save-edit-pay').innerText = 'Kaydediliyor...';
+                    document.getElementById('save-edit-pay').disabled = true;
+
+                    const res = await fetch('/api/saas/admin/update-payment', { 
+                        method: 'POST', 
+                        headers: {'Content-Type': 'application/json'}, 
+                        body: JSON.stringify({ id, amount: newAmount, period: newPeriod }) 
+                    });
+                    const result = await res.json();
+                    
+                    if(result.success) {
+                        document.body.removeChild(modalOverlay);
+                        saas.loadPayments(); // Listeyi yenile
+                    } else { 
+                        alert("Hata oluştu."); 
+                        document.body.removeChild(modalOverlay);
+                    }
+                } catch(err) { 
+                    alert("Sunucu hatası."); 
+                    document.body.removeChild(modalOverlay);
+                }
+            };
+        },
+        // YENİ: Ödeme Loglarını (Geçmişini) Gösteren Modal
+        // YENİ: Ödeme Loglarını (Geçmişini) Gösteren Modal (Arama ve Silme Özellikli)
+        showPaymentLogs: () => {
+            const modalOverlay = document.createElement('div');
+            modalOverlay.id = 'payment-logs-modal-overlay';
+            modalOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; animation: fadeIn 0.3s;';
+            
+            modalOverlay.innerHTML = `
+                <div style="background:white; padding:30px; border-radius:10px; width:900px; max-width:95%; max-height: 85vh; overflow-y: auto; box-shadow:0 10px 30px rgba(0,0,0,0.2); position: relative;">
+                    <button id="close-pay-logs" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:24px; font-weight:bold; color:#7f8c8d; cursor:pointer;">&times;</button>
+                    <h2 style="margin-top:0; color:#2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px;">Silinme ve Düzenleme Geçmişi</h2>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; margin-bottom:15px;">
+                        <input type="text" id="search-pay-logs" placeholder="🔍 Şirket veya işlem ara..." style="padding:10px; border:1px solid #ccc; border-radius:4px; width:300px;" onkeyup="saas.filterPaymentLogs()">
+                        <button class="btn-sm-danger" style="padding:10px 15px; font-size:14px; cursor:pointer;" onclick="saas.clearAllPaymentLogs()">🗑️ Hepsini Sil</button>
+                    </div>
+
+                    <table style="width:100%; border-collapse: collapse; margin-top:10px; font-size:14px; text-align:left;" id="pay-logs-table">
+                        <thead style="background:#f8f9fa;">
+                            <tr>
+                                <th style="padding:12px; border-bottom:2px solid #ddd; color:#2c3e50;">Tarih</th>
+                                <th style="padding:12px; border-bottom:2px solid #ddd; color:#2c3e50;">Şirket</th>
+                                <th style="padding:12px; border-bottom:2px solid #ddd; color:#2c3e50;">İşlem</th>
+                                <th style="padding:12px; border-bottom:2px solid #ddd; color:#2c3e50;">Eski Değerler</th>
+                                <th style="padding:12px; border-bottom:2px solid #ddd; color:#2c3e50;">Yeni Değerler</th>
+                                <th style="padding:12px; border-bottom:2px solid #ddd; color:#2c3e50; text-align:center;">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pay-logs-tbody">
+                            <tr><td colspan="6" style="text-align:center; padding:20px;">Geçmiş yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.body.appendChild(modalOverlay);
+            document.getElementById('close-pay-logs').onclick = () => document.body.removeChild(modalOverlay);
+
+            // Verileri sunucudan çeken fonksiyonu çağır
+            saas.fetchAndRenderPaymentLogs();
+        },
+
+        // Verileri çekip tabloya basan fonksiyon
+        fetchAndRenderPaymentLogs: async () => {
+            const tbody = document.getElementById('pay-logs-tbody');
+            if(!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Geçmiş yükleniyor...</td></tr>';
+            
+            try {
+                const res = await fetch('/api/saas/admin/payment-logs');
+                const logs = await res.json();
+                tbody.innerHTML = '';
+                
+                if(logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#7f8c8d; font-style:italic;">Henüz silinmiş veya düzenlenmiş bir kayıt bulunmuyor.</td></tr>';
+                    return;
+                }
+
+                logs.forEach(log => {
+                    const date = new Date(log.logDate).toLocaleDateString('tr-TR') + ' ' + new Date(log.logDate).toLocaleTimeString('tr-TR');
+                    
+                    const isDelete = log.action === 'Silindi';
+                    const actionColor = isDelete ? '#e74c3c' : '#f39c12';
+                    const actionBadge = `<span style="background:${actionColor}; color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:11px;">${log.action.toUpperCase()}</span>`;
+                    
+                    const oldVal = `${log.oldAmount} TL <br><small style="color:#7f8c8d;">(${log.oldPeriod})</small>`;
+                    const newVal = isDelete ? '-' : `${log.newAmount} TL <br><small style="color:#7f8c8d;">(${log.newPeriod})</small>`;
+
+                    tbody.innerHTML += `
+                        <tr class="pay-log-row" style="border-bottom:1px solid #ecf0f1;">
+                            <td style="padding:12px; font-size:12px; color:#34495e;">${date}</td>
+                            <td style="padding:12px; font-weight:bold; color:#2c3e50;">${log.companyName}</td>
+                            <td style="padding:12px;">${actionBadge}</td>
+                            <td style="padding:12px; color:#7f8c8d; text-decoration: ${isDelete ? 'line-through' : 'none'};">${oldVal}</td>
+                            <td style="padding:12px; font-weight:bold; color:#2ecc71;">${newVal}</td>
+                            <td style="padding:12px; text-align:center;">
+                                <button class="btn-sm-danger" style="cursor:pointer;" onclick="saas.deletePaymentLog('${log._id}')">Sil</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch(err) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:red; font-weight:bold;">Veriler çekilirken bir hata oluştu!</td></tr>';
+            }
+        },
+
+        // Tabloda arama (filtreleme) fonksiyonu
+        filterPaymentLogs: () => {
+            const input = document.getElementById('search-pay-logs').value.toLowerCase();
+            const rows = document.querySelectorAll('.pay-log-row');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        },
+
+        // Tekil Log Silme Fonksiyonu
+        deletePaymentLog: async (id) => {
+            if(!confirm('Bu geçmiş kaydını kalıcı olarak silmek istediğinizden emin misiniz?')) return;
+            try {
+                const res = await fetch('/api/saas/admin/delete-payment-log', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id })
+                });
+                const result = await res.json();
+                if(result.success) {
+                    saas.fetchAndRenderPaymentLogs(); // Tabloyu anında güncelle
+                } else {
+                    alert("Hata oluştu.");
+                }
+            } catch(err) { alert("Sunucu hatası."); }
+        },
+
+        // Tüm Logları Temizleme Fonksiyonu
+        clearAllPaymentLogs: async () => {
+            if(!confirm('Hepsini silmek istediğinize emin misiniz?')) return;
+            try {
+                const res = await fetch('/api/saas/admin/clear-payment-logs', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const result = await res.json();
+                if(result.success) {
+                    saas.fetchAndRenderPaymentLogs(); // Tabloyu anında güncelle
+                } else {
+                    alert("Hata oluştu.");
+                }
+            } catch(err) { alert("Sunucu hatası."); }
+        },
+        
         // Yardımcılar
         deleteCompany: async (id) => {
             if(!confirm('Bu şirketi KALICI olarak silmek istiyor musunuz?')) return;
@@ -3989,11 +4390,98 @@ stokSil: (stokId) => {
     };
     
     // --- BÖLÜM 7: UYGULAMA BAŞLATMA ---
+    // Tüm ekranları gizleme (Yeni ekranlar eklendi)
     main.hideAllAuth = () => {
         app.dom.setupContainer.style.display = 'none';
         app.dom.loginChoiceContainer.style.display = 'none';
         app.dom.adminLoginContainer.style.display = 'none';
         app.dom.personelLoginContainer.style.display = 'none';
+        if(document.getElementById('internal-admin-forgot-pw')) document.getElementById('internal-admin-forgot-pw').style.display = 'none';
+        if(document.getElementById('internal-admin-reset-pw')) document.getElementById('internal-admin-reset-pw').style.display = 'none';
+    };
+
+    main.showAdminLogin = () => {
+        main.hideAllAuth();
+        app.dom.adminLoginContainer.style.display = 'block';
+    };
+
+    main.showInternalAdminForgotPassword = () => {
+        main.hideAllAuth();
+        document.getElementById('internal-admin-forgot-pw').style.display = 'block';
+    };
+
+    main.showInternalAdminResetPassword = (username) => {
+        main.hideAllAuth();
+        document.getElementById('int-reset-user').value = username;
+        document.getElementById('internal-admin-reset-pw').style.display = 'block';
+    };
+
+    // Yönetici Şifresi için Kod İsteği
+    main.requestInternalAdminResetCode = async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('int-forgot-user').value.trim();
+        
+        // Kişi var mı ve yetkisi Yönetici mi kontrol et
+        const personel = app.data.personel.find(p => p.kullaniciAdi && p.kullaniciAdi.toLowerCase() === username.toLowerCase());
+        if (!personel) {
+            alert("Bu kullanıcı adına sahip bir personel bulunamadı."); return;
+        }
+        const pos = app.data.pozisyonlar.find(pos => pos.id === personel.pozisyonId);
+        const isAdminPos = pos && pos.ad && pos.ad.toLowerCase() === 'yönetici';
+        if (!isAdminPos) {
+            alert("Bu kullanıcı yönetici yetkisine sahip değil. Lütfen yöneticinizle görüşün."); return;
+        }
+
+        const btn = document.getElementById('btn-int-req-code');
+        btn.innerText = "Gönderiliyor..."; btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/saas/internal-admin/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'company-id': saas.currentCompanyId }
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert(result.message);
+                main.showInternalAdminResetPassword(username); // Kod girme ekranına geç
+            } else { alert(result.error); }
+        } catch(err) { alert("Sunucu hatası."); }
+        
+        btn.innerText = "Kodu Gönder"; btn.disabled = false;
+    };
+
+    // Yönetici Yeni Şifreyi Kaydetme
+    main.resetInternalAdminPassword = async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('int-reset-user').value;
+        const code = document.getElementById('int-reset-code').value;
+        const newPassword = document.getElementById('int-reset-new').value;
+        
+        const btn = document.getElementById('btn-int-reset-pw');
+        btn.innerText = "İşleniyor..."; btn.disabled = true;
+
+        try {
+            // 1. Sunucuda Kodu Doğrula
+            const res = await fetch('/api/saas/internal-admin/verify-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'company-id': saas.currentCompanyId },
+                body: JSON.stringify({ code })
+            });
+            const result = await res.json();
+            
+            if(result.success) {
+                // 2. Doğrulama başarılıysa şifreyi güncelle ve veritabanına kaydet
+                const personel = app.data.personel.find(p => p.kullaniciAdi && p.kullaniciAdi.toLowerCase() === username.toLowerCase());
+                if (personel) {
+                    personel.sifre = await app.helpers.hash(newPassword);
+                    await dataManager.save();
+                    alert("Şifreniz başarıyla değiştirildi. Şimdi yeni şifrenizle giriş yapabilirsiniz.");
+                    main.showAdminLogin();
+                }
+            } else { alert(result.error); }
+        } catch(err) { alert("Sunucu hatası."); }
+        
+        btn.innerText = "Şifreyi Değiştir"; btn.disabled = false;
     };
     main.showLoginChoice = () => {
         main.hideAllAuth();
