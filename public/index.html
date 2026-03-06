@@ -3219,14 +3219,17 @@ kasaOzet: () => {
         navigate: (e, forcePageId = null) => {
             if (e) e.preventDefault();
             const pageId = forcePageId || e.currentTarget.dataset.page;
+            
+            // DÜZELTME: 'fabrika-notlari' sayfası işçi ve stok personeli için erişilebilir listeye eklendi
             if (app.currentUser.role === 'isci') { 
-                const allowedPages = ['vardiya-yonetimi']; 
+                const allowedPages = ['vardiya-yonetimi', 'fabrika-notlari']; 
                 if (!allowedPages.includes(pageId)) { return; } 
             }
             if (app.currentUser.role === 'stok_personeli') { 
-                const allowedPages = ['vardiya-yonetimi', 'stok-yonetimi']; 
+                const allowedPages = ['vardiya-yonetimi', 'stok-yonetimi', 'fabrika-notlari']; 
                 if (!allowedPages.includes(pageId)) { return; } 
             }
+            
             app.dom.navLinks.forEach(l => l.classList.remove('active'));
             app.dom.pages.forEach(p => p.classList.remove('active'));
             const activeLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
