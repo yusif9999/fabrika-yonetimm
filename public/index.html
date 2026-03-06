@@ -642,7 +642,7 @@
 </li>
 <li data-role="admin isci stok_personeli"><a href="#" class="nav-link" data-page="vardiya-yonetimi"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.25 14.16L11 13.32V7h1.5v5.5l4.5 2.66-.75 1.3z"/></svg>Vardiya Yönetimi</a></li>
 
-<li data-role="admin operasyon stok_personeli"><a href="#" class="nav-link" data-page="uretim-ekle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>Üretim Ekle</a></li>
+<li data-role="admin operasyon"><a href="#" class="nav-link" data-page="uretim-ekle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>Üretim Ekle</a></li>
 <li data-role="admin"><a href="#" class="nav-link" data-page="personel-yonetimi"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V18h14v-1.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V18h6v-1.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Personel Yönetimi</a></li>
 <li data-role="admin operasyon"><a href="#" class="nav-link" data-page="giderler"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm-1 14H5c-.55 0-1-.45-1-1v-5h16v5c0 .55-.45 1-1 1zM20 8H4V6h16v2z"/></svg>Giderler</a></li>
 <li data-role="admin operasyon"><a href="#" class="nav-link" data-page="fabrikalar"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>Fabrika Hesapları</a></li>
@@ -803,7 +803,7 @@
                             <div class="input-group"><label for="personel-telefon">Telefon</label><input type="tel" id="personel-telefon" placeholder="Örn: 0555 123 4567"></div>
                             <div class="input-group"><label for="personel-ise-alim-tarihi">İşe Alınma Tarihi</label><input type="date" id="personel-ise-alim-tarihi"></div>
                         </div>
-                        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+                       <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
                             <div class="input-group"><label for="personel-pozisyon-select">Pozisyon</label><select id="personel-pozisyon-select" required><option value="" disabled selected>Pozisyon Seçin...</option></select></div>
                              <div class="input-group">
                                 <label for="personel-net-maas" style="color: var(--success-color);">Net Maaş (Ele Geçen)</label>
@@ -821,6 +821,10 @@
                                     <option value="Yarım Ay">Yarım Ay</option>
                                     <option value="Avans">Avans</option>
                                     <option value="Prim">Prim Usulü</option> </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="personel-gunluk-saat" style="color: #8e44ad; font-weight:bold;">Günlük Çalışma Saati</label>
+                                <input type="number" step="0.5" id="personel-gunluk-saat" placeholder="Örn: 8 veya 9" value="9" required style="border: 2px solid #8e44ad;">
                             </div>
                             <div class="input-group"><label for="personel-durum">Durum</label><select id="personel-durum"><option value="Aktif" selected>Aktif</option><option value="İzinde">İzinde</option><option value="Ayrıldı">İşten Ayrıldı</option></select></div>
                         </div>
@@ -1267,19 +1271,25 @@
                 <div class="content-box danger-zone" style="border-left-color: var(--secondary-color);">
                     <h2 style="color: var(--dark-color); border-bottom-color: var(--secondary-color);">Aylık Kapanış ve Raporlama</h2>
                     <p style="font-size: 15px;">Bu ekrandan içinde bulunduğunuz ayın tüm gelir, gider, tahsilat ve kâr durumunu Excel (CSV) olarak bilgisayarınıza indirebilirsiniz.</p>
-                    <p style="font-size: 15px;"><strong>Ayı Kapat</strong> işlemine bastığınızda; sistemdeki tüm işlem geçmişi (gelirler, giderler, üretimler) sıfırlanır ve yeni aya temiz bir başlangıç yapılır. Fabrikaların mevcut borçları ve kasanızdaki para <strong>"Geçmiş Aydan Devreden"</strong> olarak yeni aya aktarılır (Kimsenin borcu silinmez).</p>
+                    <p style="font-size: 15px;"><strong>Ayı Kapat</strong> işlemine bastığınızda; sistemdeki mevcut işlem geçmişi (gelirler, giderler, üretimler) <strong>Geçmiş Aylar Arşivi'ne</strong> aktarılır ve yeni aya temiz bir başlangıç yapılır. Fabrikaların mevcut borçları ve kasanızdaki para <strong>"Geçmiş Aydan Devreden"</strong> olarak yeni aya aktarılır (Kimsenin borcu silinmez).</p>
                     
                     <div class="card-container" style="margin-top: 25px;">
-                        <div class="card"><h3>Aylık Toplam Üretim (Ciro)</h3><div class="value" id="kapanis-ciro">0 ₺</div></div>
-                        <div class="card"><h3>Aylık Toplam Tahsilat</h3><div class="value" id="kapanis-tahsilat">0 ₺</div></div>
-                        <div class="card"><h3>Aylık Toplam Gider</h3><div class="value loss" id="kapanis-gider">0 ₺</div></div>
-                        <div class="card"><h3>Aylık Sistem Net Kârı</h3><div class="value profit" id="kapanis-netkar">0 ₺</div></div>
+                        <div class="card"><h3>İçinde Bulunan Ay Toplam Üretim (Ciro)</h3><div class="value" id="kapanis-ciro">0 ₺</div></div>
+                        <div class="card"><h3>İçinde Bulunan Ay Toplam Tahsilat</h3><div class="value" id="kapanis-tahsilat">0 ₺</div></div>
+                        <div class="card"><h3>İçinde Bulunan Ay Toplam Gider</h3><div class="value loss" id="kapanis-gider">0 ₺</div></div>
+                        <div class="card"><h3>İçinde Bulunan Ay Sistem Net Kârı</h3><div class="value profit" id="kapanis-netkar">0 ₺</div></div>
                     </div>
 
                     <div style="display: flex; gap: 20px; margin-top: 30px;">
-                        <button class="btn btn-info" style="flex: 1; padding: 18px; font-size: 16px; font-weight: bold;" onclick="csvManager.downloadAyKapanis()">📊 AY SONU RAPORUNU İNDİR (CSV)</button>
-                        <button class="btn btn-danger" style="flex: 1; padding: 18px; font-size: 16px; font-weight: bold;" onclick="actions.ayiKapatTam()">🛑 AYI KAPAT (Yeni Aya Geç)</button>
+                        <button class="btn btn-info" style="flex: 1; padding: 18px; font-size: 16px; font-weight: bold;" onclick="csvManager.downloadAyKapanis()">📊 BU AYIN RAPORUNU İNDİR (CSV)</button>
+                        <button class="btn btn-danger" style="flex: 1; padding: 18px; font-size: 16px; font-weight: bold;" onclick="actions.ayiKapatTam()">🛑 AYI KAPAT (Arşive Kaldır ve Yeni Aya Geç)</button>
                     </div>
+                </div>
+
+                <div class="content-box">
+                    <h2 style="color: var(--dark-color); border-bottom: 2px solid var(--primary-color);">Geçmiş Aylar Arşivi</h2>
+                    <p style="font-size: 14px; color: #7f8c8d;">Daha önce kapattığınız aylara ait özet finansal tabloları buradan inceleyebilirsiniz.</p>
+                    <div id="gecmis-aylar-container" style="overflow-x:auto;"></div>
                 </div>
             </div>
         </main>
@@ -2126,6 +2136,7 @@ renderer.stokGecmisi(); // <-- BU SATIRI EKLEYİN
 renderer.kasaOzet();
             renderer.kasaListesi();
             renderer.ayKapanisiOzeti();
+            renderer.gecmisAylarListesi();
         },
         updateForRole: () => {
             const role = app.currentUser.role;
@@ -2144,15 +2155,13 @@ renderer.kasaOzet();
                 else { li.style.display = 'none'; }
             });
             
-            // --- STOK PERSONELİ İÇİN FİNANSAL ALANLARI GİZLEME ---
+            // --- STOK PERSONELİ İÇİN SADECE ÜRETİM ALANLARINI GİZLEME ---
             const isStokPersoneli = role === 'stok_personeli';
             const hideElems = [
                 document.getElementById('uretim-birim-maliyet'),
                 document.getElementById('uretim-kdv-orani'),
                 document.getElementById('uretim-birim-fiyat'),
-                document.getElementById('uretim-toplam-tutar'),
-                document.getElementById('stok-fiyat'),
-                document.getElementById('stok-toplam-deger')
+                document.getElementById('uretim-toplam-tutar')
             ];
 
             hideElems.forEach(el => {
@@ -2719,7 +2728,10 @@ personelDurumu: () => {
 
     let tbodyHtml = '<tbody>';
     personeller.forEach(p => {
-        tbodyHtml += `<tr><td style="background:#f8f9fa; font-weight:bold; position:sticky; left:0; z-index:1; border-right:2px solid #ddd;">${p.ad}</td>`;
+        // İŞTE BURASI DİNAMİK: Personelin saati kayıtlı değilse 9 al, kayıtlıysa onu al.
+        const beklenenSaat = p.gunlukCalismaSaati ? parseFloat(p.gunlukCalismaSaati) : 9;
+        
+        tbodyHtml += `<tr><td style="background:#f8f9fa; font-weight:bold; position:sticky; left:0; z-index:1; border-right:2px solid #ddd;">${p.ad} <br><span style="color:#8e44ad; font-size:10px;">(${beklenenSaat} Saat)</span></td>`;
         
         days.forEach(d => {
             const entry = p.attendance ? p.attendance[d] : undefined;
@@ -2729,14 +2741,13 @@ personelDurumu: () => {
 
             if (entry) {
                 if (entry.status === 'present') {
-                    // Sadece 'present' durumunda saat kontrolü yap
-                    const calisilanSaat = entry.hours !== null ? parseFloat(entry.hours) : 9;
+                    const calisilanSaat = entry.hours !== null && entry.hours !== undefined ? parseFloat(entry.hours) : beklenenSaat;
                     
-                    if (calisilanSaat >= 9) {
+                    if (calisilanSaat >= beklenenSaat) {
                         cellHtml = `<div style="color:#27ae60; font-weight:bold; font-size:12px;">✔ ${calisilanSaat}s</div>`;
                         cellStyle += 'background-color:#e8f8f5;';
                     } else {
-                        const eksik = (9 - calisilanSaat).toFixed(1);
+                        const eksik = (beklenenSaat - calisilanSaat).toFixed(1);
                         cellHtml = `
                             <div style="color:#d35400; font-weight:bold; font-size:12px;">⚠️ ${calisilanSaat}s</div>
                             <div style="color:red; font-size:10px; font-weight:bold;">(-${eksik})</div>
@@ -2746,18 +2757,15 @@ personelDurumu: () => {
                     }
 
                 } else if (entry.status === 'weekly') {
-                    // SARI İZİN: Sadece 'İZİN' yaz, hesaplama yapma
                     cellHtml = '<span style="color:#f39c12; font-weight:bold; font-size:11px;">İZİN</span>';
                     cellStyle += 'background-color:#fcf3cf;';
                 } else if (entry.status === 'izin') {
-                    // MOR RAPOR: Sadece 'RAPOR' yaz, hesaplama yapma
                     cellHtml = '<span style="color:#8e44ad; font-weight:bold; font-size:11px;">RAPOR</span>';
                     cellStyle += 'background-color:#f4ecf7;';
                 } else if (entry.status === 'devamsiz') {
-                    // KIRMIZI DEVAMSIZ
                     cellHtml = '<span style="color:white; font-weight:bold; font-size:11px;">YOK</span>';
                     cellStyle += 'background-color:#c0392b;';
-                    title = 'Devamsız (-9 Saat)';
+                    title = `Devamsız (-${beklenenSaat} Saat)`;
                 } else if (entry.status === 'yillik_izin') {
                     cellHtml = '<span style="color:white; font-weight:bold; font-size:11px;">Y.İZİN</span>';
                     cellStyle += 'background-color:#2980b9;';
@@ -2993,6 +3001,50 @@ kasaOzet: () => {
                 netkarEl.className = 'value ' + (durum.netKar >= 0 ? 'profit' : 'loss');
             }
         },
+        gecmisAylarListesi: () => {
+            const container = document.getElementById('gecmis-aylar-container');
+            if (!container) return;
+
+            if (!app.data.gecmisAylar || app.data.gecmisAylar.length === 0) {
+                container.innerHTML = '<p class="no-data-message" style="text-align:center; padding:20px; color:#7f8c8d; font-style:italic;">Henüz kapatılmış bir ay kaydı (arşiv) bulunmuyor.</p>';
+                return;
+            }
+
+            let html = `
+            <table style="width:100%; border-collapse:collapse; margin-top:15px; text-align:left;">
+                <thead>
+                    <tr style="background:#f8f9fa;">
+                        <th style="padding:12px; border-bottom:2px solid #ddd;">Dönem</th>
+                        <th style="padding:12px; border-bottom:2px solid #ddd;">Kapanış Tarihi</th>
+                        <th style="padding:12px; border-bottom:2px solid #ddd;">O Ayki Ciro</th>
+                        <th style="padding:12px; border-bottom:2px solid #ddd;">O Ayki Net Kâr</th>
+                        <th style="padding:12px; border-bottom:2px solid #ddd; text-align:center;">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            // Listeyi en yeniden en eskiye sırala
+            const siraliAylar = [...app.data.gecmisAylar].sort((a, b) => b.id - a.id);
+
+            siraliAylar.forEach(ay => {
+                const tarih = new Date(ay.kapanisTarihi).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const netKarRenk = ay.ozet.netKar >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+
+                html += `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:12px; font-weight:bold; color:var(--dark-color);">${ay.donemAdi}</td>
+                        <td style="padding:12px; font-size:13px; color:#7f8c8d;">${tarih}</td>
+                        <td style="padding:12px; font-weight:bold;">${app.helpers.formatCurrency(ay.ozet.ciro)}</td>
+                        <td style="padding:12px; font-weight:bold; color:${netKarRenk};">${app.helpers.formatCurrency(ay.ozet.netKar)}</td>
+                        <td style="padding:12px; text-align:center;">
+                            <button class="btn-sm-primary" onclick="actions.gecmisAyDetayGoster(${ay.id})">👁️ İncele</button>
+                        </td>
+                    </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        },
         kasaListesi: () => {
             const container = document.getElementById('kasa-tablo-container');
             if (!container) return;
@@ -3172,7 +3224,7 @@ kasaOzet: () => {
                 if (!allowedPages.includes(pageId)) { return; } 
             }
             if (app.currentUser.role === 'stok_personeli') { 
-                const allowedPages = ['vardiya-yonetimi', 'uretim-ekle', 'stok-yonetimi']; 
+                const allowedPages = ['vardiya-yonetimi', 'stok-yonetimi']; 
                 if (!allowedPages.includes(pageId)) { return; } 
             }
             app.dom.navLinks.forEach(l => l.classList.remove('active'));
@@ -3355,13 +3407,16 @@ kasaOzet: () => {
 // actions nesnesinin içine ekleyin/güncelleyin:
 
 // 1. Güncellenmiş Modal (Devamsızlık Seçeneği Eklendi)
+// 1. Güncellenmiş Modal (Devamsızlık Seçeneği Eklendi)
 openAttendanceModal: (personelId, date) => {
     if (app.currentUser && app.currentUser.role !== 'admin') return;
 
     const person = app.data.personel.find(p => p.id === personelId);
     if (!person) return;
 
-    const entry = person.attendance && person.attendance[date] ? person.attendance[date] : { status: '', hours: 9 };
+    // Kişiye özel saati al
+    const beklenenSaat = person.gunlukCalismaSaati ? parseFloat(person.gunlukCalismaSaati) : 9;
+    const entry = person.attendance && person.attendance[date] ? person.attendance[date] : { status: '', hours: beklenenSaat };
     const durum = entry.status || 'bos';
     const tarihFormat = new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
 
@@ -3387,8 +3442,8 @@ openAttendanceModal: (personelId, date) => {
             </div>
 
             <div class="input-group" id="att-hours-group" style="display:${durum === 'present' ? 'block' : 'none'};">
-                <label>Çalışılan Saat</label>
-                <input type="number" id="att-hours" value="${entry.hours || 9}" step="0.5" class="form-control">
+                <label>Çalışılan Saat (Hedef: ${beklenenSaat} Saat)</label>
+                <input type="number" id="att-hours" value="${entry.hours !== null && entry.hours !== undefined ? entry.hours : beklenenSaat}" step="0.5" class="form-control">
             </div>
 
             <button type="submit" class="btn btn-primary btn-full" style="margin-top:15px;">Kaydet</button>
@@ -3400,7 +3455,6 @@ openAttendanceModal: (personelId, date) => {
         document.getElementById('attendance-form').addEventListener('submit', actions.saveAttendanceManual);
     }, 100);
 },
-
 // 2. YENİ: Toplu Yıllık İzin Modalı
 openAnnualLeaveModal: () => {
     // Personel Listesi
@@ -3478,7 +3532,6 @@ showMissingHoursReport: () => {
     const personeller = app.data.personel;
     let raporData = [];
 
-    // Hesaplama Aralığı: Son 30 Gün
     const today = new Date();
     const startDate = new Date(today);
     startDate.setDate(today.getDate() - 30); 
@@ -3487,47 +3540,36 @@ showMissingHoursReport: () => {
         let toplamEksikSaat = 0;
         let eksikGunSayisi = 0;
         let devamsizlikSayisi = 0;
+        
+        // Kişiye özel saat hesabı (Eskiden 9 yazıyordu)
+        const beklenenSaat = p.gunlukCalismaSaati ? parseFloat(p.gunlukCalismaSaati) : 9;
 
         if (p.attendance) {
             Object.keys(p.attendance).forEach(date => {
                 const recordDate = new Date(date);
                 
-                // Sadece son 30 günü hesapla
                 if (recordDate >= startDate && recordDate <= today) {
                     const entry = p.attendance[date];
                     
-                    // --- HESAPLAMA MANTIĞI ---
-                    
                     if (entry.status === 'present') {
-                        // DURUM 1: GELDİ (Çalıştı)
-                        // Saati al, eğer boşsa veya hatalıysa 9 kabul et (Eksik yok say)
-                        let saat = 9;
+                        let saat = beklenenSaat;
                         if (entry.hours !== undefined && entry.hours !== null && entry.hours !== '') {
                             saat = parseFloat(entry.hours);
                         }
                         
-                        // Eğer 9 saatten az çalıştıysa eksik yaz
-                        if (saat < 9) {
-                            toplamEksikSaat += (9 - saat);
+                        if (saat < beklenenSaat) {
+                            toplamEksikSaat += (beklenenSaat - saat);
                             eksikGunSayisi++;
                         }
 
                     } else if (entry.status === 'devamsiz') {
-                        // DURUM 2: DEVAMSIZ (Kırmızı)
-                        // Mazeretsiz gelmediği için tam gün (9 saat) ceza
-                        toplamEksikSaat += 9;
+                        toplamEksikSaat += beklenenSaat;
                         devamsizlikSayisi++;
-                    
-                    } else if (entry.status === 'weekly' || entry.status === 'izin' || entry.status === 'yillik_izin') {
-                        // DURUM 3: İZİNLER (Sarı, Mor, Mavi)
-                        // BU GÜNLER KESİNLİKLE EKSİK SAYILMAZ!
-                        // İşlem yapma, pas geç.
-                    }
+                    } 
                 }
             });
         }
 
-        // Eğer eksik çalışma varsa listeye ekle
         if (toplamEksikSaat > 0) {
             raporData.push({
                 ad: p.ad,
@@ -3537,7 +3579,6 @@ showMissingHoursReport: () => {
         }
     });
 
-    // Raporu Sırala (En çok eksiği olan en üstte)
     raporData.sort((a, b) => b.eksikSaat - a.eksikSaat);
 
     let html = `
@@ -3722,6 +3763,7 @@ saveAttendanceManual: (e) => {
             const sgkTutarInput = form.querySelector('#personel-sgk-tutar');
             const netMaasInput = app.dom.personelNetMaasInput; 
             const brutMaasInput = app.dom.personelBrutMaasInput; 
+            const saatInput = form.querySelector('#personel-gunluk-saat');
             
             if (selectedId === 'new') {
                 form.reset();
@@ -3733,6 +3775,7 @@ saveAttendanceManual: (e) => {
                 sifreInput.placeholder = 'Yeni şifre (en az 4 karakter)';
                 sgkSelect.value = 'Yok'; 
                 sgkTutarGroup.style.display = 'none';
+                if(saatInput) saatInput.value = '9'; // Varsayılan
             } else {
                 const personelId = parseInt(selectedId);
                 const personel = app.data.personel.find(p => p.id === personelId);
@@ -3748,6 +3791,7 @@ saveAttendanceManual: (e) => {
                 
                 netMaasInput.value = personel.netMaas || '';
                 brutMaasInput.value = personel.brutMaas || '';
+                if(saatInput) saatInput.value = personel.gunlukCalismaSaati || 9;
                 
                 form.querySelector('#personel-maas-tipi').value = personel.maasTipi;
                 form.querySelector('#personel-durum').value = personel.durum;
@@ -3768,6 +3812,7 @@ saveAttendanceManual: (e) => {
                 submitBtn.classList.add('btn-warning');
             }
         },
+
         handlePersonelFormSubmit: async (e) => {
             e.preventDefault();
             const selectedId = app.dom.personelIslemSelect.value;
@@ -3782,13 +3827,13 @@ saveAttendanceManual: (e) => {
             const sifre = form.querySelector('#personel-sifre').value;
             const sgkDurumu = form.querySelector('#personel-sgk-durumu').value;
             const sgkTutar = parseFloat(form.querySelector('#personel-sgk-tutar').value) || 0;
-            // Maaşları Al (Manuel)
             const netMaas = parseFloat(app.dom.personelNetMaasInput.value) || 0;
             const brutMaas = parseFloat(app.dom.personelBrutMaasInput.value) || 0;
+            const gunlukSaat = parseFloat(form.querySelector('#personel-gunluk-saat').value) || 9; // YENİ ALAN
 
             let sifreHash = '';
             if (kullaniciAdi) {
-                if (kullaniciAdi.toLowerCase() === 'admin' || app.data.personel.some(p => p.kullaniciAdi.toLowerCase() === kullaniciAdi.toLowerCase())) {
+                if (kullaniciAdi.toLowerCase() === 'admin' || app.data.personel.some(p => p.kullaniciAdi && p.kullaniciAdi.toLowerCase() === kullaniciAdi.toLowerCase())) {
                     alert('Bu kullanıcı adı zaten kullanılıyor. Lütfen başka bir kullanıcı adı seçin.');
                     return;
                 }
@@ -3807,12 +3852,13 @@ saveAttendanceManual: (e) => {
                 netMaas: netMaas, 
                 brutMaas: brutMaas, 
                 maasTipi: form.querySelector('#personel-maas-tipi').value,
+                gunlukCalismaSaati: gunlukSaat, // YENİ ALAN
                 durum: form.querySelector('#personel-durum').value,
                 kullaniciAdi: kullaniciAdi,
                 sifre: sifreHash,
                 sgkDurumu: sgkDurumu,
                 sgkTutar: sgkTutar,
-                attendance: {} // Yeni: katılım kaydı
+                attendance: {}
             };
             app.data.personel.push(newWorker);
             dataManager.save();
@@ -3830,9 +3876,9 @@ saveAttendanceManual: (e) => {
             const pozisyonId = parseInt(form.querySelector('#personel-pozisyon-select').value);
             const sgkDurumu = form.querySelector('#personel-sgk-durumu').value;
             const sgkTutar = parseFloat(form.querySelector('#personel-sgk-tutar').value) || 0;
-            // Maaşları Al (Manuel)
             const netMaas = parseFloat(app.dom.personelNetMaasInput.value) || 0;
             const brutMaas = parseFloat(app.dom.personelBrutMaasInput.value) || 0;
+            const gunlukSaat = parseFloat(form.querySelector('#personel-gunluk-saat').value) || 9; // YENİ ALAN
 
             if (!adSoyad || isNaN(pozisyonId)) { alert('İsim Soyisim ve Pozisyon alanları zorunludur.'); return; }
             const eskiAd = app.data.personel[personelIndex].ad;
@@ -3841,7 +3887,7 @@ saveAttendanceManual: (e) => {
             const yeniSifre = form.querySelector('#personel-sifre').value;
             let sifreHash = app.data.personel[personelIndex].sifre;
             if (kullaniciAdi) {
-                if (kullaniciAdi.toLowerCase() === 'admin' || app.data.personel.some(p => p.id !== personelId && p.kullaniciAdi.toLowerCase() === kullaniciAdi.toLowerCase())) {
+                if (kullaniciAdi.toLowerCase() === 'admin' || app.data.personel.some(p => p.id !== personelId && p.kullaniciAdi && p.kullaniciAdi.toLowerCase() === kullaniciAdi.toLowerCase())) {
                     alert('Bu kullanıcı adı zaten başka bir personel tarafından kullanılıyor.');
                     return;
                 }
@@ -3865,6 +3911,7 @@ saveAttendanceManual: (e) => {
                 netMaas: netMaas, 
                 brutMaas: brutMaas, 
                 maasTipi: form.querySelector('#personel-maas-tipi').value,
+                gunlukCalismaSaati: gunlukSaat, // YENİ ALAN
                 durum: form.querySelector('#personel-durum').value,
                 kullaniciAdi: kullaniciAdi,
                 sifre: sifreHash,
@@ -4621,9 +4668,45 @@ stokSil: (stokId) => {
             }
         },
        ayiKapatTam: () => {
-            const onay = confirm("⚠️ DİKKAT: AYI KAPATMA İŞLEMİ!\n\nBu işlem, içinde bulunduğunuz aya ait TÜM gelir, gider, üretim ve kasa hareketlerini silecektir.\nLütfen devam etmeden önce raporunuzu (CSV) indirdiğinizden emin olun.\n\nMüşteri borçları ve kasanızdaki mevcut para sıfırlanmayacak, yeni aya 'Devreden Bakiye' olarak eklenecektir.\n\nBu işlemi onaylıyor musunuz?");
+            const onay = confirm("⚠️ DİKKAT: AYI KAPATMA İŞLEMİ!\n\nBu işlem, mevcut ayın verilerini 'Geçmiş Aylar Arşivi'ne kaldıracak ve yeni aya temiz bir sayfa açacaktır.\n\nMüşteri borçları ve kasanızdaki mevcut para SIFIRLANMAYACAK, yeni aya 'Devreden Bakiye' olarak eklenecektir.\n\nBu işlemi onaylıyor musunuz?");
             
             if (onay) {
+                const durum = calculator.genelDurum();
+                
+                // Kasa bakiyesini hesapla
+                let giris = 0; let cikis = 0;
+                if (app.data.kasaHareketleri) {
+                    app.data.kasaHareketleri.forEach(h => {
+                        if (h.tip === 'giris') giris += h.tutar;
+                        if (h.tip === 'cikis') cikis += h.tutar;
+                    });
+                }
+                const kasaBakiye = giris - cikis;
+
+                // --- YENİ: MEVCUT AYI ARŞİVE KAYDET ---
+                if (!app.data.gecmisAylar) app.data.gecmisAylar = [];
+                const simdi = new Date();
+                const donemAdi = simdi.toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
+
+                app.data.gecmisAylar.push({
+                    id: Date.now(),
+                    donemAdi: donemAdi,
+                    kapanisTarihi: simdi.toISOString(),
+                    ozet: {
+                        ciro: durum.toplamUretimDegeri,
+                        tahsilat: durum.toplamTahsilat,
+                        gider: durum.toplamGiderler,
+                        netKar: durum.netKar,
+                        kasaBakiye: kasaBakiye
+                    },
+                    // Tüm verilerin bir kopyasını (klon) saklıyoruz
+                    uretimler: JSON.parse(JSON.stringify(app.data.uretimler || [])),
+                    giderler: JSON.parse(JSON.stringify(app.data.giderler || [])),
+                    odemeler: JSON.parse(JSON.stringify(app.data.odemeler || [])),
+                    kasaHareketleri: JSON.parse(JSON.stringify(app.data.kasaHareketleri || []))
+                });
+                // ----------------------------------------
+
                 let devredenUretimler = [];
                 let devredenOdemeler = [];
 
@@ -4640,7 +4723,7 @@ stokSil: (stokId) => {
                             birimFiyat: bakiye.kalanBorc,
                             birimMaliyet: 0,
                             kdvOrani: 0,
-                            tip: 'devir' // Bu sayede ciroya yansımaz!
+                            tip: 'devir' // Bu sayede yeni ayın cirosuna yansımaz!
                         });
                     } else if (bakiye.kalanBorc < 0) {
                         devredenOdemeler.push({
@@ -4653,14 +4736,6 @@ stokSil: (stokId) => {
                 });
 
                 // 2. Kasa Bakiyesini Devret
-                let giris = 0; let cikis = 0;
-                if (app.data.kasaHareketleri) {
-                    app.data.kasaHareketleri.forEach(h => {
-                        if (h.tip === 'giris') giris += h.tutar;
-                        if (h.tip === 'cikis') cikis += h.tutar;
-                    });
-                }
-                const kasaBakiye = giris - cikis;
                 let yeniKasa = [];
                 if (kasaBakiye > 0) {
                     yeniKasa.push({ id: Date.now(), tip: 'giris', tutar: kasaBakiye, aciklama: 'Geçmiş Aydan Devreden Kasa Bakiyesi', tarih: app.helpers.getTodayISO(), ekleyen: 'Sistem' });
@@ -4683,10 +4758,40 @@ stokSil: (stokId) => {
                 dataManager.save();
                 renderer.updateAll();
                 
-                alert("✅ Ay başarıyla kapatıldı!\n\nKayıtlar temizlendi, müşteri borçları ve kasa bakiyesi yeni aya devredildi.");
+                alert("✅ Ay başarıyla kapatıldı ve Geçmiş Aylar Arşivi'ne eklendi!\n\nKayıtlar temizlendi, müşteri borçları ve kasa bakiyesi yeni aya devredildi.");
             }
         },
+        gecmisAyDetayGoster: (id) => {
+            const ay = app.data.gecmisAylar.find(a => a.id === id);
+            if (!ay) return;
 
+            const netKarRenk = ay.ozet.netKar >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+            const kasaRenk = ay.ozet.kasaBakiye >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
+
+            const html = `
+                <div style="background:#f8f9fa; padding:20px; border-radius:8px; border:1px solid #ddd; margin-bottom:20px;">
+                    <h3 style="margin-top:0; color:var(--dark-color); text-align:center; border-bottom:2px solid #ccc; padding-bottom:10px;">${ay.donemAdi} Finansal Özeti</h3>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr; gap:15px; margin-top:15px; font-size:16px;">
+                        <div style="display:flex; justify-content:space-between; padding:5px 0;"><strong>Toplam Ciro:</strong> <span>${app.helpers.formatCurrency(ay.ozet.ciro)}</span></div>
+                        <div style="display:flex; justify-content:space-between; padding:5px 0;"><strong>Tahsilat (Giren Para):</strong> <span style="color:var(--success-color);">${app.helpers.formatCurrency(ay.ozet.tahsilat)}</span></div>
+                        <div style="display:flex; justify-content:space-between; padding:5px 0;"><strong>Giderler (Çıkan Para):</strong> <span style="color:var(--danger-color);">${app.helpers.formatCurrency(ay.ozet.gider)}</span></div>
+                        
+                        <div style="display:flex; justify-content:space-between; padding:10px 0; border-top:1px solid #ccc; font-size:18px;">
+                            <strong>Aylık Net Kâr:</strong> <span style="font-weight:bold; color:${netKarRenk};">${app.helpers.formatCurrency(ay.ozet.netKar)}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:10px 0; border-top:1px solid #ccc; font-size:18px;">
+                            <strong>Aydan Devreden Kasa:</strong> <span style="font-weight:bold; color:${kasaRenk};">${app.helpers.formatCurrency(ay.ozet.kasaBakiye)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <button class="btn btn-secondary" onclick="actions.closeModal()">Kapat</button>
+                </div>
+            `;
+
+            actions.openModal(`${ay.donemAdi} Dönem Detayı`, html, false);
+        }
     };
 
     // --- BÖLÜM 6: CSV YÖNETİCİSİ ---
@@ -5103,8 +5208,7 @@ renderer.stokListesi = function() {
     }
 
     // --- TABLO BAŞLIKLARI (Üretim Alanı Sütunu Eklendi) ---
-    const isStokPersoneli = app.currentUser && app.currentUser.role === 'stok_personeli';
-    const finansalBaslik = isStokPersoneli ? '' : '<th>Birim Fiyat</th><th>Toplam Değer</th>';
+    const finansalBaslik = '<th>Birim Fiyat</th><th>Toplam Değer</th>';
 
     let html = `
     <table>
@@ -5172,8 +5276,7 @@ renderer.stokListesi = function() {
             ? `<button class="btn-sm-primary" onclick="actions.stokSayimModalAc(${s.id})">📝 Onayla</button>`
             : `<button class="btn-sm-warning" ${isPasif ? 'disabled' : ''} onclick="actions.stokSayimBaslat(${s.id})">🔒 Sayım</button>`;
 
-        const finansalHuceler = isStokPersoneli ? '' : `<td>${app.helpers.formatCurrency(fiyat)}</td><td>${app.helpers.formatCurrency(toplamDeger)}</td>`;
-
+        const finansalHuceler = `<td>${app.helpers.formatCurrency(fiyat)}</td><td style="font-weight:bold;">${app.helpers.formatCurrency(toplamDeger)}</td>`;
         html += `
             <tr style="${trStyle}">
                 <td>${durumBadge}</td>
@@ -5676,16 +5779,16 @@ actions.stokIslemModalAc = function(id, tip) {
                 </select>
             </div>
 
-            <div class="form-grid" style="grid-template-columns: ${app.currentUser && app.currentUser.role === 'stok_personeli' ? '1fr' : '1fr 1fr 1fr'}; gap:10px;">
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap:10px;">
                 <div class="input-group">
                     <label>Miktar (${stok.birim})</label>
                     <input type="number" id="mk-miktar" step="0.01" placeholder="0" required oninput="actions.malKabulHesapla()">
                 </div>
-                <div class="input-group" style="display: ${app.currentUser && app.currentUser.role === 'stok_personeli' ? 'none' : 'block'};">
+                <div class="input-group">
                     <label>Birim Fiyat (₺)</label>
                     <input type="number" id="mk-fiyat" step="0.01" value="${stok.alisFiyati || 0}" required oninput="actions.malKabulHesapla()">
                 </div>
-                <div class="input-group" style="display: ${app.currentUser && app.currentUser.role === 'stok_personeli' ? 'none' : 'block'};">
+                <div class="input-group">
                     <label>Toplam</label>
                     <input type="text" id="mk-toplam" disabled style="background:#eee; font-weight:bold;" value="0.00 ₺">
                 </div>
