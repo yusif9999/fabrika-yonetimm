@@ -3314,17 +3314,19 @@ kasaOzet: () => {
         },
         navigate: (e, forcePageId = null) => {
             if (e) e.preventDefault();
-            const pageId = forcePageId || e.currentTarget.dataset.page;
+            let pageId = forcePageId || (e ? e.currentTarget.dataset.page : null);
             
-            // DÜZELTME: 'fabrika-notlari' sayfası işçi ve stok personeli için erişilebilir listeye eklendi
+            // DÜZELTME: Yetkisiz sayfada asılı kalmasını engelle, doğrudan kendi sayfasına fırlat
             if (app.currentUser.role === 'isci') { 
                 const allowedPages = ['vardiya-yonetimi', 'fabrika-notlari']; 
-                if (!allowedPages.includes(pageId)) { return; } 
+                if (!allowedPages.includes(pageId)) { pageId = 'vardiya-yonetimi'; } 
             }
             if (app.currentUser.role === 'stok_personeli') { 
                 const allowedPages = ['vardiya-yonetimi', 'stok-yonetimi', 'fabrika-notlari']; 
-                if (!allowedPages.includes(pageId)) { return; } 
+                if (!allowedPages.includes(pageId)) { pageId = 'stok-yonetimi'; } 
             }
+            
+            app.dom.navLinks.forEach(l => l.classList.remove('active'));
             
             app.dom.navLinks.forEach(l => l.classList.remove('active'));
             app.dom.pages.forEach(p => p.classList.remove('active'));
@@ -5342,7 +5344,8 @@ renderer.stokListesi = function() {
     }
 
     // --- TABLO BAŞLIKLARI (Üretim Alanı Sütunu Eklendi) ---
-    const finansalBaslik = '<th>Birim Fiyat</th><th>Toplam Değer</th>';
+    const isStokPersoneli = app.currentUser && app.currentUser.role === 'stok_personeli';
+    const finansalBaslik = isStokPersoneli ? '' : '<th>Birim Fiyat</th><th>Toplam Değer</th>';
 
     let html = `
     <table>
@@ -5410,7 +5413,8 @@ renderer.stokListesi = function() {
             ? `<button class="btn-sm-primary" onclick="actions.stokSayimModalAc(${s.id})">📝 Onayla</button>`
             : `<button class="btn-sm-warning" ${isPasif ? 'disabled' : ''} onclick="actions.stokSayimBaslat(${s.id})">🔒 Sayım</button>`;
 
-        const finansalHuceler = `<td>${app.helpers.formatCurrency(fiyat)}</td><td style="font-weight:bold;">${app.helpers.formatCurrency(toplamDeger)}</td>`;
+        // DÜZELTME: Fiyat bilgilerini stok personelinden gizle
+        const finansalHuceler = isStokPersoneli ? '' : `<td>${app.helpers.formatCurrency(fiyat)}</td><td style="font-weight:bold;">${app.helpers.formatCurrency(toplamDeger)}</td>`;
         html += `
             <tr style="${trStyle}">
                 <td>${durumBadge}</td>
@@ -5526,7 +5530,16 @@ renderer.stokOzetGuncelle = function() {
 
     if(document.getElementById('stok-toplam-kalem')) document.getElementById('stok-toplam-kalem').innerText = toplamKalem;
     if(document.getElementById('stok-kritik-sayi')) document.getElementById('stok-kritik-sayi').innerText = kritik;
-    if(document.getElementById('stok-toplam-deger')) document.getElementById('stok-toplam-deger').innerText = app.helpers.formatCurrency(deger);
+    
+    const degerEl = document.getElementById('stok-toplam-deger');
+    if (degerEl) {
+        if (app.currentUser && app.currentUser.role === 'stok_personeli') {
+            degerEl.parentElement.style.display = 'none'; // Personelse Toplam Değer kartını tamamen gizle
+        } else {
+            degerEl.innerText = app.helpers.formatCurrency(deger);
+            degerEl.parentElement.style.display = 'block'; // Adminse göster
+        }
+    }
 };
 
 renderer.stokGecmisiIndir = function() {
