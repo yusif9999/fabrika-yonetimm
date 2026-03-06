@@ -1355,7 +1355,7 @@ const main = {};
     // --- SAAS MODÜLÜ (GÜNCELLENMİŞ - Ayarlar ve Silme Dahil) ---
     // --- SAAS MODÜLÜ (Gelişmiş Abonelik Yönetimi) ---
     const saas = {
-        currentCompanyId: null,
+        currentCompanyId: localStorage.getItem('saas_company_id') || null,
         
         hideAll: () => {
     ['saas-landing', 'saas-register', 'saas-login', 'saas-admin-login', 'saas-admin-panel', 'saas-forgot-pw', 'saas-reset-pw','saas-company-forgot-pw', 'saas-company-reset-pw'].forEach(id => {
@@ -1502,6 +1502,11 @@ showCompanyForgotPassword: () => { saas.hideAll(); document.getElementById('saas
                 
                 saas.currentCompanyId = result.companyId;
                 const sirketAdi = result.companyName || "Panel";
+                
+                // YENİ: Şirket girişini tarayıcıya kaydet
+                localStorage.setItem('saas_company_id', result.companyId);
+                localStorage.setItem('saas_company_name', sirketAdi);
+
                 document.title = sirketAdi;
                 if(document.querySelector('#login-choice-container h1')) document.querySelector('#login-choice-container h1').textContent = sirketAdi;
                 if(document.querySelector('#sidebar .logo')) document.querySelector('#sidebar .logo').innerHTML = sirketAdi.toUpperCase();
@@ -2209,9 +2214,14 @@ renderer.kasaOzet();
             });
 
             // İlk açılacak sayfalar
-            if (role === 'isci') { actions.navigate(null, 'vardiya-yonetimi'); } 
-            else if (role === 'stok_personeli') { actions.navigate(null, 'stok-yonetimi'); } 
-            else { actions.navigate(null, 'dashboard'); }
+            const savedPage = localStorage.getItem('app_last_page');
+            if (savedPage && document.getElementById(savedPage)) {
+                actions.navigate(null, savedPage);
+            } else {
+                if (role === 'isci') { actions.navigate(null, 'vardiya-yonetimi'); } 
+                else if (role === 'stok_personeli') { actions.navigate(null, 'stok-yonetimi'); } 
+                else { actions.navigate(null, 'dashboard'); }
+            }
         },
 
         updateVardiyaDurumu: () => {
@@ -3213,7 +3223,9 @@ kasaOzet: () => {
                 localStorage.setItem('fabrikaYonetimAuth_v2_hash', '');
             } catch (e) {}
             // Oturum aç ve devam et
+            // Oturum aç ve devam et
             app.currentUser = { id: newAdmin.id, ad: newAdmin.ad, role: 'admin' };
+            localStorage.setItem('app_current_user', JSON.stringify(app.currentUser)); // YENİ: Oturumu kaydet
             app.dom.setupContainer.style.display = 'none';
             app.dom.appContainer.style.display = 'flex';
             main.runAfterLogin();
@@ -3245,6 +3257,7 @@ kasaOzet: () => {
                 }
                 // Başarılı yönetici girişi
                 app.currentUser = { id: personel.id, ad: personel.ad, role: 'admin' };
+                localStorage.setItem('app_current_user', JSON.stringify(app.currentUser)); // YENİ: Oturumu kaydet
                 app.dom.adminLoginContainer.style.display = 'none';
                 app.dom.appContainer.style.display = 'flex';
                 main.runAfterLogin();
@@ -3282,6 +3295,7 @@ kasaOzet: () => {
                 // ----------------------------------------------
 
                 app.currentUser = { id: personel.id, ad: personel.ad, role: userRole };
+                localStorage.setItem('app_current_user', JSON.stringify(app.currentUser)); // YENİ: Oturumu kaydet
                 app.dom.personelLoginContainer.style.display = 'none';
                 app.dom.appContainer.style.display = 'flex';
                 main.runAfterLogin();
@@ -3291,7 +3305,13 @@ kasaOzet: () => {
         },
 
         changePassword: async (e) => { e.preventDefault(); const form = app.dom.sifreDegistirForm; const currentPass = form.querySelector('#mevcut-sifre').value; const newPass = form.querySelector('#yeni-sifre').value; const confirmPass = form.querySelector('#yeni-sifre-onay').value; const resultMsg = app.dom.sifreDegistirSonuc; resultMsg.textContent = ''; resultMsg.style.color = 'var(--danger-color)'; const storedHash = dataManager.loadAuthHash(); const currentHash = await app.helpers.hash(currentPass); if (currentHash !== storedHash) { resultMsg.textContent = 'Mevcut Yönetici şifreniz hatalı!'; return; } if (newPass.length < 4) { resultMsg.textContent = 'Yeni şifre en az 4 karakter olmalıdır.'; return; } if (newPass !== confirmPass) { resultMsg.textContent = 'Yeni şifreler eşleşmiyor!'; return; } const newHash = await app.helpers.hash(newPass); dataManager.saveAuthHash(newHash); resultMsg.style.color = 'var(--success-color)'; resultMsg.textContent = 'Yönetici şifreniz başarıyla güncellendi!'; form.reset(); },
-        logout: () => { if(confirm("Çıkış yapmak istediğinizden emin misiniz?")) { app.currentUser = null; window.location.reload(); } },
+        logout: () => { 
+            if(confirm("Çıkış yapmak istediğinizden emin misiniz?")) { 
+                app.currentUser = null; 
+                localStorage.removeItem('app_current_user'); // YENİ: Oturumu sil
+                window.location.reload(); 
+            } 
+        },
         navigate: (e, forcePageId = null) => {
             if (e) e.preventDefault();
             const pageId = forcePageId || e.currentTarget.dataset.page;
@@ -3315,6 +3335,11 @@ kasaOzet: () => {
             // Özel sayfa güncellemeleri
             if (pageId === 'personel-durumu') {
                 renderer.personelDurumu();
+            }
+            
+            // YENİ: Son kalınan sayfayı kaydet
+            if (pageId) {
+                localStorage.setItem('app_last_page', pageId);
             }
         },
         // Yeni: vardiya başlangıcı çoklu personel destekler
@@ -5209,20 +5234,52 @@ if (stokAra) {
         if (kasaForm) kasaForm.addEventListener('submit', actions.kasaIslemEkle);
     };
     // Uygulama başlangıcında verileri yüklemek için ana boot fonksiyonu
-    main.boot = async () => {
+    // Uygulama başlangıcında verileri yüklemek için ana boot fonksiyonu
+   main.boot = async () => {
         // Form Dinleyicilerini Başlat
-        document.getElementById('saas-register-form').addEventListener('submit', saas.register);
-        document.getElementById('saas-login-form').addEventListener('submit', saas.login);
-        document.getElementById('saas-admin-login-form').addEventListener('submit', saas.adminLogin);
-
+        if (!window.bootListenersAttached) {
+            document.getElementById('saas-register-form').addEventListener('submit', saas.register);
+            document.getElementById('saas-login-form').addEventListener('submit', saas.login);
+            document.getElementById('saas-admin-login-form').addEventListener('submit', saas.adminLogin);
+            window.bootListenersAttached = true;
+        }
         // Ana uygulama veri yüklemesini burada yapmıyoruz. 
         // Kullanıcı şirkete giriş yaptığında (saas.login içinde) main.boot tekrar çağrılacak ama veri yüklemesiyle.
         
         if (saas.currentCompanyId) {
             // Şirket girişi yapılmış, normal akışı başlat
+            // Hafızadaki şirket ismini yazdır
+            const sirketAdi = localStorage.getItem('saas_company_name') || "Panel";
+            document.title = sirketAdi;
+            if(document.querySelector('#login-choice-container h1')) document.querySelector('#login-choice-container h1').textContent = sirketAdi;
+            if(document.querySelector('#sidebar .logo')) document.querySelector('#sidebar .logo').innerHTML = sirketAdi.toUpperCase();
             await dataManager.load();
             main.hideAllAuth();
-            
+            // YENİ: Daha önce admin veya personel girişi yapılmış mı?
+            // YENİ: Daha önce admin veya personel girişi yapılmış mı?
+            const savedUser = localStorage.getItem('app_current_user');
+            if (savedUser) {
+                try {
+                    app.currentUser = JSON.parse(savedUser);
+                    
+                    // KRİTİK EKLENTİ: Giriş yapılmışsa tüm başlangıç/şirket ekranlarını tamamen GİZLE
+                    saas.hideAll();
+                    const landingEl = document.getElementById('saas-landing');
+                    if (landingEl) landingEl.style.display = 'none';
+
+                    app.dom.appContainer.style.display = 'flex';
+                    main.runAfterLogin();
+
+                    // Son kalınan sayfaya git
+                    const savedPage = localStorage.getItem('app_last_page');
+                    if (savedPage && document.getElementById(savedPage)) {
+                        actions.navigate(null, savedPage);
+                    }
+                    return; // Login ekranlarına girmemek için süreci kes ve direkt devam et
+                } catch (e) {
+                    localStorage.removeItem('app_current_user');
+                }
+            }
             // Yönetici kontrolü (Mevcut kodunuzdaki gibi)
             let adminExists = false;
             try {
@@ -5255,8 +5312,6 @@ if (stokAra) {
             saas.showLanding();
         }
     };
-
-    // --- SİSTEM BAĞLANTILARI (BUNU EKLEMEZSENİZ BUTONLAR ÇALIŞMAZ) ---
 window.app = app;
 // --- STOK YÖNETİMİ VE GEÇMİŞİ ENTEGRASYONU ---
 
