@@ -691,7 +691,18 @@
                     <div class="card"><h3>Net Kâr (Tahsilata Göre)</h3><div class="value" id="dashboard-kar">0 ₺</div></div>
                     <div class="card"><h3>Kalan Toplam Alacak</h3><div class="value"id="dashboard-alacak">0 ₺</div></div>
                 </div>
-                <div class="content-box"><h2>Son 6 Aylık Nakit Akışı</h2><canvas id="nakitAkisChart" height="120"></canvas></div>
+                <div class="content-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h2 style="margin-bottom:0; border-bottom:none;">Nakit Akışı Grafiği</h2>
+                        <select id="nakit-akis-ay-sayisi" onchange="renderer.nakitAkisChart()" style="padding: 8px; border-radius: 5px; border: 1px solid #bdc3c7; font-weight: bold; color: var(--dark-color);">
+                            <option value="3">Son 3 Ay</option>
+                            <option value="6" selected>Son 6 Ay</option>
+                            <option value="9">Son 9 Ay</option>
+                            <option value="12">Son 1 Yıl (12 Ay)</option>
+                        </select>
+                    </div>
+                    <canvas id="nakitAkisChart" height="120"></canvas>
+                </div>
             </div>
 
           <div id="fabrika-notlari" class="page">
@@ -2605,7 +2616,44 @@ renderer.kasaOzet();
             link.download = `fabrika_karlilik_raporu_${new Date().toISOString().slice(0,10)}.csv`;
             link.click();
         },
-        nakitAkisChart: () => { const ctx = document.getElementById('nakitAkisChart').getContext('2d'); const etiketler = [], tahsilatlar = [], giderler = [], simdi = new Date(); for (let i = 5; i >= 0; i--) { const tarih = new Date(simdi.getFullYear(), simdi.getMonth() - i, 1); etiketler.push(tarih.toLocaleString('tr-TR', { month: 'long' })); const ayFiltre = item => { const it = new Date(item.tarih); return it.getFullYear() === tarih.getFullYear() && it.getMonth() === tarih.getMonth(); }; tahsilatlar.push(app.data.odemeler.filter(ayFiltre).reduce((sum, o) => sum + o.tutar, 0)); giderler.push(app.data.giderler.filter(ayFiltre).reduce((sum, g) => sum + g.tutar, 0)); } if (app.charts.nakitAkis) app.charts.nakitAkis.destroy(); app.charts.nakitAkis = new Chart(ctx, { type: 'bar', data: { labels: etiketler, datasets: [{ label: 'Tahsilatlar', data: tahsilatlar, backgroundColor: 'var(--success-color)' }, { label: 'Giderler', data: giderler, backgroundColor: 'var(--danger-color)' }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: value => app.helpers.formatCurrency(value) } } } } }); },
+        nakitAkisChart: () => { 
+            const ctx = document.getElementById('nakitAkisChart').getContext('2d'); 
+            const selectEl = document.getElementById('nakit-akis-ay-sayisi');
+            const aySayisi = selectEl ? parseInt(selectEl.value) : 6;
+            
+            const etiketler = [], tahsilatlar = [], giderler = [], simdi = new Date(); 
+            for (let i = aySayisi - 1; i >= 0; i--) { 
+                const tarih = new Date(simdi.getFullYear(), simdi.getMonth() - i, 1); 
+                
+                // 12 Ay seçilirse ayların yanına yıl da eklensin ki "Ocak" gibi isimler karışmasın
+                const formatTipi = aySayisi > 11 ? { month: 'short', year: 'numeric' } : { month: 'long' };
+                etiketler.push(tarih.toLocaleString('tr-TR', formatTipi)); 
+                
+                const ayFiltre = item => { 
+                    const it = new Date(item.tarih); 
+                    return it.getFullYear() === tarih.getFullYear() && it.getMonth() === tarih.getMonth(); 
+                }; 
+                tahsilatlar.push(app.data.odemeler.filter(ayFiltre).reduce((sum, o) => sum + o.tutar, 0)); 
+                giderler.push(app.data.giderler.filter(ayFiltre).reduce((sum, g) => sum + g.tutar, 0)); 
+            } 
+            if (app.charts.nakitAkis) app.charts.nakitAkis.destroy(); 
+            app.charts.nakitAkis = new Chart(ctx, { 
+                type: 'bar', 
+                data: { 
+                    labels: etiketler, 
+                    datasets: [
+                        { label: 'Tahsilatlar', data: tahsilatlar, backgroundColor: 'var(--success-color)' }, 
+                        { label: 'Giderler', data: giderler, backgroundColor: 'var(--danger-color)' }
+                    ] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { callback: value => app.helpers.formatCurrency(value) } } 
+                    } 
+                } 
+            }); 
+        },
         // renderer nesnesinin içindeki uretimEkleListesi fonksiyonunu bununla değiştir:
 // renderer nesnesinin içine yapıştır (Eskisini sil)
 uretimEkleListesi: () => {
