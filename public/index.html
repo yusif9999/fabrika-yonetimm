@@ -1007,6 +1007,29 @@
                     <p style="margin-bottom:20px;">Tüm üretim (gelir kalemi) ve gider kayıtlarınızı içeren detaylı bir CSV dosyası indirin. Rapor sonunda Net Kâr ve Kalan Alacak özetini göreceksiniz.</p>
                     <button id="genel-csv-indir" class="btn btn-primary">Genel CSV Raporu İndir</button>
                 </div>
+                <div class="content-box" style="margin-top: 20px; border-top: 3px solid var(--primary-color);">
+    <h2>Özel Raporlama (Tarih Aralığı)</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; align-items: center;">
+        <div>
+            <label style="font-weight: bold; margin-right: 5px;">Başlangıç:</label>
+            <input type="date" id="ozel-rapor-baslangic" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+        </div>
+        <div>
+            <label style="font-weight: bold; margin-right: 5px;">Bitiş:</label>
+            <input type="date" id="ozel-rapor-bitis" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+        </div>
+        <button onclick="renderer.ozelRaporOlustur()" style="padding: 7px 15px; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+            Raporla
+        </button>
+    </div>
+
+    <div id="ozel-rapor-sonuc" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
+        <h3 style="margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 10px;">Seçilen Tarih Aralığı Özeti</h3>
+        <p style="font-size: 1.1em;"><strong>Toplam Gelir (Tahsilat):</strong> <span id="ozel-gelir" style="color: var(--success-color, green); font-weight: bold;">0 ₺</span></p>
+        <p style="font-size: 1.1em;"><strong>Toplam Gider:</strong> <span id="ozel-gider" style="color: var(--danger-color, red); font-weight: bold;">0 ₺</span></p>
+        <p style="font-size: 1.2em; margin-top: 10px;"><strong>Net Durum (Kar/Zarar):</strong> <span id="ozel-kar" style="font-weight: bold;">0 ₺</span></p>
+    </div>
+</div>
                 <div class="content-box">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <h2>🏭 Fabrika Bazlı Kârlılık ve Ciro Analizi</h2>
@@ -1018,6 +1041,7 @@
     <div id="fabrika-karlilik-container" style="overflow-x:auto;"></div>
 </div>
             </div>
+            
 
             <div id="stok-yonetimi" class="page">
     
@@ -2656,6 +2680,7 @@ renderer.kasaOzet();
         },
         // renderer nesnesinin içindeki uretimEkleListesi fonksiyonunu bununla değiştir:
 // renderer nesnesinin içine yapıştır (Eskisini sil)
+           
 uretimEkleListesi: () => {
     app.dom.kayitListesiContainer.innerHTML = '';
     const list = app.temp.uretimListesi;
@@ -7303,6 +7328,42 @@ if(btnKaydet) {
 
 // Sayfa yenilendiğinde listeyi yükle
 setTimeout(renderer.stokListesi, 1000);
+// --- ÖZEL RAPORLAMA FONKSİYONU BAŞLANGIÇ ---
+renderer.ozelRaporOlustur = function() {
+    const baslangic = document.getElementById('ozel-rapor-baslangic').value;
+    const bitis = document.getElementById('ozel-rapor-bitis').value;
+    
+    if (!baslangic || !bitis) {
+        alert('Lütfen hem başlangıç hem de bitiş tarihini seçiniz.');
+        return;
+    }
+
+    const basTarih = new Date(baslangic);
+    basTarih.setHours(0, 0, 0, 0);
+
+    const bitTarih = new Date(bitis);
+    bitTarih.setHours(23, 59, 59, 999);
+
+    const tarihFiltresi = (item) => {
+        if (!item.tarih) return false;
+        const itemTarih = new Date(item.tarih);
+        return itemTarih >= basTarih && itemTarih <= bitTarih;
+    };
+
+    const toplamGelir = app.data.odemeler.filter(tarihFiltresi).reduce((sum, o) => sum + (Number(o.tutar) || 0), 0);
+    const toplamGider = app.data.giderler.filter(tarihFiltresi).reduce((sum, g) => sum + (Number(g.tutar) || 0), 0);
+    const netKar = toplamGelir - toplamGider;
+
+    document.getElementById('ozel-gelir').textContent = app.helpers.formatCurrency(toplamGelir);
+    document.getElementById('ozel-gider').textContent = app.helpers.formatCurrency(toplamGider);
+    
+    const karElement = document.getElementById('ozel-kar');
+    karElement.textContent = app.helpers.formatCurrency(netKar);
+    karElement.style.color = netKar >= 0 ? 'var(--success-color, green)' : 'var(--danger-color, red)';
+
+    document.getElementById('ozel-rapor-sonuc').style.display = 'block';
+};
+// --- ÖZEL RAPORLAMA FONKSİYONU BİTİŞ ---
 window.renderer = renderer;
 window.actions = actions;
 window.dataManager = dataManager;
