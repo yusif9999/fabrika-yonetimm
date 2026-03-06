@@ -7519,7 +7519,9 @@ csvManager.downloadOzelRapor = function() {
 // ------------------------------------------------------------------
     
     // UYGULAMAYI BAŞLAT
+    // UYGULAMAYI BAŞLAT
     main.boot();
+    
     // Mobil menü için toggle butonu: sidebar'ı aç/kapat
     const sidebarToggleBtn = document.getElementById('sidebar-toggle');
     if (sidebarToggleBtn) {
@@ -7531,18 +7533,16 @@ csvManager.downloadOzelRapor = function() {
         });
     }
 
-});
-
-// --- STOK SİSTEMİ TAMİR VE SİLME MODÜLÜ ---
-    
-    // 1. Sistem Bağlantılarını Garantiye Al (Hata Çözümü)
+    // --- Sistem Bağlantılarını Garantiye Al (İçeri Taşındı) ---
     window.app = app;
     window.renderer = renderer;
     window.actions = actions;
     window.dataManager = dataManager;
 
-    
+}); // <-- TÜM KODLAR BU KAPANAN PARANTEZİN İÇİNDE KALMALI
+
 // JAVASCRIPT KODLARI BİTİŞ
+
 </script>
 
 </body>
