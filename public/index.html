@@ -1024,11 +1024,14 @@
     </div>
 
     <div id="ozel-rapor-sonuc" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
-        <h3 style="margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 10px;">Seçilen Tarih Aralığı Özeti</h3>
-        <p style="font-size: 1.1em;"><strong>Toplam Gelir (Tahsilat):</strong> <span id="ozel-gelir" style="color: var(--success-color, green); font-weight: bold;">0 ₺</span></p>
-        <p style="font-size: 1.1em;"><strong>Toplam Gider:</strong> <span id="ozel-gider" style="color: var(--danger-color, red); font-weight: bold;">0 ₺</span></p>
-        <p style="font-size: 1.2em; margin-top: 10px;"><strong>Net Durum (Kar/Zarar):</strong> <span id="ozel-kar" style="font-weight: bold;">0 ₺</span></p>
-    </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 10px;">
+                            <h3 style="margin-top: 0; margin-bottom: 0;">Seçilen Tarih Aralığı Özeti</h3>
+                            <button onclick="csvManager.downloadOzelRapor()" class="btn btn-info" style="padding: 5px 15px; font-size: 13px;">📊 Excel (CSV) İndir</button>
+                        </div>
+                        <p style="font-size: 1.1em;"><strong>Toplam Gelir (Tahsilat):</strong> <span id="ozel-gelir" style="color: var(--success-color, green); font-weight: bold;">0 ₺</span></p>
+                        <p style="font-size: 1.1em;"><strong>Toplam Gider:</strong> <span id="ozel-gider" style="color: var(--danger-color, red); font-weight: bold;">0 ₺</span></p>
+                        <p style="font-size: 1.2em; margin-top: 10px;"><strong>Net Durum (Kar/Zarar):</strong> <span id="ozel-kar" style="font-weight: bold;">0 ₺</span></p>
+                    </div>
 </div>
                 <div class="content-box">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -7368,6 +7371,69 @@ window.renderer = renderer;
 window.actions = actions;
 window.dataManager = dataManager;
 window.csvManager = csvManager;
+// ------------------------------------------------------------------
+    window.csvManager = csvManager;
+
+// --- ÖZEL RAPORLAMA CSV İNDİRME FONKSİYONU BAŞLANGIÇ ---
+csvManager.downloadOzelRapor = function() {
+    const baslangic = document.getElementById('ozel-rapor-baslangic').value;
+    const bitis = document.getElementById('ozel-rapor-bitis').value;
+    
+    if (!baslangic || !bitis) {
+        alert('Lütfen raporu indirmek için önce başlangıç ve bitiş tarihlerini seçin.');
+        return;
+    }
+
+    const basTarih = new Date(baslangic);
+    basTarih.setHours(0, 0, 0, 0);
+
+    const bitTarih = new Date(bitis);
+    bitTarih.setHours(23, 59, 59, 999);
+
+    const tarihFiltresi = (item) => {
+        if (!item.tarih) return false;
+        const itemTarih = new Date(item.tarih);
+        return itemTarih >= basTarih && itemTarih <= bitTarih;
+    };
+
+    // Verileri Filtrele
+    const filtrelenmisOdemeler = app.data.odemeler.filter(tarihFiltresi);
+    const filtrelenmisGiderler = app.data.giderler.filter(tarihFiltresi);
+
+    let csv = `OZEL TARIH ARALIGI RAPORU (${baslangic} - ${bitis})\n\n`;
+    csv += 'Tip,Tarih,Aciklama,Tutar (TL)\n';
+
+    let toplamGelir = 0;
+    let toplamGider = 0;
+
+    // Gelirleri (Tahsilatları) Ekle
+    filtrelenmisOdemeler.sort((a,b) => new Date(a.tarih) - new Date(b.tarih)).forEach(o => {
+        const fabrika = app.data.fabrikalar.find(f => f.id === o.fabrikaId);
+        const fabrikaAdi = fabrika ? fabrika.ad : 'Bilinmeyen Fabrika';
+        const tutar = Number(o.tutar) || 0;
+        toplamGelir += tutar;
+        csv += `Gelir (Tahsilat),${new Date(o.tarih).toLocaleDateString('tr-TR')},"${fabrikaAdi} Odemesi",${tutar.toFixed(2)}\n`;
+    });
+
+    // Giderleri Ekle
+    filtrelenmisGiderler.sort((a,b) => new Date(a.tarih) - new Date(b.tarih)).forEach(g => {
+        const tutar = Number(g.tutar) || 0;
+        toplamGider += tutar;
+        const aciklama = `"${(g.aciklama || '').replace(/"/g, '""')} - ${(g.detay || '').replace(/"/g, '""')}"`;
+        csv += `Gider,${new Date(g.tarih).toLocaleDateString('tr-TR')},${aciklama},-${tutar.toFixed(2)}\n`;
+    });
+
+    const netKar = toplamGelir - toplamGider;
+
+    csv += '\n--- OZET ---\n';
+    csv += `Toplam Gelir (Tahsilat),,,${toplamGelir.toFixed(2)}\n`;
+    csv += `Toplam Gider,,,-${toplamGider.toFixed(2)}\n`;
+    csv += `NET DURUM (Kar/Zarar),,,${netKar.toFixed(2)}\n`;
+
+    csvManager.download(csv, `ozel_rapor_${baslangic}_to_${bitis}.csv`);
+};
+// --- ÖZEL RAPORLAMA CSV İNDİRME FONKSİYONU BİTİŞ ---
+
 // ------------------------------------------------------------------
     
     // UYGULAMAYI BAŞLAT
